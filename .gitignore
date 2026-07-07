@@ -1,0 +1,11 @@
+# Fichiers temporaires de génération (build_mockup.py / vérifs)
+_sample_data.json
+_template.html
+_c.js
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
