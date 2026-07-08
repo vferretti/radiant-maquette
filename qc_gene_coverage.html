@@ -398,22 +398,18 @@ function renderTable(){
   if(state.page<0) state.page=0;
   const start=state.page*state.pageSize;
   const rows = all.slice(start, start+state.pageSize);
-  const t=THRESH[state.depthIdx];
 
   const covCols = THRESH.map((tt,i)=>({t:tt,i}));
-  const ncols = covCols.length+5;
+  const ncols = covCols.length+4;
   const arrow = k => state.sortKey===k ? `<span class="arrow">${state.sortDir>0?'▲':'▼'}</span>` : '';
   let h = '<thead><tr>'
     + `<th class="sortable" data-k="gene">Gène ${arrow('gene')}</th>`
     + `<th class="sortable num" data-k="size">Taille (pb) ${arrow('size')}</th>`
     + `<th class="sortable num" data-k="avg">Couv. moy. (x) ${arrow('avg')}</th>`
     + covCols.map(c=>`<th class="sortable num ${c.i===state.depthIdx?'depth':''}" data-k="${c.i}">%≥${c.t}x ${arrow(''+c.i)}</th>`).join('')
-    + '<th>Statut</th>'
-    + `<th class="num" title="Bases n'atteignant pas la profondeur minimale">Bases &lt;${t}x</th></tr></thead><tbody>`;
+    + '<th>Statut</th></tr></thead><tbody>';
   for(const r of rows){
     const st = statusOf(r);
-    const v=r.cov[state.depthIdx];
-    const missing=Math.round(r.size*(1-v));
     h += `<tr><td class="gene">${r.gene}</td>`
       + `<td class="num">${r.size.toLocaleString('fr-CA')}</td>`
       + `<td class="num">${r.avg}</td>`
@@ -421,8 +417,7 @@ function renderTable(){
           const cv=r.cov[c.i];
           return `<td class="num ${c.i===state.depthIdx?'depth':''}"><span class="covcell" style="background:${band(cv)}">${(cv*100).toFixed(1)}</span></td>`;
         }).join('')
-      + `<td>${badge(st)}</td>`
-      + `<td class="num">${missing.toLocaleString('fr-CA')}</td></tr>`;
+      + `<td>${badge(st)}</td></tr>`;
   }
   if(!rows.length) h += `<tr><td colspan="${ncols}" class="muted" style="padding:24px;text-align:center">Aucun gène ne correspond aux filtres.</td></tr>`;
   h += '</tbody>';
