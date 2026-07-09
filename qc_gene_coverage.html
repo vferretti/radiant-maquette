@@ -20,7 +20,7 @@
   body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
        color:var(--fg);background:#f8fafc;font-size:14px;line-height:1.45}
   a{color:var(--primary);text-decoration:none}
-  .app{max-width:1320px;margin:0 auto;padding:0 24px 64px}
+  .app{max-width:1720px;margin:0 auto;padding:0 24px 64px}
   /* top chrome */
   .topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:10px 24px;
           display:flex;align-items:center;gap:12px}
@@ -37,13 +37,12 @@
   .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:650}
   .tab .ic{width:15px;height:15px;opacity:.85}
   /* sample selector */
-  .samples{display:flex;gap:8px;margin:18px 0 4px;align-items:center;flex-wrap:wrap}
+  .samples{display:flex;gap:10px;margin:18px 0 4px;align-items:center;flex-wrap:wrap}
   .samples .lbl{color:var(--muted-fg);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
-  .pill{border:1px solid var(--border);background:var(--bg);border-radius:999px;padding:6px 14px;
-        cursor:pointer;font-size:13px;display:flex;flex-direction:column;line-height:1.15}
-  .pill small{color:var(--muted-fg);font-size:11px}
-  .pill.active{border-color:var(--primary);background:#eef1fb;color:var(--primary)}
-  .pill.active small{color:var(--primary)}
+  .samples select{border:1px solid var(--border);border-radius:6px;padding:7px 12px;
+                  font-size:13px;background:var(--bg);color:var(--fg);font-family:inherit;
+                  min-width:460px;cursor:pointer}
+  .samples select:focus{outline:2px solid #c7d0f2;border-color:var(--primary)}
   /* segmented sub-tabs */
   .seg{display:inline-flex;background:var(--muted);border-radius:var(--radius);padding:3px;margin:16px 0}
   .seg button{border:0;background:transparent;padding:7px 16px;border-radius:6px;cursor:pointer;
@@ -143,9 +142,70 @@
   dialog textarea{width:100%;height:150px;border:1px solid var(--border);border-radius:6px;padding:8px;
         font-family:ui-monospace,Menlo,monospace;font-size:12px}
   .hidden{display:none!important}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted-fg);margin-top:10px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted-fg);margin-top:4px}
   .legend span{display:inline-flex;align-items:center;gap:5px}
   .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  /* exon detail modal */
+  #exonDlg{max-width:1280px;width:96%}
+  .exon-summary{display:flex;flex-wrap:wrap;gap:22px;font-size:13px;
+                padding:11px 14px;background:var(--muted);border-radius:6px;margin-bottom:14px}
+  .exon-summary div{display:flex;flex-direction:column;gap:2px}
+  .exon-summary .k{color:var(--muted-fg);font-size:11px;text-transform:uppercase;
+                   letter-spacing:.4px;font-weight:600}
+  .exon-summary .v{font-weight:650}
+  .exon-schema-wrap{margin-bottom:14px}
+  .exon-schema-title{font-size:12px;color:var(--muted-fg);margin-bottom:6px;display:flex;
+                     justify-content:space-between;gap:12px}
+  .exon-schema{display:flex;gap:6px;height:32px;padding:2px 0;background:transparent}
+  .exon-schema > div{height:100%;border:1.5px solid rgba(15,23,42,.28);
+                     border-radius:999px;position:relative;cursor:pointer;
+                     transition:filter .1s;flex-shrink:0;flex-basis:0;min-width:10px}
+  .exon-schema > div:hover{filter:brightness(.92)}
+  .exon-schema > div.active{outline:2px solid var(--primary);outline-offset:2px;
+                            border-color:var(--primary);z-index:2}
+  .exon-schema > div .num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+                          font-size:10px;font-weight:700;color:#334155;pointer-events:none;
+                          white-space:nowrap}
+  .exon-tablewrap{overflow:auto;max-height:320px;border:1px solid var(--border);border-radius:6px}
+  .exon-tablewrap table{width:100%;font-size:12px;border-collapse:separate;border-spacing:0}
+  .exon-tablewrap thead th{background:var(--table-header);position:sticky;top:0;padding:7px 9px;
+                           text-align:left;font-weight:650;border-bottom:1px solid var(--border);
+                           z-index:2;white-space:nowrap}
+  .exon-tablewrap tbody td{padding:5px 9px;border-bottom:1px solid var(--border);white-space:nowrap}
+  .exon-tablewrap tbody tr:hover td{background:var(--table-accent)}
+  .exon-tablewrap tbody tr.active td{background:#eef1fb}
+  .exon-tablewrap td.num,.exon-tablewrap th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .exon-tablewrap th.num{text-align:right}
+  .exon-actions{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px}
+  td.gene.clickable{cursor:pointer;text-decoration:underline;
+                    text-decoration-style:dotted;text-underline-offset:3px;
+                    text-decoration-color:var(--muted-fg)}
+  td.gene.clickable:hover{color:var(--primary);text-decoration-color:var(--primary)}
+  /* colonne cases à cocher */
+  th.check,td.check{width:36px;text-align:center;padding-left:12px;padding-right:4px}
+  th.check input,td.check input{cursor:pointer;width:15px;height:15px;margin:0;
+                                accent-color:var(--primary);vertical-align:middle}
+  /* barre de sélection au-dessus du tableau */
+  .sel-bar{display:flex;align-items:center;gap:16px;font-size:13px;margin:0 0 4px;padding:0}
+  .sel-bar .info{color:var(--fg);font-weight:600}
+  .sel-bar .info.none{color:var(--muted-fg);font-weight:500}
+  .sel-bar .action{color:var(--primary);cursor:pointer;text-decoration:underline;
+                   text-underline-offset:2px;font-weight:600}
+  .sel-bar .action:hover{filter:brightness(.85)}
+  .sel-bar .kpi{margin-left:auto;font-weight:650;font-variant-numeric:tabular-nums}
+  .sel-bar .kpi .k{color:var(--muted-fg);font-weight:500;margin-right:6px}
+  /* colonne actions (SNV / CNV / IGV) */
+  td.actions{white-space:nowrap;font-size:12px}
+  td.actions .lnk{display:inline-block;padding:2px 8px;border-radius:4px;cursor:pointer;
+                  margin-right:4px;text-decoration:none;border:1px solid transparent;
+                  font-weight:600;font-variant-numeric:tabular-nums;transition:background .1s}
+  td.actions .lnk:last-child{margin-right:0}
+  td.actions .lnk:hover{background:var(--muted);border-color:var(--border)}
+  td.actions .lnk.zero{color:var(--muted-fg);font-weight:400}
+  td.actions .lnk.snv{color:#0369a1;background:#e0f2fe}
+  td.actions .lnk.cnv{color:#6d28d9;background:#ede9fe}
+  td.actions .lnk.igv{color:var(--primary);background:#eef1fb}
+  td.actions .lnk.zero.snv,td.actions .lnk.zero.cnv{background:transparent}
 </style>
 </head>
 <body>
@@ -168,12 +228,11 @@
 
   <!-- sample selector -->
   <div class="samples">
-    <span class="lbl">Échantillon</span>
-    <div class="pill active" data-sample="proband">Proband<small>SP-1008-01 · atteint</small></div>
-    <div class="pill" data-sample="mother">Mère<small>SP-1008-02</small></div>
-    <div class="pill" data-sample="father">Père<small>SP-1008-03</small></div>
-    <span class="muted" style="font-size:11px;margin-left:8px">
-      (mère/père = données proband dégradées pour la démo)</span>
+    <select id="sampleSel">
+      <option value="proband">Proband (ID Séq. 12345) · Échantillon SP-1008-01 · Affecté</option>
+      <option value="mother">Mère (ID Séq. 12346) · Échantillon SP-1008-02 · Non-affectée</option>
+      <option value="father">Père (ID Séq. 12347) · Échantillon SP-1008-03 · Non-affecté</option>
+    </select>
   </div>
 
   <!-- filter card (shared) -->
@@ -233,21 +292,23 @@
   <div class="card">
     <div class="hd">
       <span id="tableTitle">Couverture par gène</span>
-      <button class="btn sm" id="exportTable">Exporter (CSV filtré)</button>
+      <span id="tableAvg" style="font-weight:650;font-variant-numeric:tabular-nums;font-size:13px"></span>
     </div>
     <div class="bd">
+      <div class="sel-bar" id="selBar"></div>
       <div class="tablewrap"><table id="covTable"></table></div>
-      <div class="pagination pagination-row" style="display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px">
-        <span class="muted" id="pageInfo"></span>
-        <button class="btn sm" id="prev">‹ Préc.</button>
-        <button class="btn sm" id="next">Suiv. ›</button>
-      </div>
-      <div class="legend">
-        <span><i style="background:var(--ok-bg)"></i>≥98 %</span>
-        <span><i style="background:var(--warn-bg)"></i>90–98 %</span>
-        <span><i style="background:var(--orange-bg)"></i>50–90 %</span>
-        <span><i style="background:var(--err-bg)"></i>&lt;50 %</span>
-        <span class="muted">Colonne encadrée = profondeur minimale choisie · % = fraction des bases atteignant cette profondeur · cliquez une carte pour filtrer par statut</span>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:12px;flex-wrap:wrap">
+        <div class="legend" style="margin-top:0">
+          <span><i style="background:var(--ok-bg)"></i>≥98 %</span>
+          <span><i style="background:var(--warn-bg)"></i>90–98 %</span>
+          <span><i style="background:var(--orange-bg)"></i>50–90 %</span>
+          <span><i style="background:var(--err-bg)"></i>&lt;50 %</span>
+        </div>
+        <div class="pagination pagination-row" style="display:flex;gap:8px;align-items:center;margin-left:auto">
+          <span class="muted" id="pageInfo"></span>
+          <button class="btn sm" id="prev">‹ Préc.</button>
+          <button class="btn sm" id="next">Suiv. ›</button>
+        </div>
       </div>
     </div>
   </div>
@@ -264,6 +325,32 @@
       <span style="flex:1"></span>
       <button class="btn sm" id="clearList">Effacer</button>
       <button class="btn sm primary" id="applyList">Appliquer</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="exonDlg">
+  <div class="hd" style="display:flex;align-items:flex-start;gap:10px">
+    <div style="flex:1">
+      <div id="exonTitle">Détail par exon</div>
+      <div id="exonCriteria" class="muted" style="font-size:12px;font-weight:normal;margin-top:2px"></div>
+    </div>
+    <button class="info-i" id="exonInfoBtn" title="En savoir plus sur les critères" aria-label="Information sur les critères">i</button>
+  </div>
+  <div class="bd">
+    <div class="exon-summary" id="exonSummary"></div>
+    <div class="exon-schema-wrap">
+      <div class="exon-schema-title">
+        <span>Exons du gène</span>
+      </div>
+      <div class="exon-schema" id="exonSchema"></div>
+    </div>
+    <div class="exon-tablewrap">
+      <table id="exonTable"></table>
+    </div>
+    <div class="exon-actions">
+      <button class="btn sm" id="copyBed" title="Copie les régions dont %≥Nx est sous le seuil de complétude, au format BED">Copier les régions sous-couvertes (BED)</button>
+      <button class="btn sm primary" id="exonClose">Fermer</button>
     </div>
   </div>
 </dialog>
@@ -299,6 +386,52 @@
 const DATA = {"genes": [["AANAT", 615, 201.5, [1.0, 1.0, 1.0, 1.0, 0.9902, 0.5561, 0.0, 0.0, 0.0, 0.0]], ["ABRAXAS2", 1227, 191.5, [1.0, 1.0, 1.0, 1.0, 0.8696, 0.5403, 0.0179, 0.0, 0.0, 0.0]], ["ACKR4", 1048, 49.9, [0.8368, 0.5448, 0.4208, 0.3645, 0.208, 0.0, 0.0, 0.0, 0.0, 0.0]], ["ACTR3", 1230, 129.1, [1.0, 1.0, 1.0, 1.0, 0.748, 0.0333, 0.0057, 0.0, 0.0, 0.0]], ["ADPRM", 1020, 159.6, [1.0, 1.0, 1.0, 1.0, 0.9549, 0.2745, 0.0, 0.0, 0.0, 0.0]], ["AKR1B15", 1012, 144.3, [0.8538, 0.8538, 0.8468, 0.75, 0.7431, 0.3004, 0.0, 0.0, 0.0, 0.0]], ["AKR1C2", 951, 119.6, [0.9296, 0.7518, 0.6677, 0.5762, 0.5247, 0.2324, 0.0641, 0.0, 0.0, 0.0]], ["ALG1L2", 629, 135.3, [0.7091, 0.7091, 0.7091, 0.7091, 0.6645, 0.3529, 0.0, 0.0, 0.0, 0.0]], ["ALPG", 1574, 272.0, [1.0, 0.932, 0.8844, 0.8793, 0.864, 0.7618, 0.5241, 0.0572, 0.0019, 0.0]], ["ANKH", 1452, 176.7, [1.0, 1.0, 1.0, 1.0, 0.9353, 0.2555, 0.0799, 0.0, 0.0, 0.0]], ["ANKRD63", 1138, 171.7, [1.0, 1.0, 1.0, 1.0, 0.9965, 0.2118, 0.0, 0.0, 0.0, 0.0]], ["APC", 8499, 165.6, [1.0, 1.0, 1.0, 1.0, 0.9527, 0.2079, 0.0, 0.0, 0.0, 0.0]], ["ASB1", 995, 211.4, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6211, 0.0342, 0.0, 0.0, 0.0]], ["ASCL2", 577, 177.6, [1.0, 1.0, 1.0, 1.0, 0.9705, 0.2444, 0.0, 0.0, 0.0, 0.0]], ["BRCA1", 5545, 143.7, [1.0, 0.9996, 0.9964, 0.9949, 0.868, 0.1098, 0.0022, 0.0, 0.0, 0.0]], ["BRCA2", 10202, 156.7, [1.0, 1.0, 1.0, 1.0, 0.9391, 0.1469, 0.0004, 0.0, 0.0, 0.0]], ["BRME1", 1988, 205.2, [1.0, 1.0, 1.0, 1.0, 0.9965, 0.5498, 0.0101, 0.0, 0.0, 0.0]], ["C4BPA", 1769, 157.7, [1.0, 1.0, 1.0, 1.0, 0.9333, 0.1317, 0.0, 0.0, 0.0, 0.0]], ["C9orf131", 3233, 211.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.5641, 0.0229, 0.0, 0.0, 0.0]], ["CABIN1", 6588, 200.7, [1.0, 1.0, 1.0, 1.0, 0.9775, 0.4516, 0.0568, 0.0, 0.0, 0.0]], ["CACNA1A", 7424, 175.1, [0.9815, 0.9815, 0.9815, 0.9815, 0.9142, 0.337, 0.0104, 0.0, 0.0, 0.0]], ["CASP8AP2", 5876, 136.8, [1.0, 1.0, 1.0, 1.0, 0.8919, 0.026, 0.0, 0.0, 0.0, 0.0]], ["CATSPER2", 1566, 133.3, [1.0, 0.9987, 0.9706, 0.901, 0.6858, 0.1341, 0.0, 0.0, 0.0, 0.0]], ["CAV1", 528, 179.3, [1.0, 1.0, 1.0, 1.0, 0.981, 0.3257, 0.0, 0.0, 0.0, 0.0]], ["CCDC148", 1745, 143.5, [1.0, 1.0, 1.0, 1.0, 0.9238, 0.0562, 0.0, 0.0, 0.0, 0.0]], ["CCDC195", 597, 146.1, [1.0, 1.0, 1.0, 1.0, 0.9246, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CCDC91", 1299, 121.2, [1.0, 1.0, 1.0, 1.0, 0.642, 0.0123, 0.0, 0.0, 0.0, 0.0]], ["CCND1", 875, 235.0, [1.0, 1.0, 1.0, 1.0, 1.0, 0.712, 0.1326, 0.0, 0.0, 0.0]], ["CCNE2", 1190, 168.6, [1.0, 1.0, 1.0, 1.0, 0.8916, 0.3101, 0.0, 0.0, 0.0, 0.0]], ["CCNP", 911, 210.9, [1.0, 1.0, 1.0, 1.0, 0.9857, 0.6257, 0.0165, 0.0, 0.0, 0.0]], ["CCZ1B", 1416, 55.5, [0.6624, 0.565, 0.4534, 0.4138, 0.238, 0.0064, 0.0, 0.0, 0.0, 0.0]], ["CDC26", 251, 102.9, [1.0, 1.0, 0.8207, 0.6374, 0.3147, 0.2829, 0.0, 0.0, 0.0, 0.0]], ["CDV3", 764, 158.6, [1.0, 1.0, 1.0, 0.9398, 0.7722, 0.2487, 0.0563, 0.0, 0.0, 0.0]], ["CELA3B", 794, 185.2, [0.9899, 0.8942, 0.8942, 0.8778, 0.8778, 0.4144, 0.0592, 0.0, 0.0, 0.0]], ["CFTR", 4386, 176.6, [1.0, 0.997, 0.9893, 0.9795, 0.946, 0.3069, 0.0098, 0.0, 0.0, 0.0]], ["CH507-42P11.1", 376, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CHMP2A", 656, 213.3, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6692, 0.0305, 0.0, 0.0, 0.0]], ["CITED4", 550, 72.0, [1.0, 1.0, 0.8436, 0.7345, 0.3345, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CLECL1", 497, 155.5, [1.0, 1.0, 1.0, 1.0, 0.998, 0.1127, 0.0, 0.0, 0.0, 0.0]], ["CORO1A", 1363, 168.8, [0.9266, 0.9266, 0.9266, 0.9266, 0.8122, 0.3228, 0.091, 0.0, 0.0, 0.0]], ["CT45A6", 559, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CT47A10", 860, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CTAG1A", 534, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CTBP2", 2937, 182.2, [0.9629, 0.9571, 0.9571, 0.9571, 0.9268, 0.3742, 0.0289, 0.0, 0.0, 0.0]], ["CTD-2192J16.17", 1915, 188.1, [1.0, 1.0, 1.0, 1.0, 0.9671, 0.3927, 0.0606, 0.0, 0.0, 0.0]], ["CTD-3051L14.15", 2016, 162.8, [0.9306, 0.9306, 0.9306, 0.9306, 0.8953, 0.31, 0.0, 0.0, 0.0, 0.0]], ["CXCR5", 1112, 215.2, [1.0, 1.0, 1.0, 1.0, 0.9568, 0.6807, 0.0126, 0.0, 0.0, 0.0]], ["CYP3A5", 1480, 172.2, [1.0, 1.0, 1.0, 0.9939, 0.8392, 0.3304, 0.0155, 0.0, 0.0, 0.0]], ["CYP4F22", 1569, 181.3, [1.0, 1.0, 1.0, 1.0, 0.9745, 0.369, 0.0229, 0.0, 0.0, 0.0]], ["DCBLD1", 2115, 191.2, [1.0, 1.0, 1.0, 0.9986, 0.939, 0.3967, 0.06, 0.0, 0.0, 0.0]], ["DHX58", 2010, 175.1, [1.0, 1.0, 1.0, 0.9915, 0.9328, 0.3562, 0.0179, 0.0, 0.0, 0.0]], ["DMD", 10897, 125.6, [1.0, 1.0, 1.0, 0.9983, 0.7836, 0.0043, 0.0, 0.0, 0.0, 0.0]], ["DNALI1", 762, 190.1, [1.0, 1.0, 1.0, 1.0, 0.9318, 0.4291, 0.0, 0.0, 0.0, 0.0]], ["DPYSL5", 1668, 204.3, [1.0, 1.0, 1.0, 1.0, 0.9442, 0.494, 0.0779, 0.0, 0.0, 0.0]], ["EIF5AL1", 460, 89.0, [1.0, 1.0, 0.8022, 0.437, 0.3152, 0.1457, 0.0, 0.0, 0.0, 0.0]], ["ELK4", 1285, 163.2, [1.0, 1.0, 1.0, 1.0, 0.9813, 0.214, 0.0, 0.0, 0.0, 0.0]], ["EMG1", 720, 183.7, [1.0, 1.0, 1.0, 1.0, 1.0, 0.318, 0.0, 0.0, 0.0, 0.0]], ["EP400", 9265, 186.4, [0.949, 0.9353, 0.9271, 0.9192, 0.8807, 0.457, 0.064, 0.0, 0.0, 0.0]], ["EPS8L2", 2105, 215.1, [1.0, 1.0, 1.0, 1.0, 0.9986, 0.5378, 0.0755, 0.0166, 0.0, 0.0]], ["FAM131C", 826, 116.1, [1.0, 1.0, 0.7724, 0.7095, 0.4903, 0.1961, 0.0375, 0.0, 0.0, 0.0]], ["FAM25C", 261, 37.2, [0.5057, 0.5057, 0.5057, 0.2644, 0.1303, 0.0, 0.0, 0.0, 0.0, 0.0]], ["FAM3B", 689, 171.0, [1.0, 1.0, 1.0, 1.0, 0.9869, 0.2772, 0.0, 0.0, 0.0, 0.0]], ["FAM86B1", 974, 149.2, [0.8162, 0.7341, 0.6129, 0.5924, 0.4825, 0.3388, 0.1982, 0.0986, 0.0113, 0.0]], ["FAM90A7P", 1384, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["FAM98B", 1283, 145.7, [0.9478, 0.9291, 0.894, 0.848, 0.7295, 0.1738, 0.0624, 0.0, 0.0, 0.0]], ["FBLL1", 1000, 197.0, [1.0, 0.906, 0.893, 0.876, 0.829, 0.64, 0.053, 0.0, 0.0, 0.0]], ["FBN1", 8483, 182.7, [1.0, 1.0, 1.0, 1.0, 0.9705, 0.3437, 0.0038, 0.0, 0.0, 0.0]], ["FCRLB", 1266, 178.6, [1.0, 1.0, 1.0, 1.0, 0.8989, 0.3562, 0.0284, 0.0, 0.0, 0.0]], ["FGFBP1", 700, 235.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6071, 0.1929, 0.0, 0.0, 0.0]], ["FHAD1", 4371, 171.3, [0.9661, 0.9661, 0.9661, 0.9661, 0.93, 0.326, 0.0018, 0.0, 0.0, 0.0]], ["FKBP7", 658, 150.6, [1.0, 1.0, 1.0, 1.0, 0.9392, 0.0654, 0.0, 0.0, 0.0, 0.0]], ["FMO2", 1589, 167.4, [1.0, 1.0, 1.0, 1.0, 0.9069, 0.2882, 0.0, 0.0, 0.0, 0.0]], ["FNTB", 1287, 199.2, [1.0, 1.0, 1.0, 1.0, 0.9588, 0.4981, 0.0202, 0.0, 0.0, 0.0]], ["FOXK2", 1962, 191.4, [0.9648, 0.9572, 0.9541, 0.9439, 0.9225, 0.472, 0.0515, 0.0, 0.0, 0.0]], ["FRMD3", 1763, 182.7, [1.0, 1.0, 1.0, 1.0, 0.9654, 0.3709, 0.0085, 0.0, 0.0, 0.0]], ["GATAD1", 797, 144.6, [1.0, 1.0, 1.0, 1.0, 0.7729, 0.1857, 0.0, 0.0, 0.0, 0.0]], ["GNAO1", 1046, 176.2, [1.0, 1.0, 1.0, 0.9981, 0.8518, 0.347, 0.0669, 0.0, 0.0, 0.0]], ["GOLGA8Q", 1858, 74.3, [0.6959, 0.5011, 0.3897, 0.3439, 0.2422, 0.1685, 0.085, 0.0, 0.0, 0.0]], ["GPAT2", 2343, 61.5, [0.5557, 0.5318, 0.5079, 0.4306, 0.318, 0.0533, 0.0, 0.0, 0.0, 0.0]], ["H2AB2", 343, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["H2AL1RP", 442, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["HCAR3", 1159, 196.6, [1.0, 1.0, 0.8568, 0.7636, 0.7015, 0.5591, 0.2752, 0.0, 0.0, 0.0]], ["HMCN2", 15038, 220.2, [1.0, 1.0, 1.0, 1.0, 0.9864, 0.5634, 0.1377, 0.0143, 0.0006, 0.0]], ["HOXB5", 803, 201.7, [1.0, 1.0, 1.0, 1.0, 1.0, 0.325, 0.0859, 0.0, 0.0, 0.0]], ["IGHV3OR16-17", 345, 135.8, [1.0, 1.0, 0.8609, 0.6783, 0.5276, 0.3334, 0.0, 0.0, 0.0, 0.0]], ["IGLON5", 992, 196.9, [1.0, 1.0, 1.0, 1.0, 0.9788, 0.4587, 0.0343, 0.0, 0.0, 0.0]], ["IL18", 569, 186.1, [1.0, 1.0, 1.0, 1.0, 0.9719, 0.3884, 0.0, 0.0, 0.0, 0.0]], ["IL24", 606, 164.7, [1.0, 1.0, 1.0, 1.0, 0.9785, 0.264, 0.0, 0.0, 0.0, 0.0]], ["IL7R", 1361, 184.1, [1.0, 1.0, 1.0, 1.0, 0.9993, 0.2976, 0.0, 0.0, 0.0, 0.0]], ["ITPR2", 7989, 136.3, [1.0, 1.0, 0.9991, 0.9929, 0.7699, 0.0974, 0.001, 0.0, 0.0, 0.0]], ["IVL", 1753, 338.9, [1.0, 1.0, 1.0, 1.0, 0.9755, 0.8329, 0.6047, 0.3714, 0.0873, 0.0]], ["JAKMIP3", 2206, 244.8, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6922, 0.2208, 0.0494, 0.0, 0.0]], ["KCNMB3", 819, 159.4, [1.0, 1.0, 0.7473, 0.7179, 0.663, 0.4445, 0.0586, 0.0, 0.0, 0.0]], ["KCNN2", 2357, 135.4, [0.944, 0.863, 0.8104, 0.7683, 0.7285, 0.2181, 0.0, 0.0, 0.0, 0.0]], ["KCNQ3", 2586, 187.8, [1.0, 1.0, 1.0, 0.9818, 0.9281, 0.4439, 0.0336, 0.0, 0.0, 0.0]], ["KIR2DL4", 1232, 279.3, [1.0, 1.0, 1.0, 1.0, 0.9854, 0.8523, 0.3953, 0.0779, 0.0, 0.0]], ["KIRREL2", 2094, 188.3, [1.0, 1.0, 1.0, 1.0, 0.9962, 0.3696, 0.0267, 0.0, 0.0, 0.0]], ["KLHDC8A", 1040, 187.6, [1.0, 1.0, 1.0, 1.0, 0.9539, 0.4077, 0.0, 0.0, 0.0, 0.0]], ["KRTAP2-2", 367, 80.3, [1.0, 1.0, 0.6866, 0.3052, 0.248, 0.1526, 0.0, 0.0, 0.0, 0.0]], ["LACC1", 1280, 185.8, [1.0, 1.0, 1.0, 1.0, 0.9633, 0.3914, 0.0195, 0.0, 0.0, 0.0]], ["LAT", 677, 168.6, [1.0, 1.0, 1.0, 0.9542, 0.8774, 0.2615, 0.096, 0.0, 0.0, 0.0]], ["LCOR", 4665, 200.9, [1.0, 1.0, 1.0, 1.0, 0.9972, 0.4802, 0.0023, 0.0, 0.0, 0.0]], ["LILRB2", 1765, 302.0, [1.0, 1.0, 0.8991, 0.8895, 0.8895, 0.8317, 0.6108, 0.2091, 0.0453, 0.0]], ["LIPM", 1251, 186.1, [1.0, 1.0, 1.0, 1.0, 0.9808, 0.3613, 0.0056, 0.0, 0.0, 0.0]], ["LPAR2", 1049, 188.5, [1.0, 1.0, 1.0, 1.0, 0.9762, 0.2927, 0.0152, 0.0, 0.0, 0.0]], ["LRP10", 2125, 202.2, [1.0, 1.0, 1.0, 1.0, 0.9925, 0.4372, 0.0584, 0.0, 0.0, 0.0]], ["LTA4H", 1795, 114.4, [1.0, 1.0, 1.0, 0.9994, 0.7242, 0.0, 0.0, 0.0, 0.0, 0.0]], ["MAGED4", 2199, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["MECP2", 1488, 137.1, [1.0, 1.0, 1.0, 1.0, 0.8723, 0.0242, 0.0, 0.0, 0.0, 0.0]], ["MED12L", 6349, 185.9, [1.0, 1.0, 1.0, 1.0, 0.9622, 0.3679, 0.0183, 0.0, 0.0, 0.0]], ["MED4", 796, 175.5, [1.0, 1.0, 1.0, 1.0, 0.9183, 0.3229, 0.0, 0.0, 0.0, 0.0]], ["METTL16", 1668, 180.4, [1.0, 1.0, 1.0, 0.9946, 0.9095, 0.3573, 0.0174, 0.0, 0.0, 0.0]], ["METTL25", 1785, 134.0, [1.0, 1.0, 1.0, 0.9955, 0.6162, 0.1866, 0.0, 0.0, 0.0, 0.0]], ["MGRN1", 1694, 208.3, [1.0, 1.0, 1.0, 1.0, 0.9864, 0.4681, 0.0525, 0.0, 0.0, 0.0]], ["MIA2", 4178, 165.9, [1.0, 1.0, 1.0, 1.0, 0.9425, 0.2161, 0.0211, 0.0, 0.0, 0.0]], ["MIF", 339, 173.8, [1.0, 1.0, 1.0, 1.0, 1.0, 0.3038, 0.0, 0.0, 0.0, 0.0]], ["MLH1", 2230, 179.6, [1.0, 1.0, 1.0, 1.0, 0.9596, 0.3193, 0.004, 0.0, 0.0, 0.0]], ["MMP12", 1390, 179.5, [1.0, 1.0, 1.0, 1.0, 0.9633, 0.3338, 0.0, 0.0, 0.0, 0.0]], ["MSH2", 2770, 161.2, [1.0, 1.0, 0.9986, 0.9906, 0.9249, 0.187, 0.0, 0.0, 0.0, 0.0]], ["MT-ND6", 523, 5.0, [0.4455, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["NADK2", 1302, 152.8, [1.0, 0.9923, 0.9593, 0.9278, 0.8441, 0.1951, 0.0, 0.0, 0.0, 0.0]], ["NBEAL1", 8059, 150.5, [0.9895, 0.9895, 0.9895, 0.9888, 0.8928, 0.1063, 0.0, 0.0, 0.0, 0.0]], ["NBPF20", 16664, 23.9, [0.0907, 0.0806, 0.0735, 0.0723, 0.0673, 0.0536, 0.0353, 0.0216, 0.0104, 0.0]], ["NF1", 8401, 158.7, [0.9758, 0.9758, 0.9758, 0.975, 0.8969, 0.187, 0.0021, 0.0, 0.0, 0.0]], ["NGDN", 923, 188.6, [1.0, 1.0, 1.0, 1.0, 0.9675, 0.4063, 0.0, 0.0, 0.0, 0.0]], ["NOTCH2NLR", 812, 140.8, [1.0, 1.0, 1.0, 0.9975, 0.7463, 0.1404, 0.0, 0.0, 0.0, 0.0]], ["NRG2", 2530, 165.5, [1.0, 0.9945, 0.9834, 0.966, 0.836, 0.3229, 0.0233, 0.0, 0.0, 0.0]], ["OGFOD2", 1036, 233.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6882, 0.1178, 0.0, 0.0, 0.0]], ["OR2A5", 931, 277.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.8034, 0.3888, 0.0816, 0.0, 0.0]], ["OR51A7", 934, 153.8, [1.0, 1.0, 1.0, 1.0, 1.0, 0.1221, 0.0, 0.0, 0.0, 0.0]], ["OR52D1", 952, 211.2, [1.0, 1.0, 1.0, 1.0, 0.9821, 0.5924, 0.0, 0.0, 0.0, 0.0]], ["PAGR1", 756, 111.9, [1.0, 1.0, 1.0, 0.9973, 0.7275, 0.0, 0.0, 0.0, 0.0, 0.0]], ["PAIP2B", 363, 132.5, [1.0, 1.0, 1.0, 0.9614, 0.6281, 0.0468, 0.0, 0.0, 0.0, 0.0]], ["PCTP", 630, 154.7, [1.0, 1.0, 1.0, 1.0, 0.7952, 0.2841, 0.0, 0.0, 0.0, 0.0]], ["PDZRN4", 3088, 162.1, [1.0, 0.9926, 0.9851, 0.9735, 0.9032, 0.2931, 0.0, 0.0, 0.0, 0.0]], ["PIAS2", 1835, 182.6, [1.0, 1.0, 1.0, 0.9956, 0.8719, 0.4365, 0.0, 0.0, 0.0, 0.0]], ["PIP5K1B", 1596, 171.1, [1.0, 1.0, 1.0, 1.0, 0.8985, 0.2519, 0.0, 0.0, 0.0, 0.0]], ["PPIAL4C", 490, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["PPIAL4D", 490, 0.4, [0.0041, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["PRAMEF20", 1419, 398.0, [1.0, 1.0, 1.0, 1.0, 1.0, 0.9894, 0.8851, 0.4595, 0.1029, 0.0]], ["PRAMEF7", 1416, 187.6, [0.5946, 0.5946, 0.5946, 0.5819, 0.5177, 0.4527, 0.3326, 0.1695, 0.0685, 0.0]], ["PRR20B", 659, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["PSD2", 2285, 210.3, [1.0, 1.0, 1.0, 1.0, 0.9934, 0.5225, 0.0915, 0.0096, 0.0, 0.0]], ["PSMB6", 705, 210.7, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6199, 0.0298, 0.0, 0.0, 0.0]], ["PTEN", 1191, 159.1, [1.0, 1.0, 1.0, 1.0, 0.9001, 0.1713, 0.0, 0.0, 0.0, 0.0]], ["RAB33A", 707, 161.2, [1.0, 1.0, 1.0, 1.0, 1.0, 0.0297, 0.0, 0.0, 0.0, 0.0]], ["RAB6C", 760, 126.2, [1.0, 0.9803, 0.8263, 0.7592, 0.5, 0.2711, 0.0, 0.0, 0.0, 0.0]], ["RAET1L", 730, 239.8, [1.0, 1.0, 0.889, 0.8562, 0.8493, 0.7027, 0.3589, 0.0534, 0.0, 0.0]], ["RAP1B", 540, 116.8, [1.0, 1.0, 1.0, 0.9944, 0.6982, 0.0019, 0.0, 0.0, 0.0, 0.0]], ["RARA", 1370, 184.7, [1.0, 1.0, 1.0, 0.992, 0.8949, 0.3577, 0.0642, 0.0, 0.0, 0.0]], ["RB1", 2730, 187.4, [1.0, 1.0, 1.0, 1.0, 0.9542, 0.3623, 0.0396, 0.0, 0.0, 0.0]], ["REN", 1198, 158.3, [1.0, 1.0, 1.0, 1.0, 0.7988, 0.2187, 0.0459, 0.0, 0.0, 0.0]], ["RGS2", 623, 119.9, [1.0, 1.0, 1.0, 1.0, 0.5875, 0.0995, 0.0, 0.0, 0.0, 0.0]], ["RNASE1", 466, 249.9, [1.0, 1.0, 1.0, 1.0, 1.0, 0.8369, 0.118, 0.0, 0.0, 0.0]], ["RP1-137D17.4", 682, 148.0, [0.7698, 0.7698, 0.7698, 0.7698, 0.7698, 0.3563, 0.0, 0.0, 0.0, 0.0]], ["RP11-1035H13.3", 697, 92.9, [0.693, 0.693, 0.693, 0.693, 0.6026, 0.0, 0.0, 0.0, 0.0, 0.0]], ["RP11-438F14.11", 420, 165.2, [0.7119, 0.7119, 0.7119, 0.7119, 0.7047, 0.369, 0.2214, 0.0, 0.0, 0.0]], ["RP9", 651, 133.0, [1.0, 1.0, 0.8909, 0.8295, 0.702, 0.109, 0.0, 0.0, 0.0, 0.0]], ["RPL31", 367, 0.3, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["RPS5", 602, 227.2, [1.0, 1.0, 1.0, 1.0, 1.0, 0.8007, 0.0449, 0.0, 0.0, 0.0]], ["RUNX3", 1235, 193.6, [1.0, 1.0, 1.0, 1.0, 0.9903, 0.4364, 0.0154, 0.0, 0.0, 0.0]], ["RXFP4", 1120, 232.2, [1.0, 1.0, 1.0, 1.0, 1.0, 0.7571, 0.0848, 0.0, 0.0, 0.0]], ["SAMD7", 1324, 184.8, [1.0, 1.0, 1.0, 1.0, 0.9736, 0.4049, 0.0, 0.0, 0.0, 0.0]], ["SCN1A", 5975, 185.1, [1.0, 1.0, 1.0, 1.0, 0.9518, 0.328, 0.0924, 0.0, 0.0, 0.0]], ["SDK1", 6549, 211.8, [0.975, 0.9721, 0.9698, 0.9669, 0.9542, 0.5943, 0.0913, 0.0, 0.0, 0.0]], ["SIGLEC14", 1174, 284.6, [0.8603, 0.8339, 0.8024, 0.7734, 0.6737, 0.6227, 0.5468, 0.3671, 0.1976, 0.0]], ["SLC27A2", 1840, 190.1, [1.0, 1.0, 1.0, 1.0, 0.9859, 0.3402, 0.0125, 0.0, 0.0, 0.0]], ["SLC30A8", 1091, 217.6, [1.0, 1.0, 1.0, 1.0, 0.9991, 0.6242, 0.0321, 0.0, 0.0, 0.0]], ["SLC9B2", 1589, 164.9, [1.0, 1.0, 1.0, 1.0, 0.9377, 0.2014, 0.0, 0.0, 0.0, 0.0]], ["SMR3B", 233, 251.6, [1.0, 1.0, 0.8455, 0.7768, 0.7768, 0.7683, 0.4593, 0.0301, 0.0, 0.0]], ["SNX19", 2954, 202.8, [1.0, 1.0, 1.0, 1.0, 0.9675, 0.5139, 0.0443, 0.0, 0.0, 0.0]], ["SOX4", 1420, 136.7, [1.0, 0.9979, 0.9592, 0.8521, 0.6979, 0.1577, 0.0, 0.0, 0.0, 0.0]], ["SPATA20", 2372, 171.9, [1.0, 1.0, 1.0, 1.0, 0.9726, 0.2563, 0.0008, 0.0, 0.0, 0.0]], ["SSU72P7", 580, 58.8, [0.5707, 0.5293, 0.5172, 0.4793, 0.2448, 0.0, 0.0, 0.0, 0.0, 0.0]], ["STAT5A", 2346, 169.4, [1.0, 0.997, 0.9851, 0.9412, 0.7775, 0.3431, 0.0648, 0.0, 0.0, 0.0]], ["SWAP70", 1731, 178.6, [1.0, 1.0, 1.0, 1.0, 0.9746, 0.3524, 0.0, 0.0, 0.0, 0.0]], ["TAB1", 1490, 218.6, [1.0, 1.0, 1.0, 1.0, 0.9866, 0.5496, 0.153, 0.0, 0.0, 0.0]], ["TAF3", 2773, 182.6, [0.9697, 0.9574, 0.9488, 0.9437, 0.8843, 0.4302, 0.0635, 0.0, 0.0, 0.0]], ["TBX15", 1790, 162.6, [1.0, 1.0, 1.0, 0.9961, 0.8073, 0.3201, 0.0173, 0.0, 0.0, 0.0]], ["TENT5D", 1165, 103.9, [1.0, 1.0, 1.0, 1.0, 0.6077, 0.0, 0.0, 0.0, 0.0, 0.0]], ["TEX28", 1222, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["TIMM44", 1330, 212.0, [1.0, 1.0, 1.0, 1.0, 0.9887, 0.5556, 0.0744, 0.0, 0.0, 0.0]], ["TMEM231", 934, 216.7, [1.0, 0.939, 0.864, 0.8201, 0.8062, 0.6081, 0.3287, 0.0, 0.0, 0.0]], ["TMEM240", 511, 187.0, [1.0, 1.0, 1.0, 1.0, 0.9961, 0.4657, 0.0, 0.0, 0.0, 0.0]], ["TMIE", 460, 138.7, [0.7717, 0.7717, 0.7717, 0.7717, 0.7652, 0.2261, 0.0, 0.0, 0.0, 0.0]], ["TMLHE", 1249, 103.5, [0.8903, 0.8863, 0.8607, 0.8022, 0.6533, 0.0, 0.0, 0.0, 0.0, 0.0]], ["TP53", 1159, 187.6, [1.0, 1.0, 1.0, 1.0, 0.9819, 0.2908, 0.0, 0.0, 0.0, 0.0]], ["TRIL", 2431, 193.5, [1.0, 1.0, 1.0, 1.0, 0.9803, 0.4122, 0.0609, 0.0, 0.0, 0.0]], ["TRIM51GP", 1344, 114.0, [0.9286, 0.9286, 0.9286, 0.8854, 0.381, 0.2262, 0.0, 0.0, 0.0, 0.0]], ["TRMT61A", 861, 219.2, [1.0, 1.0, 1.0, 1.0, 0.9884, 0.5958, 0.0917, 0.0, 0.0, 0.0]], ["TSPY8", 912, 0.3, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["TTLL8", 2474, 233.6, [1.0, 1.0, 1.0, 1.0, 0.9915, 0.7377, 0.0946, 0.0, 0.0, 0.0]], ["UCK1", 817, 202.1, [1.0, 1.0, 1.0, 1.0, 0.978, 0.5422, 0.038, 0.0, 0.0, 0.0]], ["UHRF1BP1L", 4350, 129.9, [1.0, 1.0, 1.0, 0.9993, 0.8023, 0.0501, 0.0, 0.0, 0.0, 0.0]], ["USP17L8", 1588, 0.3, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["VHL", 633, 236.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6935, 0.1469, 0.0, 0.0, 0.0]], ["VPS37A", 1169, 177.7, [1.0, 1.0, 1.0, 1.0, 0.9743, 0.231, 0.0, 0.0, 0.0, 0.0]], ["WASHC3", 568, 98.6, [1.0, 1.0, 1.0, 0.9842, 0.4736, 0.0, 0.0, 0.0, 0.0, 0.0]], ["XAGE5", 316, 78.5, [1.0, 0.807, 0.6076, 0.6076, 0.5253, 0.0, 0.0, 0.0, 0.0, 0.0]], ["XKR5", 2044, 232.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.7118, 0.1047, 0.0, 0.0, 0.0]], ["ZBED1", 4160, 98.9, [0.5, 0.5, 0.5, 0.5, 0.4933, 0.2596, 0.0, 0.0, 0.0, 0.0]], ["ZBTB32", 1451, 215.5, [1.0, 1.0, 1.0, 1.0, 0.9869, 0.6258, 0.0427, 0.0, 0.0, 0.0]], ["ZNF417", 1719, 147.2, [1.0, 1.0, 0.8644, 0.7539, 0.5783, 0.3351, 0.0942, 0.0, 0.0, 0.0]], ["ZNF454", 1558, 165.6, [1.0, 1.0, 1.0, 1.0, 0.9499, 0.1681, 0.0051, 0.0, 0.0, 0.0]], ["ZNF543", 1792, 260.8, [1.0, 1.0, 1.0, 1.0, 0.9911, 0.721, 0.3398, 0.038, 0.0, 0.0]], ["ZNF585B", 2299, 177.3, [1.0, 1.0, 1.0, 0.9974, 0.8899, 0.3719, 0.0343, 0.0, 0.0, 0.0]], ["ZNF679", 1225, 110.5, [1.0, 1.0, 0.849, 0.7984, 0.4939, 0.0359, 0.0, 0.0, 0.0, 0.0]], ["ZNF705D", 890, 0.1, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["ZNF713", 1321, 156.4, [1.0, 1.0, 1.0, 1.0, 0.841, 0.1476, 0.0, 0.0, 0.0, 0.0]], ["ZNF714", 1659, 61.1, [0.8361, 0.7499, 0.4376, 0.3894, 0.3412, 0.0, 0.0, 0.0, 0.0, 0.0]], ["ZNF727", 1489, 88.1, [1.0, 1.0, 0.8576, 0.6219, 0.3976, 0.006, 0.0, 0.0, 0.0, 0.0]], ["ZNF804B", 4039, 135.3, [1.0, 1.0, 1.0, 0.9921, 0.8916, 0.0388, 0.0, 0.0, 0.0, 0.0]], ["ZSWIM5", 3527, 161.7, [0.9966, 0.9918, 0.987, 0.9767, 0.8968, 0.2243, 0.015, 0.0, 0.0, 0.0]]], "panels": {"Cancer héréditaire sein/ovaire": ["BRCA1", "BRCA2", "TP53", "PTEN", "MLH1", "MSH2", "APC"], "Prédispositions ACMG SF (extrait)": ["BRCA1", "BRCA2", "TP53", "PTEN", "MLH1", "MSH2", "APC", "RB1", "VHL", "NF1"], "Neurodéveloppement (extrait)": ["MECP2", "SCN1A", "DMD", "NF1"]}, "thresholds": [5, 15, 30, 50, 100, 200, 300, 400, 500, 1000], "total_csv": 19574};
 const THRESH = DATA.thresholds;
 
+// ---- données par exon simulées (source cible : Dragen *.qc-coverage-region-2_cov_report.bed) ----
+// Format : {tr: transcrit, chr, strand, ex: [{s:start, e:end, avg, min, cov:[..%≥Nx pour chaque THRESH]}]}
+// Coordonnées GRCh38 approximatives (fictives, illustratives).
+const EXON_DATA = {
+  "AANAT": {tr:"NM_001088.3", chr:"chr17", strand:"+", ex:[
+    {s:74449434, e:74449588, avg:189.4, min:128, cov:[1,1,1,1,0.97,0.47,0,0,0,0]},
+    {s:74450101, e:74450258, avg:208.7, min:152, cov:[1,1,1,1,1,0.58,0,0,0,0]},
+    {s:74450844, e:74450998, avg:213.2, min:168, cov:[1,1,1,1,1,0.62,0,0,0,0]},
+    {s:74451485, e:74451631, avg:195.5, min:148, cov:[1,1,1,1,0.98,0.53,0,0,0,0]}
+  ]},
+  "ABRAXAS2": {tr:"NM_018288.4", chr:"chr10", strand:"+", ex:[
+    {s:105410123, e:105410333, avg:198.2, min:142, cov:[1,1,1,1,0.94,0.58,0.02,0,0,0]},
+    {s:105411501, e:105411780, avg:189.7, min:138, cov:[1,1,1,1,0.88,0.54,0.01,0,0,0]},
+    {s:105413044, e:105413290, avg:205.4, min:156, cov:[1,1,1,1,0.95,0.61,0.02,0,0,0]},
+    {s:105414800, e:105415024, avg:172.6, min:98, cov:[1,1,1,1,0.72,0.42,0.01,0,0,0]},
+    {s:105415501, e:105415767, avg:191.6, min:145, cov:[1,1,1,1,0.87,0.55,0.02,0,0,0]}
+  ]},
+  "ACKR4": {tr:"NM_016557.4", chr:"chr3", strand:"-", ex:[
+    {s:132600123, e:132600530, avg:71.4, min:12, cov:[0.94,0.72,0.62,0.55,0.32,0,0,0,0,0]},
+    {s:132604211, e:132604440, avg:42.1, min:4,  cov:[0.85,0.53,0.38,0.30,0.14,0,0,0,0,0]},
+    {s:132608100, e:132608511, avg:34.8, min:0,  cov:[0.74,0.38,0.24,0.18,0.09,0,0,0,0,0]}
+  ]},
+  "ACTR3": {tr:"NM_005721.5", chr:"chr2", strand:"+", ex:[
+    {s:114255010, e:114255188, avg:127.3, min:94, cov:[1,1,1,1,0.72,0.03,0,0,0,0]},
+    {s:114256500, e:114256692, avg:132.5, min:98, cov:[1,1,1,1,0.78,0.05,0,0,0,0]},
+    {s:114258120, e:114258332, avg:125.1, min:89, cov:[1,1,1,1,0.70,0.02,0,0,0,0]},
+    {s:114260500, e:114260709, avg:130.8, min:92, cov:[1,1,1,1,0.76,0.04,0,0,0,0]},
+    {s:114262450, e:114262662, avg:128.7, min:91, cov:[1,1,1,1,0.74,0.03,0,0,0,0]},
+    {s:114264800, e:114265023, avg:129.9, min:95, cov:[1,1,1,1,0.77,0.03,0,0,0,0]}
+  ]},
+  // ⭐ Cas vedette : gène à 85 % globalement mais un exon entièrement à 0
+  "AKR1B15": {tr:"NM_001080538.3", chr:"chr7", strand:"+", ex:[
+    {s:134120100, e:134120309, avg:158.6, min:104, cov:[1,1,0.98,0.94,0.85,0.32,0,0,0,0]},
+    {s:134125441, e:134125635, avg:167.2, min:118, cov:[1,1,1,0.97,0.90,0.35,0,0,0,0]},
+    {s:134130810, e:134131049, avg:172.8, min:126, cov:[1,1,0.99,0.95,0.88,0.34,0,0,0,0]},
+    {s:134136200, e:134136349, avg:2.1,   min:0,   cov:[0.05,0,0,0,0,0,0,0,0,0]},
+    {s:134142788, e:134143004, avg:169.3, min:122, cov:[1,1,1,0.98,0.92,0.38,0,0,0,0]}
+  ]},
+  "AKR1C2": {tr:"NM_001354.7", chr:"chr10", strand:"-", ex:[
+    {s:5030101, e:5030296, avg:128.2, min:52, cov:[1,0.94,0.86,0.78,0.65,0.30,0.08,0,0,0]},
+    {s:5034550, e:5034733, avg:112.4, min:38, cov:[0.98,0.86,0.72,0.62,0.51,0.24,0.06,0,0,0]},
+    {s:5038800, e:5039045, avg:98.7,  min:14, cov:[0.85,0.62,0.54,0.46,0.42,0.19,0.05,0,0,0]},
+    {s:5041200, e:5041526, avg:132.8, min:64, cov:[0.94,0.78,0.68,0.60,0.55,0.28,0.08,0,0,0]}
+  ]}
+};
+
 // ---- état ----
 const state = {
   sample: 'proband',
@@ -310,6 +443,8 @@ const state = {
   statusFilter: new Set(), // statuts sélectionnés via les cartes; vide = tous
   sortKey: 'gene', sortDir: 1,
   page: 0, pageSize: 50,
+  currentExonGene: null,
+  selected: new Set(),     // gènes sélectionnés (par case à cocher)
 };
 const SAMPLE_DEG = { proband:{deg:1.0,avg:1.0}, mother:{deg:1.6,avg:0.9}, father:{deg:2.3,avg:0.82} };
 
@@ -322,6 +457,24 @@ function adjRows(){
   });
 }
 function isDark(r){ return r.avg < 5 || r.cov[0] < 0.10; }
+// Compteurs SNV/CNV simulés (déterministes par nom de gène). Source cible : appel de variants Radiant.
+function mockCount(gene, kind){
+  let h = 0; const s = gene + kind;
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) | 0;
+  const r = Math.abs(h);
+  if(kind === 'snv'){
+    const bucket = r % 10;
+    if(bucket < 4) return 0;
+    if(bucket < 7) return 1 + ((r>>4) % 3);
+    if(bucket < 9) return 4 + ((r>>4) % 5);
+    return 9 + ((r>>4) % 12);
+  }
+  // cnv : majoritairement 0
+  const bucket = r % 20;
+  if(bucket < 17) return 0;
+  if(bucket < 19) return 1;
+  return 2 + ((r>>4) % 2);
+}
 function statusOf(r){
   if(isDark(r)) return 'dark';
   const v = r.cov[state.depthIdx];
@@ -400,9 +553,11 @@ function renderTable(){
   const rows = all.slice(start, start+state.pageSize);
 
   const covCols = THRESH.map((tt,i)=>({t:tt,i}));
-  const ncols = covCols.length+4;
+  const ncols = covCols.length+6;
   const arrow = k => state.sortKey===k ? `<span class="arrow">${state.sortDir>0?'▲':'▼'}</span>` : '';
   let h = '<thead><tr>'
+    + '<th class="check"><input type="checkbox" id="selAllPage" aria-label="Sélectionner la page"></th>'
+    + '<th>Actions</th>'
     + `<th class="sortable" data-k="gene">Gène ${arrow('gene')}</th>`
     + `<th class="sortable num" data-k="size">Taille (pb) ${arrow('size')}</th>`
     + `<th class="sortable num" data-k="avg">Couv. moy. (x) ${arrow('avg')}</th>`
@@ -410,7 +565,18 @@ function renderTable(){
     + '<th>Statut</th></tr></thead><tbody>';
   for(const r of rows){
     const st = statusOf(r);
-    h += `<tr><td class="gene">${r.gene}</td>`
+    const hasExon = !!EXON_DATA[r.gene];
+    const snv = mockCount(r.gene, 'snv');
+    const cnv = mockCount(r.gene, 'cnv');
+    const isSel = state.selected.has(r.gene);
+    h += `<tr${isSel?' class="selected"':''}>`
+      + `<td class="check"><input type="checkbox" data-gene="${r.gene}"${isSel?' checked':''} aria-label="Sélectionner ${r.gene}"></td>`
+      + `<td class="actions">`
+      +   `<a class="lnk snv${snv?'':' zero'}" data-gene="${r.gene}" data-kind="snv" data-n="${snv}" title="${snv} SNV — voir dans l'onglet Variants">${snv} SNV</a>`
+      +   `<a class="lnk cnv${cnv?'':' zero'}" data-gene="${r.gene}" data-kind="cnv" data-n="${cnv}" title="${cnv} CNV — voir dans l'onglet Variants">${cnv} CNV</a>`
+      +   `<a class="lnk igv" data-gene="${r.gene}" data-kind="igv" title="Ouvrir ${r.gene} dans IGV">IGV ↗</a>`
+      + `</td>`
+      + `<td class="gene${hasExon?' clickable':''}" data-gene="${r.gene}" ${hasExon?`title="Voir le détail par exon"`:''}>${r.gene}</td>`
       + `<td class="num">${r.size.toLocaleString('fr-CA')}</td>`
       + `<td class="num">${r.avg}</td>`
       + covCols.map(c=>{
@@ -426,6 +592,62 @@ function renderTable(){
   document.getElementById('tableTitle').textContent = `Couverture par gène — ${total.toLocaleString('fr-CA')} gène(s)${fn}`;
   document.getElementById('pageInfo').textContent = total? `${start+1}–${Math.min(start+state.pageSize,total)} sur ${total.toLocaleString('fr-CA')}` : '0 résultat';
   bindSort();
+  syncHeaderCheckbox();
+}
+
+function syncHeaderCheckbox(){
+  const cb = document.getElementById('selAllPage');
+  if(!cb) return;
+  const rowCbs = [...document.querySelectorAll('#covTable tbody input[type=checkbox]')];
+  if(!rowCbs.length){ cb.checked=false; cb.indeterminate=false; return; }
+  const nSel = rowCbs.filter(x=>x.checked).length;
+  cb.checked = nSel === rowCbs.length;
+  cb.indeterminate = nSel > 0 && nSel < rowCbs.length;
+}
+
+// ---- barre de sélection + couverture moyenne ----
+function renderSelBar(){
+  const all = filtered();
+  const visible = state.statusFilter.size ? all.filter(r=>state.statusFilter.has(statusOf(r))) : all;
+  const total = visible.length;
+  const nSel = state.selected.size;
+  // base pour la moyenne : sélection si présente, sinon toutes les rangées filtrées
+  const base = nSel > 0 ? visible.filter(r => state.selected.has(r.gene)) : visible;
+  const totalSize = base.reduce((s,r)=>s+r.size, 0);
+  const meanCov = totalSize > 0 ? base.reduce((s,r)=>s+r.avg*r.size, 0)/totalSize : 0;
+
+  // couverture moyenne dans l'en-tête de la carte
+  document.getElementById('tableAvg').innerHTML =
+    `<span style="color:var(--muted-fg);font-weight:500;margin-right:6px">Couv. moyenne${nSel>0?' (sélection)':''} :</span>${meanCov.toFixed(2)} x`;
+
+  // barre au-dessus du tableau : contrôles de sélection (gauche) + bouton exporter (droite)
+  const bar = document.getElementById('selBar');
+  const parts = [];
+  if(nSel > 0){
+    parts.push(`<span class="info">${nSel.toLocaleString('fr-CA')} élément(s) sélectionné(s)</span>`);
+    if(nSel < total){
+      parts.push(`<a class="action" id="selAllFiltered">Sélectionner tous les résultats (${total.toLocaleString('fr-CA')})</a>`);
+    }
+    parts.push(`<a class="action" id="selClear">Effacer la sélection</a>`);
+  }
+  parts.push(`<button class="btn sm" id="exportTable" style="margin-left:auto">Exporter</button>`);
+  bar.innerHTML = parts.join('');
+
+  const selAll = document.getElementById('selAllFiltered');
+  if(selAll) selAll.onclick = ()=>{
+    visible.forEach(r => state.selected.add(r.gene));
+    render();
+  };
+  const selClear = document.getElementById('selClear');
+  if(selClear) selClear.onclick = ()=>{
+    state.selected.clear();
+    render();
+  };
+  document.getElementById('exportTable').onclick = ()=>{
+    let rows=filtered();
+    if(state.statusFilter.size) rows=rows.filter(r=>state.statusFilter.has(statusOf(r)));
+    exportCSV(sortRows(rows),'couverture_filtree.csv',false);
+  };
 }
 function badge(st){
   return `<span class="badge ${st}">${STATUS_LABEL[st]}</span>`;
@@ -463,6 +685,140 @@ function render(){
   renderChips();
   renderStats(filtered());
   renderTable();
+  renderSelBar();
+}
+
+// ---- dialogue "Détail par exon" ----
+function exonStatus(x, depthIdx, cutoff){
+  if(x.avg < 5 || x.cov[0] < 0.10) return 'dark';
+  const v = x.cov[depthIdx];
+  if(v >= cutoff) return 'pass';
+  if(v >= 0.90) return 'warn';
+  return 'fail';
+}
+function fmtCoord(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+
+function openExonDlg(gene){
+  const data = EXON_DATA[gene];
+  if(!data) return;
+  state.currentExonGene = gene;
+
+  const t = THRESH[state.depthIdx];
+  const cutoff = state.cutoff;
+  const {deg, avg:avgMult} = SAMPLE_DEG[state.sample];
+
+  // appliquer la dégradation du sample courant aux exons
+  const adjExons = data.ex.map((x,i)=>({
+    num: i+1, s: x.s, e: x.e,
+    avg: +(x.avg * avgMult).toFixed(1),
+    min: Math.round(x.min * avgMult),
+    cov: x.cov.map(v => Math.max(0, Math.min(1, 1-(1-v)*deg)))
+  }));
+
+  // agrégats pondérés par la taille de l'exon
+  const totalSize = adjExons.reduce((s,x)=>s+(x.e-x.s+1),0);
+  const wAvg   = adjExons.reduce((s,x)=>s+x.avg*(x.e-x.s+1),0) / totalSize;
+  const wPctT  = adjExons.reduce((s,x)=>s+x.cov[state.depthIdx]*(x.e-x.s+1),0) / totalSize;
+  const wPct5  = adjExons.reduce((s,x)=>s+x.cov[0]*(x.e-x.s+1),0) / totalSize;
+  const geneStatus =
+    (wAvg < 5 || wPct5 < 0.10) ? 'dark' :
+    (wPctT >= cutoff) ? 'pass' :
+    (wPctT >= 0.90) ? 'warn' : 'fail';
+
+  document.getElementById('exonTitle').textContent = `${gene} — Détail par exon`;
+  document.getElementById('exonSummary').innerHTML =
+      `<div><span class="k">Transcrit</span><span class="v">${data.tr}</span></div>`
+    + `<div><span class="k">Locus</span><span class="v">${data.chr} (${data.strand})</span></div>`
+    + `<div><span class="k">Exons</span><span class="v">${adjExons.length}</span></div>`
+    + `<div><span class="k">Taille codante</span><span class="v">${totalSize.toLocaleString('fr-CA')} pb</span></div>`
+    + `<div><span class="k">Couv. moyenne</span><span class="v">${wAvg.toFixed(1)} x</span></div>`
+    + `<div><span class="k">%≥${t}x</span><span class="v">${(wPctT*100).toFixed(1)} %</span></div>`
+    + `<div><span class="k">Statut global</span><span class="v">${badge(geneStatus)}</span></div>`;
+
+  document.getElementById('exonCriteria').textContent =
+    `Profondeur : ${t}x · Complétude requise : ${(cutoff*100).toFixed(0)} %`;
+
+  // schéma horizontal
+  const schema = document.getElementById('exonSchema');
+  schema.innerHTML = adjExons.map((x,i)=>{
+    const size = x.e - x.s + 1;
+    const frac = size / totalSize;
+    const st = exonStatus(x, state.depthIdx, cutoff);
+    const bg = st==='dark' ? 'var(--dark-bg)' : band(x.cov[state.depthIdx]);
+    const label = frac >= 0.05 ? `<span class="num">${i+1}</span>` : '';
+    return `<div data-i="${i}" style="flex-grow:${size};background:${bg}" `
+      + `title="Exon ${i+1} · ${size.toLocaleString('fr-CA')} pb · ${(x.cov[state.depthIdx]*100).toFixed(1)} % ≥${t}x · ${STATUS_LABEL[st]}">${label}</div>`;
+  }).join('');
+
+  // tableau détaillé (seuils ≤ 200x pour la lisibilité ; on garde aussi la profondeur active si plus haute)
+  const covCols = THRESH.map((tt,i)=>({t:tt,i})).filter(c=>c.t<=200 || c.i===state.depthIdx);
+  let h = '<thead><tr>'
+    + '<th>Exon</th>'
+    + '<th>Coord. (GRCh38)</th>'
+    + '<th class="num">Taille (pb)</th>'
+    + '<th class="num">Couv. moy. (x)</th>'
+    + '<th class="num" title="Couverture minimale observée dans l\'exon">Min. couv. (x)</th>'
+    + covCols.map(c=>`<th class="num ${c.i===state.depthIdx?'depth':''}">%≥${c.t}x</th>`).join('')
+    + '<th>Statut</th></tr></thead><tbody>';
+  for(const x of adjExons){
+    const size = x.e - x.s + 1;
+    const st = exonStatus(x, state.depthIdx, cutoff);
+    const minStyle = x.min < t ? 'color:var(--err-fg);font-weight:700' : '';
+    h += `<tr data-i="${x.num-1}"><td><b>${x.num}</b></td>`
+      + `<td class="muted">${data.chr}:${fmtCoord(x.s)}–${fmtCoord(x.e)}</td>`
+      + `<td class="num">${size.toLocaleString('fr-CA')}</td>`
+      + `<td class="num">${x.avg}</td>`
+      + `<td class="num" style="${minStyle}">${x.min}</td>`
+      + covCols.map(c=>{
+          const cv=x.cov[c.i];
+          return `<td class="num ${c.i===state.depthIdx?'depth':''}"><span class="covcell" style="background:${band(cv)}">${(cv*100).toFixed(1)}</span></td>`;
+        }).join('')
+      + `<td>${badge(st)}</td></tr>`;
+  }
+  h += '</tbody>';
+  document.getElementById('exonTable').innerHTML = h;
+
+  // lier schéma <-> tableau
+  const rows = [...document.querySelectorAll('#exonTable tbody tr')];
+  schema.querySelectorAll('div[data-i]').forEach(seg=>{
+    seg.onclick = ()=>{
+      const i = seg.dataset.i;
+      schema.querySelectorAll('div').forEach(d=>d.classList.remove('active'));
+      seg.classList.add('active');
+      rows.forEach(r=>r.classList.remove('active'));
+      const row = rows.find(r=>r.dataset.i===i);
+      if(row){ row.classList.add('active'); row.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+    };
+  });
+
+  document.getElementById('exonDlg').showModal();
+}
+
+function copyExonBed(){
+  const gene = state.currentExonGene;
+  const data = gene && EXON_DATA[gene];
+  if(!data) return;
+  const {deg} = SAMPLE_DEG[state.sample];
+  const cutoff = state.cutoff;
+  const lines = data.ex.map((x,i)=>{
+    const cov = x.cov.map(v => Math.max(0, Math.min(1, 1-(1-v)*deg)));
+    return {i, x, v: cov[state.depthIdx]};
+  }).filter(r => r.v < cutoff)
+    .map(r => `${data.chr}\t${r.x.s-1}\t${r.x.e}\t${gene}_exon${r.i+1}\t${(r.v*100).toFixed(1)}\t${data.strand}`);
+  const btn = document.getElementById('copyBed');
+  const orig = btn.textContent;
+  if(!lines.length){
+    btn.textContent = '✓ Aucun exon sous-couvert';
+    setTimeout(()=>btn.textContent=orig, 1800);
+    return;
+  }
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+    btn.textContent = `✓ ${lines.length} région(s) copiée(s)`;
+    setTimeout(()=>btn.textContent=orig, 1800);
+  }).catch(()=>{
+    btn.textContent = '✗ Échec copie';
+    setTimeout(()=>btn.textContent=orig, 1800);
+  });
 }
 
 // ---- init contrôles ----
@@ -483,20 +839,60 @@ function initControls(){
   qInput.oninput=()=>{state.q=qInput.value.trim();state.page=0;syncQ();render();};
   qClear.onclick=()=>{qInput.value='';state.q='';state.page=0;syncQ();render();qInput.focus();};
 
-  document.querySelectorAll('.pill').forEach(p=>p.onclick=()=>{
-    document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
-    p.classList.add('active'); state.sample=p.dataset.sample; state.page=0; render();
-  });
+  document.getElementById('sampleSel').onchange = e => {
+    state.sample = e.target.value; state.page = 0; render();
+  };
   document.getElementById('prev').onclick=()=>{if(state.page>0){state.page--;renderTable();}};
   document.getElementById('next').onclick=()=>{state.page++;renderTable();};
 
-  // info dialog (critères)
+  // ouverture du dialogue exon + liens SNV/CNV/IGV depuis le tableau (délégation)
+  const covTbl = document.getElementById('covTable');
+  covTbl.addEventListener('click', e => {
+    if(e.target.matches('input[type=checkbox]')) return; // laisser au handler 'change'
+    const lnk = e.target.closest('td.actions .lnk');
+    if(lnk){
+      const g = lnk.dataset.gene, k = lnk.dataset.kind, n = lnk.dataset.n;
+      if(k === 'igv')      alert(`Démo : ouvrirait ${g} dans IGV.`);
+      else if(k === 'snv') alert(`Démo : filtrerait l'onglet Variants sur ${g} (${n} SNV).`);
+      else if(k === 'cnv') alert(`Démo : filtrerait l'onglet Variants CNV sur ${g} (${n} CNV).`);
+      return;
+    }
+    const cell = e.target.closest('td.gene.clickable');
+    if(cell) openExonDlg(cell.dataset.gene);
+  });
+  // sélection : checkbox de rangée + checkbox d'en-tête (page courante)
+  covTbl.addEventListener('change', e => {
+    const cb = e.target;
+    if(!cb.matches('input[type=checkbox]')) return;
+    if(cb.id === 'selAllPage'){
+      const rows = [...document.querySelectorAll('#covTable tbody input[type=checkbox]')];
+      rows.forEach(x => {
+        x.checked = cb.checked;
+        if(cb.checked) state.selected.add(x.dataset.gene);
+        else state.selected.delete(x.dataset.gene);
+      });
+    } else {
+      if(cb.checked) state.selected.add(cb.dataset.gene);
+      else state.selected.delete(cb.dataset.gene);
+      syncHeaderCheckbox();
+    }
+    renderSelBar();
+  });
+  // dialogue exon : fermeture + copie BED
+  const exonDlg = document.getElementById('exonDlg');
+  document.getElementById('exonClose').onclick = ()=>exonDlg.close();
+  exonDlg.addEventListener('click', e => { if(e.target===exonDlg) exonDlg.close(); });
+  document.getElementById('copyBed').onclick = copyExonBed;
+
+  // info dialog (critères) — ouvrable depuis la barre de filtres ET depuis le dialogue exon
   const infoDlg=document.getElementById('infoDlg');
-  document.getElementById('infoBtn').onclick=()=>{
+  const openInfoDlg=()=>{
     document.getElementById('i-depth').textContent = THRESH[state.depthIdx]+'x';
     document.getElementById('i-cutoff').textContent = (state.cutoff*100).toFixed(0)+' %';
     infoDlg.showModal();
   };
+  document.getElementById('infoBtn').onclick=openInfoDlg;
+  document.getElementById('exonInfoBtn').onclick=openInfoDlg;
   document.getElementById('infoClose').onclick=()=>infoDlg.close();
   infoDlg.addEventListener('click',e=>{ if(e.target===infoDlg) infoDlg.close(); });
 
@@ -519,11 +915,7 @@ function initControls(){
     state.page=0; dlg.close(); render();
   };
 
-  document.getElementById('exportTable').onclick=()=>{
-    let rows=filtered();
-    if(state.statusFilter.size) rows=rows.filter(r=>state.statusFilter.has(statusOf(r)));
-    exportCSV(sortRows(rows),'couverture_filtree.csv',false);
-  };
+  // handler du bouton Exporter maintenant attaché dans renderSelBar() (le bouton y est créé)
 }
 function updateListCount(){
   const n=parseGenes(document.getElementById('geneList').value).size;
