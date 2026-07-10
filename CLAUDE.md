@@ -6,6 +6,8 @@ Ce repo contient une **maquette HTML statique** pour une nouvelle section QC à 
 
 Radiant est utilisé par des généticiens du CHU Sainte-Justine pour établir des diagnostics moléculaires (WES/WGS trios germinaux, panels ciblés).
 
+La maquette couvre désormais **deux sections QC**, calquées sur l'onglet QC de l'app sœur **clin** (`~/src/clin-portal-ui`, `src/views/Prescriptions/Entity/Tabs/QC`) qui possède déjà deux sections (`General` niveau échantillon + `CouvertureGenique`) : une **Vue d'ensemble (niveau échantillon)** et la **Couverture des gènes**. Objectif secondaire : prototyper une meilleure présentation du niveau échantillon que celle de clin (aujourd'hui un dump brut de paires clé/valeur) pour guider l'amélioration de clin.
+
 ## Fichiers
 
 - `qc_gene_coverage.html` — maquette principale (autonome, données inlinées). C'est le fichier de travail.
@@ -13,10 +15,20 @@ Radiant est utilisé par des généticiens du CHU Sainte-Justine pour établir d
 - `test_gene_coverage.csv` — données de couverture par gène qui ont servi à alimenter la maquette initiale.
 - `QC_demo_multiqc_report.html` — rapport MultiQC de référence (inspiration/comparaison).
 - `41267.qc-coverage-region-2_cov_report.bed` — rapport Dragen pour l'échantillon 41267 : **la source cible** pour brancher les vraies données par exon du modal drill-down (voir « Notes techniques » plus bas).
+- `47674.QC_report.json` — rapport JSON Dragen (niveau échantillon) pour l'échantillon 47674 : **source des données de la Vue d'ensemble**. Structure : `SamplesQC[0]` (groupes `DRAGEN_capture_coverage_metrics`, `DRAGEN_mapping_metrics`, `DRAGEN_cnv_metrics`, `DRAGEN_gvcf_metrics`, `DRAGEN_ploidy_estimation_metrics`, `Picard_CollectHsMetrics`) + `SequencingQC` (run/flowcell/kit). Les valeurs du proband sont inlinées telles quelles (`QC_RAW`/`SEQ_QC`).
 
 ## État de la maquette
 
-### Sections en place
+### Sous-navigation
+- **`.seg` `#qcNav`** — bascule entre **Vue d'ensemble (échantillon)** (`#secOverview`) et **Couverture des gènes** (`#secGenes`). Défaut : vue d'ensemble. Câblage + `renderOverview()` dans `initControls()`.
+
+### Vue d'ensemble (niveau échantillon) — `renderOverview()`
+- **Tableau trio** en tête : **exactement les 6 indicateurs mis en évidence par clin** (`QualityControlSummary`), dans son ordre — Sexe/ploïdie · Contamination · Couv. moyenne · Région ≥15x · Uniformité (>0,4×moy) · CNV passants — × 3 membres (Proband/Mère/Père), pastilles de statut colorées + badge de verdict global par colonne. **Seuils repris tels quels de clin** (`QualityControlSummary/utils.tsx`). (Décision 2026-07-10 : ne mettre en évidence QUE les paramètres déjà identifiés par clin ; fold-80/duplication, ajoutés initialement avec des seuils « proposés », ont été retirés de la mise en évidence.)
+- **Panneaux de détail groupés** (proband) : Couverture & uniformité, Enrichissement de capture (Picard, dont fold-80), Alignement & lectures (dont duplication), Variants (gVCF), CNV, Sexe & ploïdie, Séquençage (run) — métriques formatées ; verdicts inline uniquement pour les seuils définis par clin (fold-80/duplication affichés en valeur brute, sans verdict inventé). Catalogue `OV_PANELS`.
+- **Dump brut repliable** (`<details>`) des 3 groupes (capture / mapping / Picard) = reproduction de l'affichage actuel de clin, pour le contraste avant/après.
+- Données : proband = réelles (`QC_RAW`) ; mère/père = indicateurs dérivés du proband par facteur pour la démo trio (`trio()`).
+
+### Couverture des gènes — `#secGenes`
 - **Sélecteur d'échantillon (trio)** — dropdown `<select>` reproduisant le format du composant Radiant `SequencingVariantFiltersSelectItem` (relation · ID Séq. · Échantillon · Statut affecté). Données mère/père = données proband dégradées pour la démo.
 - **Filtres** : recherche par gène, panel prédéfini, liste custom téléversée.
 - **Critères QC** : profondeur minimale (seuil clinique) + complétude requise, avec dialogue d'aide « i ».
@@ -26,10 +38,12 @@ Radiant est utilisé par des généticiens du CHU Sainte-Justine pour établir d
 - **Couv. moyenne** affichée dans l'en-tête de la carte, pondérée par taille des gènes, sur la sélection si présente sinon sur tout le filtre.
 - **Modal « Détail par exon »** — accessible en cliquant un nom de gène (souligné en pointillé). Contient : bouton d'aide « i », résumé pondéré du gène, schéma horizontal (pilules arrondies, largeur ∝ taille, couleur = statut à la profondeur active), tableau détaillé (n° · coord. · taille · couv. moyenne · min. couv. · %≥Nx · statut), bouton **Copier les régions sous-couvertes (BED)**.
 - **Export CSV filtré** (bouton Exporter).
+- **Note de limitation pour le rapport** — bouton « Note de limitation… » dans la barre au-dessus du tableau (à côté d'Exporter). Ouvre un dialogue (`#limitDlg`) avec un texte pré-formaté, éditable, listant les gènes sous les critères actifs groupés par statut (Échec / Attention / Non mappable), + bouton **Copier**. Périmètre = sélection si présente, sinon le filtre courant (recherche/panel/liste) ; le filtre de statut des cartes est volontairement ignoré. Voir `buildLimitationNote()`.
 
 ### Journal des changements
 - **2026-07-08** — retrait de la colonne « Bases <Nx » du tableau principal.
 - **2026-07-09** — session étoffée : ajout du modal drill-down par exon (donnée simulée pour 6 gènes), colonnes case-à-cocher + Actions à gauche, sélection multi-gènes avec couv. moyenne dynamique, remplacement des pastilles échantillon par un dropdown au format Radiant, ajouts UI mineurs, commit du fichier Dragen source.
+- **2026-07-10** — deux ajouts : (1) **note de limitation pour le rapport** (`buildLimitationNote()` + `#limitDlg`) : texte pré-formaté, éditable, copiable, groupant les gènes sous les critères par statut ; pourcentage planché à 1 décimale (un gène à 99,96 % ne doit pas s'afficher « 100,0 % » à côté de « partielle »). (2) **section Vue d'ensemble (niveau échantillon)** + sous-navigation `.seg`, alimentée par `47674.QC_report.json` : tableau trio à verdicts colorés, panneaux de détail groupés, dump brut repliable. (Un bandeau sample-level fold-80 côté couverture génique avait été prototypé puis retiré le même jour — le vrai fold-80 vit désormais dans la vue d'ensemble, `FOLD_80_BASE_PENALTY` de Picard.)
 
 ## Notes techniques
 
@@ -50,6 +64,9 @@ Le mapping **gène → exons** n'est pas dans ce fichier (source annexe). Quand 
 ### Couverture moyenne pondérée
 Le calcul dans `renderSelBar()` utilise `sum(gene.avg × gene.size) / sum(gene.size)` — c'est la moyenne pondérée par la taille des gènes, cliniquement plus significative qu'une moyenne arithmétique simple.
 
+### Vue d'ensemble — seuils et données de démo
+Les seuils de verdict des indicateurs de tête sont **repris tels quels de clin** (`clin-portal-ui/src/views/Prescriptions/Entity/QualityControlSummary/utils.tsx`) : sexe via couv. chrY/chrX vs sexe déclaré ; contamination > 2 % (orange) / > 5 % (rouge) ; couv. moyenne < 100x (rouge) ; région ≥15x < 95 % (rouge) ; uniformité (>0,4×moy) < 93,91 % (orange) ; CNV > 504 (orange). **On ne met en évidence que ces indicateurs-là** (principe fixé avec l'utilisateur le 2026-07-10). Aucun seuil inventé : fold-80 et duplication vivent dans les panneaux de détail en valeur brute. Le trio mère/père est **dérivé du proband par facteur** (`trio(p, fm, ff)`) uniquement pour la démo ; à l'intégration, chaque membre a son propre `QC_report.json`.
+
 ### Compteurs SNV/CNV
 `mockCount(gene, kind)` produit un compteur déterministe par hash du nom de gène. Distribution SNV : ~40 % à 0, la plupart entre 1 et 8, quelques-uns >10. CNV : ~85 % à 0. À remplacer par un lookup vers l'API variants de Radiant.
 
@@ -65,17 +82,16 @@ Résumé des questions qu'un généticien se pose devant ce tableau et de la cou
 | Les gènes du panel/phénotype sont-ils couverts ? | **Très bon** — panel + liste custom + recherche |
 | Alignement avec les seuils cliniques du labo | **Très bon** — sélecteurs profondeur + complétude |
 | Granularité intra-gène (couverture par exon/région) | **Très bon** — modal drill-down avec schéma + tableau + export BED |
-| Verdict sample-level global (moyenne, % à 20x, uniformité) | Partiel — moyenne globale affichée mais pas d'uniformité (fold-80) |
+| Verdict sample-level global (moyenne, % à 20x, uniformité, contamination, sexe) | **En place** — Vue d'ensemble : tableau trio à verdicts + fold-80 réel (Picard) + panneaux de détail |
 | Voir les variants (SNV/CNV) associés à chaque gène | En place (liens vers onglet Variants + IGV, données stub) |
-| Comparaison trio en une seule vue | Faible (obligé de basculer via le dropdown) |
-| Note de limitation pré-formatée pour le rapport final | **Absent — priorité restante** |
+| Comparaison trio en une seule vue | **Partiel** — le tableau trio de la Vue d'ensemble compare les 3 membres au niveau échantillon ; pas encore de comparaison trio au niveau gène/exon |
+| Note de limitation pré-formatée pour le rapport final | **En place** — bouton « Note de limitation… » → texte éditable/copiable groupé par statut |
 | Annotation des gènes structurellement difficiles (pseudogènes, régions dupliquées) | Absent |
 | Aide à la décision (Sanger, retest, méthode alternative) | Absent (hors scope court terme) |
 
 ## Prochaines étapes envisagées
 
 - **Brancher les vraies données** : remplacer `EXON_DATA` simulé par un lookup depuis le fichier Dragen `.bed` (avec le mapping gène→exons annexe), remplacer `mockCount()` par l'API variants Radiant, brancher les liens IGV/SNV/CNV vers de vraies navigations.
-- **Bloc limitations pour le rapport** — bouton « copier la note de limitation » qui produit un texte pré-formatté (« Les gènes suivants ont une couverture inférieure aux critères… »).
-- **Bandeau sample-level** — ajouter fold-80 et % du panel à la profondeur cible dans l'en-tête.
-- **Autres sections QC** — d'autres modules (mapping, qualité base par base, contamination, sexe génétique, etc.) viendront s'ajouter comme sections dans ce même onglet.
-- **Intégration dans `~/src/radiant-portal`** comme onglet de la page Case.
+- **Améliorer la Vue d'ensemble puis clin** — c'est l'objet de la section : itérer sur la présentation (regroupements, seuils, ce qu'on met en avant vs en repli) pour ensuite améliorer la section `General` de clin, aujourd'hui un dump brut. Pistes : brancher les vraies données trio (chaque membre a son propre `QC_report.json`), déplacer les seuils « proposés » vers des seuils validés labo, lien depuis « Région ≥15x » vers la couverture génique (comme clin le fait déjà).
+- **Autres sections QC** — d'autres modules (qualité base par base, index de contamination inter-échantillons `SequencingQC.index_contamination_stats`, etc.) pourront s'ajouter.
+- **Intégration dans `~/src/radiant-portal`** comme onglet de la page Case (et report des améliorations dans `~/src/clin-portal-ui`).
