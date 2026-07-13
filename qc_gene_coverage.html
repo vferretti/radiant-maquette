@@ -102,13 +102,26 @@
   /* summary cards */
   .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:16px 0}
   .stat{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;
-        cursor:pointer;transition:box-shadow .12s,border-color .12s;position:relative;user-select:none}
-  .stat:hover{border-color:#c7d0f2;box-shadow:0 1px 4px rgba(79,95,195,.12)}
-  .stat.sel{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+        cursor:pointer;transition:box-shadow .12s,border-color .12s,transform .12s;position:relative;user-select:none}
+  .stat:hover{border-color:#c7d0f2;box-shadow:0 2px 6px rgba(79,95,195,.16);transform:translateY(-1px)}
+  .stat.sel{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary);background:#eef1fb}
+  .stat.ok.sel{background:var(--ok-bg)} .stat.warn.sel{background:var(--warn-bg)}
+  .stat.err.sel{background:var(--err-bg)} .stat.dark.sel{background:var(--dark-bg)}
   .stat.sel::after{content:'✓';position:absolute;top:8px;right:10px;color:var(--primary);font-weight:700;font-size:12px}
   .stat.dim{opacity:.55}
   .stat .n{font-size:26px;font-weight:700;line-height:1}
   .stat .t{font-size:12px;color:var(--muted-fg);margin-top:6px;font-weight:600}
+  /* indice de filtre sous les cartes */
+  .stats-hint{font-size:12px;color:var(--muted-fg);margin:-6px 0 14px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+  .stats-hint .fic{vertical-align:-2px;margin-right:5px;opacity:.7}
+  .stats-hint .filter-active{color:var(--fg);font-weight:700}
+  .stats-hint .reset{color:var(--primary);cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-weight:600;margin-left:8px}
+  .stats-hint .reset:hover{filter:brightness(.85)}
+  /* indice « détail par exon » + icône sur les gènes cliquables */
+  .exon-ic{width:12px;height:12px;margin-left:5px;vertical-align:-1px;opacity:.5;color:var(--muted-fg)}
+  td.gene.clickable:hover .exon-ic{opacity:1;color:var(--primary)}
+  .legend-hint{font-size:12px;color:var(--muted-fg);display:inline-flex;align-items:center}
+  .legend-hint .exon-ic{opacity:.75;margin-left:0;margin-right:5px}
   .stat.ok .n{color:var(--ok-fg)} .stat.warn .n{color:var(--warn-fg)}
   .stat.err .n{color:var(--err-fg)} .stat.dark .n{color:var(--dark-fg)}
   /* alert */
@@ -355,6 +368,7 @@
 
   <!-- summary cards = filtre de statut cliquable -->
   <div class="stats" id="stats"></div>
+  <div class="stats-hint" id="statsHint"></div>
 
   <!-- tableau unique -->
   <div class="card">
@@ -372,6 +386,7 @@
           <span><i style="background:var(--orange-bg)"></i>50–90 %</span>
           <span><i style="background:var(--err-bg)"></i>&lt;50 %</span>
         </div>
+        <span class="legend-hint"><svg class="exon-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Cliquez un nom de gène souligné pour la couverture par exon</span>
         <div class="pagination pagination-row" style="display:flex;gap:8px;align-items:center;margin-left:auto">
           <span class="muted" id="pageInfo"></span>
           <button class="btn sm" id="prev">‹ Préc.</button>
@@ -454,7 +469,7 @@
 <dialog id="limitDlg">
   <div class="hd">Note de limitation pour le rapport</div>
   <div class="bd">
-    <p class="muted" style="margin-top:0">Texte pré-formaté listant les gènes du périmètre dont la couverture est inférieure aux critères actifs. Éditable — vérifiez et adaptez avant de l'insérer dans le rapport final.</p>
+    <p class="muted" style="margin-top:0">Texte pré-formaté listant les gènes analysés dont la couverture est inférieure aux critères actifs. Éditable — vérifiez et adaptez avant de l'insérer dans le rapport final.</p>
     <textarea id="limitText" spellcheck="false"></textarea>
     <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
       <span class="meta" id="limitMeta"></span>
@@ -631,6 +646,17 @@ function renderStats(rows){
     else if(sf.has(k)) sf.delete(k); else sf.add(k);
     state.page=0; render();
   });
+  // indice sous les cartes : invite à filtrer, ou état du filtre actif + réinitialisation
+  const hint=document.getElementById('statsHint');
+  if(sf.size){
+    const labels=STATUS_CARDS.filter(c=>c.key && sf.has(c.key)).map(c=>c.label).join(', ');
+    hint.innerHTML=`Liste filtrée : <span class="filter-active">${labels}</span>`
+      +`<a class="reset" id="statsReset">✕ Tout afficher</a>`;
+    document.getElementById('statsReset').onclick=()=>{ sf.clear(); state.page=0; render(); };
+  } else {
+    hint.innerHTML=`<svg class="fic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>`
+      +`Cliquez une catégorie pour filtrer la liste ci-dessous.`;
+  }
 }
 
 // ---- tableau unique ----
@@ -669,7 +695,7 @@ function renderTable(){
       +   `<a class="lnk cnv${cnv?'':' zero'}" data-gene="${r.gene}" data-kind="cnv" data-n="${cnv}" title="${cnv} CNV — voir dans l'onglet Variants">${cnv} CNV</a>`
       +   `<a class="lnk igv" data-gene="${r.gene}" data-kind="igv" title="Ouvrir ${r.gene} dans IGV">IGV ↗</a>`
       + `</td>`
-      + `<td class="gene${hasExon?' clickable':''}" data-gene="${r.gene}" ${hasExon?`title="Voir le détail par exon"`:''}>${r.gene}</td>`
+      + `<td class="gene${hasExon?' clickable':''}" data-gene="${r.gene}" ${hasExon?`title="Voir le détail par exon"`:''}>${r.gene}${hasExon?' <svg class="exon-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>':''}</td>`
       + `<td class="num">${r.size.toLocaleString('fr-CA')}</td>`
       + `<td class="num">${r.avg}</td>`
       + covCols.map(c=>{
@@ -918,9 +944,9 @@ function copyExonBed(){
 
 // ---- note de limitation pour le rapport ----
 // Construit un texte pré-formaté listant les gènes sous les critères actifs.
-// Périmètre : sélection si présente, sinon le filtre courant (recherche/panel/liste).
+// Gènes analysés : sélection si présente, sinon le filtre courant (recherche/panel/liste).
 // Le filtre de statut (cartes) est volontairement ignoré : la note doit couvrir
-// tout le périmètre de gènes d'intérêt, pas la vue transitoire.
+// tout l'ensemble des gènes d'intérêt, pas la vue transitoire.
 function buildLimitationNote(){
   const sampleTxt = document.getElementById('sampleSel').selectedOptions[0].textContent.trim();
   const depth = THRESH[state.depthIdx];
@@ -934,7 +960,7 @@ function buildLimitationNote(){
   else if(state.panel)      scopeDesc = `panel « ${state.panel} » (${scope.length} gènes)`;
   else if(state.uploaded)   scopeDesc = `liste téléversée (${scope.length} gènes)`;
   else if(state.q)          scopeDesc = `recherche « ${state.q} » (${scope.length} gènes)`;
-  else                      scopeDesc = `l'ensemble des ${scope.length} gènes analysés`;
+  else                      scopeDesc = `l'ensemble des ${scope.length} gènes`;
 
   const grp = {fail:[], warn:[], dark:[]};
   scope.forEach(r=>{ const st=statusOf(r); if(grp[st]) grp[st].push(r); });
@@ -947,11 +973,11 @@ function buildLimitationNote(){
   L.push('');
   L.push(`Échantillon : ${sampleTxt}`);
   L.push(`Critères appliqués : profondeur ≥ ${depth}x sur ${cutoffPct} % des bases.`);
-  L.push(`Périmètre évalué : ${scopeDesc}.`);
+  L.push(`Gènes analysés : ${scopeDesc}.`);
   L.push('');
 
   if(nProblem === 0){
-    L.push(`Tous les gènes du périmètre atteignent les critères de couverture `
+    L.push(`Tous les gènes analysés atteignent les critères de couverture `
          + `(≥ ${depth}x sur ${cutoffPct} % des bases). Aucune limitation à signaler.`);
     return {text:L.join('\n'), nProblem, nScope:scope.length};
   }
@@ -987,9 +1013,14 @@ function openLimitDlg(){
   const {text, nProblem, nScope} = buildLimitationNote();
   document.getElementById('limitText').value = text;
   document.getElementById('limitMeta').textContent =
-    nProblem ? `${nProblem} gène(s) sous les critères sur ${nScope} évalué(s)`
+    nProblem ? `${nProblem} gène(s) sous les critères sur ${nScope} analysé(s)`
              : `Aucune limitation — ${nScope} gène(s) conforme(s)`;
   document.getElementById('limitDlg').showModal();
+  // showModal() met le focus sur le textarea et défile jusqu'au curseur :
+  // on ramène curseur + défilement au tout début du texte.
+  const ta = document.getElementById('limitText');
+  ta.setSelectionRange(0, 0);
+  ta.scrollTop = 0;
 }
 
 // ======================================================================
@@ -1274,7 +1305,7 @@ function renderOverview(){
     + `</dl><p class="muted" style="font-size:12px;margin-top:14px">Seuils repris des critères du laboratoire (clin).</p>`;
 
   el.innerHTML =
-      `<div class="ov-head"><h2>Indicateurs - famille</h2>`
+      `<div class="ov-head"><h2>Indicateurs</h2>`
     +   `<a class="btn sm" href="QC_demo_multiqc_report.html" target="_blank" rel="noopener" title="Ouvrir le rapport MultiQC agrégé (1 par famille)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Rapport MultiQC</a></div>`
     + `<div class="ov-legend"><span>${ovDot('ok')} Conforme</span><span>${ovDot('warn')} Attention</span><span>${ovDot('err')} Échec / hors seuil</span>`
     +   `<button class="info-i" id="ovInfoBtn" title="Comprendre les seuils des indicateurs" aria-label="Seuils des indicateurs" style="margin-left:auto">i</button></div>`
