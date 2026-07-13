@@ -160,14 +160,15 @@
   .ov-intro{font-size:13px;color:#334155;margin:0 0 14px;max-width:1100px}
   .ov-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted-fg);margin:2px 0 16px;align-items:center}
   .ov-legend span{display:inline-flex;align-items:center;gap:6px}
-  .ov-sub{font-size:15px;font-weight:650;margin:24px 0 10px}
+  .ov-sub{font-size:15px;font-weight:650;margin:24px 0 10px;display:flex;align-items:center;
+          justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .ov-sub .hint{font-weight:400}
   .ov-trio{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
   .ov-trio th,.ov-trio td{padding:8px 14px;border-bottom:1px solid var(--border)}
-  .ov-trio thead th{background:var(--table-header);font-weight:650;vertical-align:top;text-align:right}
-  .ov-trio thead th:first-child{text-align:left}
-  .ov-trio td.num,.ov-trio th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .ov-trio thead th{background:var(--table-header);font-weight:650;vertical-align:top;text-align:left}
+  .ov-trio td.num,.ov-trio th.num{text-align:left;font-variant-numeric:tabular-nums}
   .ov-trio td.ml{color:var(--muted-fg);font-weight:600}
-  .ov-trio .mv{display:inline-flex;align-items:center;gap:7px;justify-content:flex-end;font-weight:600}
+  .ov-trio .mv{display:inline-flex;align-items:center;gap:7px;justify-content:flex-start;font-weight:600}
   .ov-trio .hint{color:var(--muted-fg);font-weight:400;font-size:11px}
   .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;align-items:start}
   .ov-panel .bd{padding:4px 16px 8px}
@@ -184,6 +185,9 @@
   .raw-table{width:100%;font-size:12px;border-collapse:separate;border-spacing:0}
   .raw-table td{padding:5px 16px;border-bottom:1px solid var(--muted)}
   .raw-table td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* sélecteur de membre (section détail) */
+  .ov-memsel{margin:0}
+  .ov-memsel button{padding:5px 14px;font-size:12px}
   .exon-summary{display:flex;flex-wrap:wrap;gap:22px;font-size:13px;
                 padding:11px 14px;background:var(--muted);border-radius:6px;margin-bottom:14px}
   .exon-summary div{display:flex;flex-direction:column;gap:2px}
@@ -441,6 +445,16 @@
       <span style="flex:1"></span>
       <button class="btn sm" id="limitCopy">Copier</button>
       <button class="btn sm primary" id="limitClose">Fermer</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="ovInfoDlg">
+  <div class="hd">Seuils des indicateurs de synthèse</div>
+  <div class="bd">
+    <div id="ovInfoBody"></div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn sm primary" id="ovInfoClose">Fermer</button>
     </div>
   </div>
 </dialog>
@@ -971,34 +985,86 @@ const QC_RAW = {"DRAGEN_capture_coverage_metrics": {"Aligned bases": 16544265985
 const SEQ_QC = {"captureKit": "Roche HyperExomeV2", "flowcell": "B23LFFTLT3", "runName": "20260629_LH00336_0448_B23LFFTLT3", "runNameShort": "LH00336_0448", "sequencer": "LH00336", "sequencingDate": "20260629"};
 
 const G = (grp,key)=>QC_RAW[grp][key];
+// id = ID séquençage (interne) ; sid = sample submitter ID (DMxxxxxx), affiché à l'écran
 const QC_MEMBERS = [
-  {key:'proband', label:'Proband', id:'47674', dsex:'M'},
-  {key:'mother',  label:'Mère',    id:'47675', dsex:'F'},
-  {key:'father',  label:'Père',    id:'47676', dsex:'M'},
+  {key:'proband', label:'Proband', id:'47674', sid:'DM189234', dsex:'M'},
+  {key:'mother',  label:'Mère',    id:'47675', sid:'DM189235', dsex:'F'},
+  {key:'father',  label:'Père',    id:'47676', sid:'DM189236', dsex:'M'},
 ];
-// trio de démo : proband réel, mère/père dérivés par facteur
-const trio = (p, fm, ff)=>({proband:p, mother:p*fm, father:p*ff});
+// ---- dérivation trio (démo) ----
+// Proband = données réelles ; mère/père = copie de QC_RAW avec les métriques
+// pertinentes dégradées par facteur (le reste passe tel quel). À l'intégration,
+// chaque membre aura son propre QC_report.json.
+const MEMBER_DEG = {
+  mother: {cov:0.85, covPct:0.99,  unif:0.985, fold80:1.18, contam:1.6, dup:1.12, ampl:57, del:81},
+  father: {cov:0.62, covPct:0.977, unif:0.970, fold80:1.42, contam:2.8, dup:1.30, ampl:70, del:95},
+};
+const _mqCache = {};
+function memberQC(key){
+  if(key==='proband') return QC_RAW;
+  if(_mqCache[key]) return _mqCache[key];
+  const f = MEMBER_DEG[key];
+  const q = JSON.parse(JSON.stringify(QC_RAW));
+  const cap=q.DRAGEN_capture_coverage_metrics, pic=q.Picard_CollectHsMetrics,
+        map=q.DRAGEN_mapping_metrics, cnv=q.DRAGEN_cnv_metrics;
+  const r2=x=>+x.toFixed(2), r4=x=>+x.toFixed(4);
+  // couvertures moyennes/médianes
+  ['Average alignment coverage over QC coverage region','Average autosomal coverage over QC coverage region',
+   'Median autosomal coverage over QC coverage region','Median chr X coverage (ignore 0x regions) over QC coverage region',
+   'Median chr Y coverage (ignore 0x regions) over QC coverage region'].forEach(k=> cap[k]=r2(cap[k]*f.cov));
+  pic.MEAN_TARGET_COVERAGE=r2(pic.MEAN_TARGET_COVERAGE*f.cov);
+  pic.MEDIAN_TARGET_COVERAGE=Math.round(pic.MEDIAN_TARGET_COVERAGE*f.cov);
+  // % de région ≥ Nx (léger recul ; on garde ≥0x = 100)
+  Object.keys(cap).forEach(k=>{ if(k.includes(': inf)') && !k.includes('[   0x: inf)')) cap[k]=r2(Math.min(100,cap[k]*f.covPct)); });
+  ['PCT_TARGET_BASES_1X','PCT_TARGET_BASES_2X','PCT_TARGET_BASES_10X','PCT_TARGET_BASES_20X',
+   'PCT_TARGET_BASES_30X','PCT_TARGET_BASES_40X','PCT_TARGET_BASES_50X','PCT_TARGET_BASES_100X'].forEach(k=> pic[k]=r4(Math.min(1,pic[k]*f.covPct)));
+  // uniformité, fold-80, contamination, duplication
+  cap['Uniformity of coverage (PCT > 0.2*mean) over QC coverage region']=r2(cap['Uniformity of coverage (PCT > 0.2*mean) over QC coverage region']*f.unif);
+  cap['Uniformity of coverage (PCT > 0.4*mean) over QC coverage region']=r2(cap['Uniformity of coverage (PCT > 0.4*mean) over QC coverage region']*f.unif);
+  pic.FOLD_80_BASE_PENALTY=r4(pic.FOLD_80_BASE_PENALTY*f.fold80);
+  map['Estimated sample contamination']=r4(map['Estimated sample contamination']*f.contam);
+  pic.PCT_EXC_DUPE=r4(Math.min(1,pic.PCT_EXC_DUPE*f.dup));
+  // nombres de lectures (échelle avec la couverture)
+  ['Total input reads','Mapped reads','Number of unique reads (excl. duplicate marked reads)',
+   'Properly paired reads','Reads with MAPQ [40:inf)'].forEach(k=> map[k]=Math.round(map[k]*f.cov));
+  // CNV passants (valeurs de démo par membre)
+  cnv['Number of passing amplifications']=f.ampl;
+  cnv['Number of passing deletions']=f.del;
+  _mqCache[key]=q;
+  return q;
+}
 
 // Indicateurs de tête = ceux mis en évidence par clin (QualityControlSummary),
-// dans le même ordre : Sexe (ligne dédiée) · Contamination · Couv. moyenne ·
-// ≥15x · Uniformité · CNV. Seuils repris de clin (utils.tsx).
+// dans le même ordre — Sexe (ligne dédiée) · Contamination · Couv. moyenne · ≥15x ·
+// Uniformité · CNV. (Le fold-80 a été retiré des indicateurs le 2026-07-13 ; il reste
+// affiché en valeur brute dans le panneau de détail « Enrichissement de capture ».)
+// Chaque indicateur lit memberQC(membre) → cohérent avec les panneaux de détail.
 const HEAD_IND = [
   {label:'Contamination estimée', unit:' %', dec:1, scale:100,
-   vals:trio(G('DRAGEN_mapping_metrics','Estimated sample contamination'),1.6,2.8),
+   group:'DRAGEN_mapping_metrics', key:'Estimated sample contamination',
+   help:'Fraction de l’échantillon estimée comme contamination croisée (ADN d’un autre individu). Attention si > 2 %, échec si > 5 %.',
    verdict:v=> v>0.05?{l:'err',t:'Contamination forte (> 5 %)'}:v>0.02?{l:'warn',t:'Contamination légère (> 2 %)'}:null},
   {label:'Couv. moyenne (région QC)', unit:' x', dec:0,
-   vals:trio(G('DRAGEN_capture_coverage_metrics','Average alignment coverage over QC coverage region'),0.85,0.62),
+   group:'DRAGEN_capture_coverage_metrics', key:'Average alignment coverage over QC coverage region',
+   help:'Profondeur d’alignement moyenne sur la région QC (exome). Échec si < 100x.',
    verdict:v=> v<100?{l:'err',t:'Couverture insuffisante (< 100x)'}:null},
   {label:'Région ≥ 15x', unit:' %', dec:1,
-   vals:trio(G('DRAGEN_capture_coverage_metrics','PCT of QC coverage region with coverage [  15x: inf)'),0.990,0.977),
+   group:'DRAGEN_capture_coverage_metrics', key:'PCT of QC coverage region with coverage [  15x: inf)',
+   help:'Proportion de la région QC couverte à au moins 15x (profondeur minimale pour un appel fiable). Échec si < 95 %.',
    verdict:v=> v<95?{l:'err',t:'< 95 % de la région à 15x'}:null},
   {label:'Uniformité (> 0,4×moy.)', unit:' %', dec:1,
-   vals:trio(G('DRAGEN_capture_coverage_metrics','Uniformity of coverage (PCT > 0.4*mean) over QC coverage region'),0.985,0.970),
+   group:'DRAGEN_capture_coverage_metrics', key:'Uniformity of coverage (PCT > 0.4*mean) over QC coverage region',
+   help:'Homogénéité de la couverture : part des bases couvertes à plus de 0,4× la moyenne. Attention si < 93,91 %.',
    verdict:v=> v<93.91?{l:'warn',t:'Uniformité sous-optimale (< 93,91 %)'}:null},
-  {label:'CNV (passants)', unit:'', dec:0,
-   vals:{proband:G('DRAGEN_cnv_metrics','Number of passing amplifications')+G('DRAGEN_cnv_metrics','Number of passing deletions'), mother:138, father:165},
+  {label:'CNV (passants)', unit:'', dec:0, cnv:true,
+   help:'Nombre de CNV (amplifications + délétions) passant les filtres. Attention si > 504 (nombre anormalement élevé, souvent signe de bruit technique).',
    verdict:v=> v>504?{l:'warn',t:'Nombre de CNV élevé (> 504)'}:null},
 ];
+const SEX_HELP = 'Sexe estimé par la ploïdie (couverture des chromosomes X et Y) puis comparé au sexe déclaré du patient. Attention si incohérence modérée, échec si incohérence forte — signale une possible inversion/erreur d’échantillon.';
+function headRaw(h, mq){
+  return h.cnv ? mq.DRAGEN_cnv_metrics['Number of passing amplifications'] + mq.DRAGEN_cnv_metrics['Number of passing deletions']
+               : mq[h.group][h.key];
+}
 const SEX_PLOIDY = {proband:'XY', mother:'XX', father:'XY'};
 function sexVerdict(ploidy, dsex){
   const est = ploidy==='XY'?'M':ploidy==='XX'?'F':'?';
@@ -1007,8 +1073,20 @@ function sexVerdict(ploidy, dsex){
   return null;
 }
 
-// Panneaux de détail (proband). Ligne = [label, clé, format, décimales?, verdict?, groupe?]
+// Panneaux de détail. Ligne = [label, clé, format, décimales?, verdict?, groupe?]
+// Ordre (gauche→droite) : Alignement · Couverture · Enrichissement · Sexe · Variants · CNV.
 const OV_PANELS = [
+  {title:'Alignement & lectures (DRAGEN)', group:'DRAGEN_mapping_metrics', rows:[
+    ['Lectures totales','Total input reads','int'],
+    ['Lectures alignées','Mapped reads','int'],
+    ['Lectures uniques (hors doublons)','Number of unique reads (excl. duplicate marked reads)','int'],
+    ['Paires correctement appariées','Properly paired reads','int'],
+    ['Contamination estimée','Estimated sample contamination','pct01',2, v=>v>0.05?{l:'err',t:'> 5 %'}:v>0.02?{l:'warn',t:'> 2 %'}:null],
+    ['Longueur de lecture estimée','Estimated read length','num',0],
+    ['Taille d’insert (médiane)','Insert length: median','num',0],
+    ['Lectures MAPQ ≥ 40','Reads with MAPQ [40:inf)','int'],
+    ['Lectures dupliquées (Picard)','PCT_EXC_DUPE','pct01',1, null,'Picard_CollectHsMetrics'],
+  ]},
   {title:'Couverture & uniformité (région QC)', group:'DRAGEN_capture_coverage_metrics', rows:[
     ['Couv. moyenne (alignement)','Average alignment coverage over QC coverage region','x',1, v=>v<100?{l:'err',t:'< 100x'}:null],
     ['Couv. autosomale moyenne','Average autosomal coverage over QC coverage region','x',1],
@@ -1031,18 +1109,13 @@ const OV_PANELS = [
     ['Cibles à couv. nulle','ZERO_CVG_TARGETS_PCT','pct01',2],
     ['AT dropout','AT_DROPOUT','ratio',2],
     ['GC dropout','GC_DROPOUT','ratio',3],
-    ['Kit de capture','BAIT_SET','text'],
   ]},
-  {title:'Alignement & lectures (DRAGEN)', group:'DRAGEN_mapping_metrics', rows:[
-    ['Lectures totales','Total input reads','int'],
-    ['Lectures alignées','Mapped reads','int'],
-    ['Lectures uniques (hors doublons)','Number of unique reads (excl. duplicate marked reads)','int'],
-    ['Paires correctement appariées','Properly paired reads','int'],
-    ['Contamination estimée','Estimated sample contamination','pct01',2, v=>v>0.05?{l:'err',t:'> 5 %'}:v>0.02?{l:'warn',t:'> 2 %'}:null],
-    ['Longueur de lecture estimée','Estimated read length','num',0],
-    ['Taille d’insert (médiane)','Insert length: median','num',0],
-    ['Lectures MAPQ ≥ 40','Reads with MAPQ [40:inf)','int'],
-    ['Lectures dupliquées (Picard)','PCT_EXC_DUPE','pct01',1, null,'Picard_CollectHsMetrics'],
+  {title:'Sexe & ploïdie', group:'DRAGEN_ploidy_estimation_metrics', rows:[
+    ['Ploïdie estimée','Ploidy estimation','text'],
+    ['Ratio X / autosomes','X / Autosomal ratio','ratio',2],
+    ['Ratio Y / autosomes','Y / Autosomal ratio','ratio',2],
+    ['Couv. chr X médiane','Median chr X coverage (ignore 0x regions) over QC coverage region','x',0,null,'DRAGEN_capture_coverage_metrics'],
+    ['Couv. chr Y médiane','Median chr Y coverage (ignore 0x regions) over QC coverage region','x',0,null,'DRAGEN_capture_coverage_metrics'],
   ]},
   {title:'Variants (gVCF)', group:'DRAGEN_gvcf_metrics', rows:[
     ['Total','Total','int'],
@@ -1061,13 +1134,6 @@ const OV_PANELS = [
     ['Délétions (total)','Number of deletions','int'],
     ['Segments','Number of segments','int'],
     ['Coverage MAD','Coverage MAD','ratio',4],
-  ]},
-  {title:'Sexe & ploïdie', group:'DRAGEN_ploidy_estimation_metrics', rows:[
-    ['Ploïdie estimée','Ploidy estimation','text'],
-    ['Ratio X / autosomes','X / Autosomal ratio','ratio',2],
-    ['Ratio Y / autosomes','Y / Autosomal ratio','ratio',2],
-    ['Couv. chr X médiane','Median chr X coverage (ignore 0x regions) over QC coverage region','x',0,null,'DRAGEN_capture_coverage_metrics'],
-    ['Couv. chr Y médiane','Median chr Y coverage (ignore 0x regions) over QC coverage region','x',0,null,'DRAGEN_capture_coverage_metrics'],
   ]},
 ];
 
@@ -1091,9 +1157,12 @@ function fmtMetric(fmt, val, dec){
   }
 }
 
+let OV_MEMBER = 'proband';   // membre affiché dans la section détail
+
 function renderOverview(){
   const el = document.getElementById('secOverview');
   const date = SEQ_QC.sequencingDate.replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3');
+  const MQ = {proband:memberQC('proband'), mother:memberQC('mother'), father:memberQC('father')};
 
   // --- tableau trio : indicateurs mis en évidence par clin + verdict global par membre ---
   const memberLvls = {proband:[], mother:[], father:[]};
@@ -1104,13 +1173,13 @@ function renderOverview(){
     const vd = sexVerdict(ploidy, m.dsex);
     const lvl = vd?vd.l:'ok';
     memberLvls[m.key].push(lvl);
-    sexCells += `<td class="num"><span class="mv">${ovDot(lvl)}${ploidy} <span class="hint">décl. ${m.dsex==='M'?'♂':'♀'}</span></span></td>`;
+    sexCells += `<td class="num"><span class="mv">${ovDot(lvl)}${ploidy} <span class="hint">· déclaré : ${m.dsex==='M'?'masculin':'féminin'}</span></span></td>`;
   });
   let trioBody = `<tr><td class="ml">Sexe estimé (ploïdie)</td>${sexCells}</tr>`;
   HEAD_IND.forEach(h=>{
     let cells = '';
     QC_MEMBERS.forEach(m=>{
-      const raw = h.vals[m.key];
+      const raw = headRaw(h, MQ[m.key]);
       const vd = h.verdict ? h.verdict(raw) : null;
       const lvl = vd?vd.l:'ok';
       memberLvls[m.key].push(lvl);
@@ -1123,17 +1192,20 @@ function renderOverview(){
   let trioHead = '<th>Indicateur</th>';
   QC_MEMBERS.forEach(m=>{
     const ov = overall(memberLvls[m.key]);
-    trioHead += `<th class="num"><div>${m.label}</div><div class="hint">Séq. ${m.id}</div><div style="margin-top:4px"><span class="badge ${ov.c}">${ov.t}</span></div></th>`;
+    const active = m.key===OV_MEMBER ? ' style="background:#eef1fb"' : '';
+    trioHead += `<th class="num"${active}><div>${m.label}</div><div class="hint">${m.sid}</div><div style="margin-top:4px"><span class="badge ${ov.c}">${ov.t}</span></div></th>`;
   });
 
-  // --- panneaux de détail (proband) ---
+  // --- panneaux de détail : membre sélectionné (OV_MEMBER) ---
+  const activeMember = QC_MEMBERS.find(m=>m.key===OV_MEMBER);
+  const activeQC = MQ[OV_MEMBER];
   let panels = '';
   OV_PANELS.forEach(p=>{
     let rows = '';
     p.rows.forEach(r=>{
       const [label,key,fmt,dec,verdict,grpOv] = r;
       const grp = grpOv||p.group;
-      const val = QC_RAW[grp][key];
+      const val = activeQC[grp][key];
       let dot = '';
       if(verdict && val!=='NA' && val!=null){
         const vd = verdict(typeof val==='number'?val:parseFloat(val));
@@ -1143,7 +1215,7 @@ function renderOverview(){
     });
     panels += `<div class="card ov-panel"><div class="hd">${p.title}</div><div class="bd">${rows}</div></div>`;
   });
-  // panneau métadonnées de séquençage
+  // carte métadonnées de séquençage (run) — affichée dans la grille, plus dans le titre
   const seqRows = [
     ['Analyse (run)', SEQ_QC.runName],
     ['Run', SEQ_QC.runNameShort],
@@ -1154,7 +1226,7 @@ function renderOverview(){
   ].map(([k,v])=>`<div class="metric"><span class="ml">${k}</span><span class="mv">${v}</span></div>`).join('');
   panels += `<div class="card ov-panel"><div class="hd">Séquençage (run)</div><div class="bd">${seqRows}</div></div>`;
 
-  // --- dump brut (comme dans clin actuellement) ---
+  // --- dump brut (comme dans clin actuellement), pour le membre sélectionné ---
   const rawGroups = [
     ['DRAGEN — Couverture (capture)','DRAGEN_capture_coverage_metrics'],
     ['DRAGEN — Alignement (mapping)','DRAGEN_mapping_metrics'],
@@ -1162,22 +1234,42 @@ function renderOverview(){
   ];
   let raw = '';
   rawGroups.forEach(([title,grp])=>{
-    const body = Object.entries(QC_RAW[grp]).map(([k,v])=>`<tr><td>${k}</td><td class="num">${v}</td></tr>`).join('');
-    raw += `<details class="raw-details"><summary>${title} — ${Object.keys(QC_RAW[grp]).length} métriques (format brut, tel qu'affiché dans clin aujourd'hui)</summary>`
+    const body = Object.entries(activeQC[grp]).map(([k,v])=>`<tr><td>${k}</td><td class="num">${v}</td></tr>`).join('');
+    raw += `<details class="raw-details"><summary>${title} — ${Object.keys(activeQC[grp]).length} métriques (format brut, tel qu'affiché dans clin aujourd'hui)</summary>`
          + `<div class="tablewrap" style="max-height:360px;border:0;border-radius:0"><table class="raw-table"><tbody>${body}</tbody></table></div></details>`;
   });
 
+  // sélecteur de membre pour la section détail
+  const memSel = `<div class="seg ov-memsel">`
+    + QC_MEMBERS.map(m=>`<button type="button" data-mem="${m.key}"${m.key===OV_MEMBER?' class="active"':''}>${m.label}</button>`).join('')
+    + `</div>`;
+  const derivedNote = OV_MEMBER==='proband' ? ''
+    : ` <span class="hint">— valeurs dérivées du proband (démo)</span>`;
+
+  // corps du dialogue d'aide : un seuil expliqué par indicateur mis en évidence
+  const helpRows = [{label:'Sexe estimé (ploïdie)', help:SEX_HELP}]
+    .concat(HEAD_IND.map(h=>({label:h.label + (h.hint?` (${h.hint})`:''), help:h.help})));
+  document.getElementById('ovInfoBody').innerHTML =
+      `<dl class="info-dl">`
+    + helpRows.map(r=>`<dt>${r.label}</dt><dd>${r.help||''}</dd>`).join('')
+    + `</dl><p class="muted" style="font-size:12px;margin-top:14px">Seuils repris des critères du laboratoire (clin).</p>`;
+
   el.innerHTML =
-      `<div class="ov-head"><h2>Vue d'ensemble — Proband (Séq. 47674)</h2>`
-    +   `<span class="ctx">Run <b>${SEQ_QC.runNameShort}</b> · Flowcell <b>${SEQ_QC.flowcell}</b> · <b>${date}</b> · Capture <b>${SEQ_QC.captureKit}</b></span></div>`
-    + `<p class="ov-intro">Synthèse au niveau de l'échantillon issue du rapport JSON Dragen. Indicateurs colorés selon les seuils cliniques du labo. `
-    +   `<b>Proband</b> = données réelles ; <b>Mère/Père</b> = indicateurs dérivés du proband pour illustrer la comparaison trio.</p>`
-    + `<div class="ov-legend"><span>${ovDot('ok')} Conforme</span><span>${ovDot('warn')} Attention</span><span>${ovDot('err')} Échec / hors seuil</span></div>`
+      `<div class="ov-head"><h2>Vue d'ensemble — trio (proband ${QC_MEMBERS[0].sid})</h2></div>`
+    + `<div class="ov-legend"><span>${ovDot('ok')} Conforme</span><span>${ovDot('warn')} Attention</span><span>${ovDot('err')} Échec / hors seuil</span>`
+    +   `<button class="info-i" id="ovInfoBtn" title="Comprendre les seuils des indicateurs" aria-label="Seuils des indicateurs" style="margin-left:auto">i</button></div>`
     + `<div class="card" style="overflow:hidden"><table class="ov-trio"><thead><tr>${trioHead}</tr></thead><tbody>${trioBody}</tbody></table></div>`
-    + `<div class="ov-sub">Détail des métriques — Proband (47674)</div>`
+    + `<div class="ov-sub"><span>Détail des métriques — ${activeMember.label} (${activeMember.sid})${derivedNote}</span>${memSel}</div>`
     + `<div class="ov-grid">${panels}</div>`
-    + `<div class="ov-sub">Toutes les métriques (format brut)</div>`
+    + `<div class="ov-sub">Toutes les métriques (format brut) — ${activeMember.label} (${activeMember.sid})</div>`
     + raw;
+
+  // câblage du sélecteur de membre (la section est re-rendue à chaque changement)
+  el.querySelectorAll('.ov-memsel button').forEach(b=>b.onclick=()=>{
+    OV_MEMBER = b.dataset.mem;
+    renderOverview();
+  });
+  document.getElementById('ovInfoBtn').onclick = ()=>document.getElementById('ovInfoDlg').showModal();
 }
 
 // ---- init contrôles ----
@@ -1254,6 +1346,11 @@ function initControls(){
   document.getElementById('exonInfoBtn').onclick=openInfoDlg;
   document.getElementById('infoClose').onclick=()=>infoDlg.close();
   infoDlg.addEventListener('click',e=>{ if(e.target===infoDlg) infoDlg.close(); });
+
+  // dialogue d'aide des indicateurs (vue d'ensemble) — ouverture câblée dans renderOverview
+  const ovInfoDlg=document.getElementById('ovInfoDlg');
+  document.getElementById('ovInfoClose').onclick=()=>ovInfoDlg.close();
+  ovInfoDlg.addEventListener('click',e=>{ if(e.target===ovInfoDlg) ovInfoDlg.close(); });
 
   // note de limitation
   const limitDlg=document.getElementById('limitDlg');
