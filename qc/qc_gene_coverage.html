@@ -192,6 +192,12 @@
   .ov-trio td.ml{color:var(--muted-fg);font-weight:600}
   .ov-trio .mv{display:inline-flex;align-items:center;gap:7px;justify-content:flex-start;font-weight:600}
   .ov-trio .hint{color:var(--muted-fg);font-weight:400;font-size:11px}
+  /* table de parenté (pédigrée) */
+  .ped-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  .ped-table th,.ped-table td{padding:8px 14px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  .ped-table thead th{background:var(--table-header);font-weight:650}
+  .ped-table tbody tr:last-child td{border-bottom:0}
+  .ped-table td.num,.ped-table th.num{text-align:right;font-variant-numeric:tabular-nums}
   .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;align-items:start}
   .ov-panel .bd{padding:4px 16px 8px}
   .metric{display:flex;justify-content:space-between;gap:14px;padding:6px 0;border-bottom:1px solid var(--border)}
@@ -1257,6 +1263,18 @@ function downloadReport(key){
   URL.revokeObjectURL(a.href);
 }
 
+// --- Pédigrée / parenté (Somalier) — données SIMULÉES pour le trio ---
+// rel = parenté mesurée ; exp = attendue (0,5 = 1er degré parent-enfant ; -1 = non apparentés attendus).
+const PEDIGREE = [
+  {a:'proband', b:'mother', rel:0.49, exp:0.5, ibs0:0,  ibs2:331},
+  {a:'proband', b:'father', rel:0.51, exp:0.5, ibs0:0,  ibs2:324},
+  {a:'mother',  b:'father', rel:0.02, exp:-1,  ibs0:38, ibs2:251},
+];
+const PED_HELP = 'Compare la parenté mesurée entre échantillons (Somalier) au pédigrée déclaré : '
+  + 'parent-enfant attendu ≈ 0,5, échantillons non apparentés ≈ 0. Échec si un lien mesuré ne '
+  + 'correspond pas à l’attendu (possible inversion ou mélange d’échantillon).';
+function pedPass(p){ return p.exp>=0.4 ? p.rel>=0.35 : p.rel<0.20; }
+
 let OV_MEMBER = 'proband';   // membre affiché dans la section détail
 
 function renderOverview(){
@@ -1289,6 +1307,8 @@ function renderOverview(){
   });
 
   const overall = lvls => lvls.includes('err')?{c:'fail',t:'Échec'}:lvls.includes('warn')?{c:'warn',t:'Attention'}:{c:'pass',t:'Conforme'};
+  // verdict global : pire statut sur tous les indicateurs × tous les échantillons
+  const globalV = overall([].concat(memberLvls.proband, memberLvls.mother, memberLvls.father));
   let trioHead = '<th>Indicateur</th>';
   QC_MEMBERS.forEach(m=>{
     const ov = overall(memberLvls[m.key]);
@@ -1344,12 +1364,34 @@ function renderOverview(){
     + helpRows.map(r=>`<dt>${r.label}</dt><dd>${colorStatus(r.help)}</dd>`).join('')
     + `</dl>`;
 
+  // section détaillée pédigrée (paires), sous le tableau d'indicateurs
+  const memLabelFull = k => { const m = QC_MEMBERS.find(x=>x.key===k); return `${m.label} <span class="hint">(${m.sid})</span>`; };
+  const pedRows = PEDIGREE.map(p=>{
+    const ok = pedPass(p);
+    const expTxt = p.exp>=0.4 ? '0,50 <span class="hint">(1<sup>er</sup> degré)</span>' : 'non apparentés';
+    return `<tr><td>${memLabelFull(p.a)}</td><td>${memLabelFull(p.b)}</td>`
+      + `<td class="num">${p.rel.toFixed(2).replace('.',',')}</td>`
+      + `<td class="num">${expTxt}</td>`
+      + `<td class="num">${p.ibs0}</td><td class="num">${p.ibs2}</td>`
+      + `<td><span class="badge ${ok?'pass':'fail'}">${ok?'Conforme':'Échec'}</span></td></tr>`;
+  }).join('');
+  const pedAllPass = PEDIGREE.every(pedPass);
+  const pedV = pedAllPass ? {c:'pass',t:'Conforme'} : {c:'fail',t:'Échec'};
+  const pedSection =
+      `<div class="ov-sub"><span style="display:inline-flex;align-items:center;gap:10px">`
+    +   `<span title="${PED_HELP}">Pédigrée — parenté</span>`
+    +   `<span class="badge ${pedV.c}">${pedV.t}</span></span></div>`
+    + `<div class="card" style="overflow:hidden"><table class="ped-table">`
+    + `<thead><tr><th>Échantillon A</th><th>Échantillon B</th><th class="num">Parenté</th><th class="num">Attendue</th><th class="num">IBS0</th><th class="num">IBS2</th><th>Statut</th></tr></thead>`
+    + `<tbody>${pedRows}</tbody></table></div>`;
+
   el.innerHTML =
-      `<div class="ov-head"><h2>Indicateurs</h2>`
+      `<div class="ov-head"><span style="display:inline-flex;align-items:center;gap:10px"><h2>Indicateurs</h2><span class="badge ${globalV.c}">${globalV.t}</span></span>`
     +   `<a class="btn sm" href="QC_demo_multiqc_report.html" target="_blank" rel="noopener" title="Ouvrir le rapport MultiQC agrégé (1 par famille)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Rapport MultiQC</a></div>`
     + `<div class="ov-legend"><span>${ovDot('ok')} Conforme</span><span>${ovDot('warn')} Attention</span><span>${ovDot('err')} Échec / hors seuil</span>`
     +   `<button class="info-i" id="ovInfoBtn" title="Comprendre les seuils des indicateurs" aria-label="Seuils des indicateurs">i</button></div>`
     + `<div class="card" style="overflow:hidden"><table class="ov-trio"><thead><tr>${trioHead}</tr></thead><tbody>${trioBody}</tbody></table></div>`
+    + pedSection
     + `<div class="ov-sub"><span>Principales métriques par échantillon${derivedNote}</span></div>`
     + `<div class="ov-memrow">${memSel}`
     +   `<button class="btn sm" id="ovDownload" title="Télécharger le rapport Dragen (JSON) de cet échantillon">`
