@@ -46,10 +46,10 @@
   /* sample selector */
   .samples{display:flex;gap:10px;margin:18px 0 4px;align-items:center;flex-wrap:wrap}
   .samples .lbl{color:var(--muted-fg);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
-  .samples select{border:1px solid var(--border);border-radius:6px;padding:7px 12px;
+  .samples select,#ovMemberSel{border:1px solid var(--border);border-radius:6px;padding:7px 12px;
                   font-size:13px;background:var(--bg);color:var(--fg);font-family:inherit;
-                  min-width:460px;cursor:pointer}
-  .samples select:focus{outline:2px solid #c7d0f2;border-color:var(--primary)}
+                  min-width:240px;cursor:pointer}
+  .samples select:focus,#ovMemberSel:focus{outline:2px solid #c7d0f2;border-color:var(--primary)}
   /* segmented sub-tabs */
   .seg{display:inline-flex;background:var(--muted);border-radius:var(--radius);padding:3px;margin:16px 0}
   .seg button{border:0;background:transparent;padding:7px 16px;border-radius:6px;cursor:pointer;
@@ -160,14 +160,15 @@
   #limitDlg .meta{color:var(--muted-fg);font-size:12px}
   /* vue d'ensemble (niveau échantillon) */
   #qcNav{margin:16px 0 4px}
-  .ov-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 14px;margin:16px 0 6px}
+  .ov-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;margin:16px 0 6px}
+  a.btn{display:inline-flex;align-items:center;text-decoration:none}
   .ov-head h2{margin:0;font-size:18px;font-weight:650}
   .ov-head .ctx{color:var(--muted-fg);font-size:13px}
   .ov-head .ctx b{color:var(--fg);font-weight:600}
   .ov-intro{font-size:13px;color:#334155;margin:0 0 14px;max-width:1100px}
   .ov-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted-fg);margin:2px 0 16px;align-items:center}
   .ov-legend span{display:inline-flex;align-items:center;gap:6px}
-  .ov-sub{font-size:15px;font-weight:650;margin:24px 0 10px;display:flex;align-items:center;
+  .ov-sub{font-size:18px;font-weight:650;margin:24px 0 10px;display:flex;align-items:center;
           justify-content:space-between;gap:14px;flex-wrap:wrap}
   .ov-sub .hint{font-weight:400}
   .ov-trio{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
@@ -192,9 +193,10 @@
   .raw-table{width:100%;font-size:12px;border-collapse:separate;border-spacing:0}
   .raw-table td{padding:5px 16px;border-bottom:1px solid var(--muted)}
   .raw-table td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-  /* sélecteur de membre (section détail) */
-  .ov-memsel{margin:0}
-  .ov-memsel button{padding:5px 14px;font-size:12px}
+  /* sélecteur de membre (section détail) : onglets à gauche + bouton télécharger */
+  .ov-memrow{display:flex;align-items:center;gap:12px;margin:0 0 12px;flex-wrap:wrap}
+  .ov-memrow .btn svg{flex-shrink:0}
+  .ov-memrow #ovDownload{margin-left:auto}   /* aligné à droite, sous le bouton MultiQC */
   .exon-summary{display:flex;flex-wrap:wrap;gap:22px;font-size:13px;
                 padding:11px 14px;background:var(--muted);border-radius:6px;margin-bottom:14px}
   .exon-summary div{display:flex;flex-direction:column;gap:2px}
@@ -283,7 +285,7 @@
 
   <!-- sous-navigation QC : niveau échantillon vs couverture des gènes -->
   <div class="seg" id="qcNav" role="tablist">
-    <button type="button" data-sec="overview" class="active">Vue d'ensemble (échantillon)</button>
+    <button type="button" data-sec="overview" class="active">Qualité de séquençage</button>
     <button type="button" data-sec="genes">Couverture des gènes</button>
   </div>
 
@@ -295,9 +297,9 @@
   <!-- sample selector -->
   <div class="samples">
     <select id="sampleSel">
-      <option value="proband">Proband (ID Séq. 12345) · Échantillon SP-1008-01 · Affecté</option>
-      <option value="mother">Mère (ID Séq. 12346) · Échantillon SP-1008-02 · Non-affectée</option>
-      <option value="father">Père (ID Séq. 12347) · Échantillon SP-1008-03 · Non-affecté</option>
+      <option value="proband">Cas-index (DM189234)</option>
+      <option value="mother">Mère (DM189235)</option>
+      <option value="father">Père (DM189236)</option>
     </select>
   </div>
 
@@ -992,8 +994,8 @@ function openLimitDlg(){
 
 // ======================================================================
 // VUE D'ENSEMBLE (niveau échantillon) — source : rapport JSON Dragen
-// (ex. 47674.QC_report.json). Données proband = réelles ; mère/père =
-// indicateurs dérivés du proband pour la démo trio.
+// (ex. 47674.QC_report.json). Données cas-index = réelles ; mère/père =
+// indicateurs dérivés du cas-index pour la démo trio.
 // ======================================================================
 const QC_RAW = {"DRAGEN_capture_coverage_metrics": {"Aligned bases": 16544265985, "Aligned bases in QC coverage region": 11044747094, "Aligned reads": 175121320, "Aligned reads in QC coverage region": 138848036, "Average alignment coverage over QC coverage region": 252.44, "Average autosomal coverage over QC coverage region": 255.77, "Average mitochondrial coverage over QC coverage region": 0.0, "Mean/Median autosomal coverage ratio over QC coverage region": 1.01, "Median autosomal coverage over QC coverage region": 254.0, "Median chr X coverage (ignore 0x regions) over QC coverage region": 184.0, "Median chr Y coverage (ignore 0x regions) over QC coverage region": 183.0, "PCT of QC coverage region with coverage [   0x:   1x)": 0.96, "PCT of QC coverage region with coverage [   0x: inf)": 100.0, "PCT of QC coverage region with coverage [   1x:   3x)": 0.24, "PCT of QC coverage region with coverage [   1x: inf)": 99.04, "PCT of QC coverage region with coverage [   3x:  10x)": 0.31, "PCT of QC coverage region with coverage [   3x: inf)": 98.8, "PCT of QC coverage region with coverage [  10x:  15x)": 0.14, "PCT of QC coverage region with coverage [  10x: inf)": 98.48, "PCT of QC coverage region with coverage [  15x:  20x)": 0.12, "PCT of QC coverage region with coverage [  15x: inf)": 98.35, "PCT of QC coverage region with coverage [  20x:  50x)": 0.64, "PCT of QC coverage region with coverage [  20x: inf)": 98.22, "PCT of QC coverage region with coverage [  50x: 100x)": 2.87, "PCT of QC coverage region with coverage [  50x: inf)": 97.58, "PCT of QC coverage region with coverage [ 100x: 500x)": 92.94, "PCT of QC coverage region with coverage [ 100x: inf)": 94.71, "PCT of QC coverage region with coverage [ 500x: inf)": 1.77, "PCT of QC coverage region with coverage [ 500x:1000x)": 1.75, "PCT of QC coverage region with coverage [1000x: inf)": 0.02, "PCT of QC coverage region with coverage [1000x:1500x)": 0.01, "PCT of QC coverage region with coverage [1500x: inf)": 0.01, "Uniformity of coverage (PCT > 0.2*mean) over QC coverage region": 97.56, "Uniformity of coverage (PCT > 0.4*mean) over QC coverage region": 94.6}, "DRAGEN_mapping_metrics": {"Bases in reference genome": 3217346917, "Bases in target bed [% of genome]": "NA", "DRAGEN mapping rate [mil. reads/second]": 1.87, "Estimated read length": 101.0, "Estimated sample contamination": 0.004, "Estimated sample contamination standard error": 0.0002, "Hard-clipped bases": 0, "Hard-clipped bases R1": 0, "Hard-clipped bases R2": 0, "Input bases divided by reference genome size": 7.77, "Input bases divided by target bed size": "NA", "Insert length: mean": 150.95, "Insert length: median": 134.0, "Insert length: standard deviation": 107.57, "Linked alignments from proximity-aware mapping": "NA", "Mapped bases": 24780316973, "Mapped bases R1": 12435450068, "Mapped bases R2": 12344866905, "Mapped reads": 245349673, "Mapped reads (RNA) to chrM and excluded from metrics": "NA", "Mapped reads (RNA) to rRNA and filtered": "NA", "Mapped reads R1": 123123268, "Mapped reads R2": 122226405, "Mapped reads including ref-external or filtered or excluded": 246450364, "Mapped reads to non-ref decoys (NRD)": 703319, "Mapped reads to pop-alt insertions (PAI)": 397372, "Mapped reads to ref-external sequences (PAI or NRD)": 1100691, "Mismatched bases R1": 22780265, "Mismatched bases R1 (excl. indels)": 20055540, "Mismatched bases R2": 26033616, "Mismatched bases R2 (excl. indels)": 23262605, "Not properly paired reads (discordant)": 725958, "Number of duplicate marked and mate reads removed": "NA", "Number of duplicate marked reads": 58647781, "Number of unique reads (excl. duplicate marked reads)": 188835099, "Paired reads (itself & mate mapped)": 244391816, "Paired reads mapped to different chromosomes": 598556, "Paired reads mapped to different chromosomes (MAPQ>=10)": 482542, "Properly paired reads": 243665858, "Provided sex chromosome ploidy": "NA", "Q30 bases": 24246777193, "Q30 bases (excl. dups & clipped bases)": 17461764011, "Q30 bases R1": 12204044254, "Q30 bases R2": 12042732939, "QC-failed reads": 0, "Reads kept by fractional downsampling [% of input reads]": "NA", "Reads mapping to multiple locations": 13210245, "Reads with MAPQ NA (Unmapped reads)": 2133207, "Reads with MAPQ [ 0:10)": 14786387, "Reads with MAPQ [10:20)": 2195220, "Reads with MAPQ [20:30)": 2355956, "Reads with MAPQ [30:40)": 652185, "Reads with MAPQ [40:inf)": 225359925, "Reads with indel R1": 1133658, "Reads with indel R2": 1169926, "Reads with mate sequenced": 247482880, "Reads with splice junction": "NA", "Reads without mate sequenced": 0, "Remapped alignments from proximity-aware mapping": "NA", "Secondary alignments": 0, "Singleton reads (itself mapped; mate unmapped)": 957857, "Soft-clipped bases": 1458106093, "Soft-clipped bases R1": 725272392, "Soft-clipped bases R2": 732833701, "Supplementary (chimeric) alignments": 382498, "Total alignments": 245732171, "Total bases": 24995770880, "Total bases R1": 12497885440, "Total bases R2": 12497885440, "Total bases removed by downsampling": "NA", "Total input reads": 247482880, "Total input reads for fractional downsampling": "NA", "Total reads removed by downsampling": "NA", "Unmapped reads": 2133207, "Unmapped reads minus excluded mappings": 2133207, "Unmapped reads minus filtered mappings": 2133207, "Unmapped reads minus ref-external mappings": 1032516, "Unmapped reads minus ref-external or filtered or excluded": 1032516}, "Picard_CollectHsMetrics": {"AT_DROPOUT": 3.165275, "BAIT_DESIGN_EFFICIENCY": 0.867924, "BAIT_SET": "HyperExomeV2_capture_targets", "BAIT_TERRITORY": 43181552, "FOLD_80_BASE_PENALTY": 1.450077, "FOLD_ENRICHMENT": 48.020374, "GC_DROPOUT": 0.000123, "GENOME_SIZE": 3217346917, "HET_SNP_Q": 20, "HET_SNP_SENSITIVITY": 0.989078, "HS_LIBRARY_SIZE": 178777643, "HS_PENALTY_100X": 4.673884, "HS_PENALTY_10X": 3.869348, "HS_PENALTY_20X": 3.944538, "HS_PENALTY_30X": 4.01221, "HS_PENALTY_40X": 4.094919, "HS_PENALTY_50X": 4.180636, "MAX_TARGET_COVERAGE": 2231, "MEAN_BAIT_COVERAGE": 348.372905, "MEAN_TARGET_COVERAGE": 179.809556, "MEDIAN_TARGET_COVERAGE": 175, "MIN_TARGET_COVERAGE": 0, "NEAR_BAIT_BASES": 4216778299, "OFF_BAIT_BASES": 4080791930, "ON_BAIT_BASES": 15043282727, "ON_BAIT_VS_SELECTED": 0.781061, "ON_TARGET_BASES": 6738959360, "PCT_EXC_ADAPTER": 0, "PCT_EXC_BASEQ": 0.002231, "PCT_EXC_DUPE": 0.242853, "PCT_EXC_MAPQ": 0.045139, "PCT_EXC_OFF_TARGET": 0.217863, "PCT_EXC_OVERLAP": 0.203209, "PCT_OFF_BAIT": 0.174835, "PCT_PF_READS": 1, "PCT_PF_UQ_READS": 0.759979, "PCT_PF_UQ_READS_ALIGNED": 0.992663, "PCT_SELECTED_BASES": 0.825165, "PCT_TARGET_BASES_100X": 0.896684, "PCT_TARGET_BASES_10X": 0.984887, "PCT_TARGET_BASES_1X": 0.990637, "PCT_TARGET_BASES_20X": 0.982105, "PCT_TARGET_BASES_2X": 0.988853, "PCT_TARGET_BASES_30X": 0.979669, "PCT_TARGET_BASES_40X": 0.976908, "PCT_TARGET_BASES_50X": 0.973058, "PCT_USABLE_BASES_ON_BAIT": 0.601833, "PCT_USABLE_BASES_ON_TARGET": 0.269604, "PF_BASES": 24995770880, "PF_BASES_ALIGNED": 23340852956, "PF_READS": 247482880, "PF_UNIQUE_READS": 188081888, "PF_UQ_BASES_ALIGNED": 17672454579, "PF_UQ_READS_ALIGNED": 186701892, "TARGET_TERRITORY": 37478316, "TOTAL_READS": 247482880, "ZERO_CVG_TARGETS_PCT": 0.006651}, "DRAGEN_cnv_metrics": {"Average alignment coverage over genome": 5.41, "Bases in reference genome": 3217346917, "Coverage MAD": 0.07621, "Median Bin Count": 2.54, "Number of alignment records": 247865378, "Number of amplifications": 59, "Number of deletions": 90, "Number of filtered records (MAPQ)": 3814924, "Number of filtered records (duplicates)": 59493862, "Number of filtered records (total)": 63688095, "Number of filtered records (unmapped)": 2133207, "Number of normal samples": 100, "Number of passing amplifications": 49, "Number of passing deletions": 71, "Number of segments": 10798, "Number of target intervals": 411407, "PMAD": 0.078734, "Post-Normalization Bin Count Sigma": 0.08008}, "DRAGEN_gvcf_metrics": {"(Chr X SNPs)/(chr Y SNPs) ratio over genome": 13.0, "Biallelic": 462615, "Chr X number of SNPs over genome": 6162, "Chr Y number of SNPs over genome": 474, "Deletions": 43006, "Deletions (Hap)": 505, "Deletions (Het)": 18764, "Deletions (Hom)": 23737, "Het/Hom ratio": 0.9, "Heterozygous": 230121, "Homozygous": 256639, "In dbSNP": 0, "Indel Mosaics": 502, "Indels (Het)": 2019, "Insertions": 39326, "Insertions (Hap)": 455, "Insertions (Het)": 17187, "Insertions (Hom)": 21684, "Multiallelic": 24145, "Not in dbSNP": 0, "Percent Autosome Callability": 11.3882, "Percent Callability": 11.0246, "Percent QC Region Callability in Region 1": 98.8017, "Percent QC Region Callability in Region 2": 98.5771, "Percent QC Region Callability in Region 3": 27.4275, "SNP Mosaics": 1886, "SNP Transitions": 433269, "SNP Transversions": 186579, "SNPs": 408419, "Single allelic": 6068, "Ti/Tv ratio": 2.32, "Total": 492828}, "DRAGEN_ploidy_estimation_metrics": {"Autosomal coverage percentile": 194.21, "Coverage skewness": 1.0, "Ploidy estimation": "XY", "X / Autosomal ratio": 0.66, "X coverage percentile": 128.01, "Y / Autosomal ratio": 0.49, "Y coverage percentile": 95.96}};
 const SEQ_QC = {"captureKit": "Roche HyperExomeV2", "flowcell": "B23LFFTLT3", "runName": "20260629_LH00336_0448_B23LFFTLT3", "runNameShort": "LH00336_0448", "sequencer": "LH00336", "sequencingDate": "20260629"};
@@ -1001,12 +1003,12 @@ const SEQ_QC = {"captureKit": "Roche HyperExomeV2", "flowcell": "B23LFFTLT3", "r
 const G = (grp,key)=>QC_RAW[grp][key];
 // id = ID séquençage (interne) ; sid = sample submitter ID (DMxxxxxx), affiché à l'écran
 const QC_MEMBERS = [
-  {key:'proband', label:'Proband', id:'47674', sid:'DM189234', dsex:'M'},
+  {key:'proband', label:'Cas-index', id:'47674', sid:'DM189234', dsex:'M'},
   {key:'mother',  label:'Mère',    id:'47675', sid:'DM189235', dsex:'F'},
   {key:'father',  label:'Père',    id:'47676', sid:'DM189236', dsex:'M'},
 ];
 // ---- dérivation trio (démo) ----
-// Proband = données réelles ; mère/père = copie de QC_RAW avec les métriques
+// Cas-index = données réelles ; mère/père = copie de QC_RAW avec les métriques
 // pertinentes dégradées par facteur (le reste passe tel quel). À l'intégration,
 // chaque membre aura son propre QC_report.json.
 const MEMBER_DEG = {
@@ -1171,6 +1173,22 @@ function fmtMetric(fmt, val, dec){
   }
 }
 
+// Reconstruit le rapport JSON d'un membre (structure d'origine) pour téléchargement.
+function memberReportJSON(key){
+  const m = QC_MEMBERS.find(x=>x.key===key);
+  const sample = Object.assign({}, memberQC(key), {SampleLabo: m.id});
+  return JSON.stringify({SamplesQC:[sample], SequencingQC: SEQ_QC}, null, 2);
+}
+function downloadReport(key){
+  const m = QC_MEMBERS.find(x=>x.key===key);
+  const blob = new Blob([memberReportJSON(key)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${m.sid}.QC_report.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 let OV_MEMBER = 'proband';   // membre affiché dans la section détail
 
 function renderOverview(){
@@ -1240,25 +1258,12 @@ function renderOverview(){
   ].map(([k,v])=>`<div class="metric"><span class="ml">${k}</span><span class="mv">${v}</span></div>`).join('');
   panels += `<div class="card ov-panel"><div class="hd">Séquençage (run)</div><div class="bd">${seqRows}</div></div>`;
 
-  // --- dump brut (comme dans clin actuellement), pour le membre sélectionné ---
-  const rawGroups = [
-    ['DRAGEN — Couverture (capture)','DRAGEN_capture_coverage_metrics'],
-    ['DRAGEN — Alignement (mapping)','DRAGEN_mapping_metrics'],
-    ['Picard — CollectHsMetrics','Picard_CollectHsMetrics'],
-  ];
-  let raw = '';
-  rawGroups.forEach(([title,grp])=>{
-    const body = Object.entries(activeQC[grp]).map(([k,v])=>`<tr><td>${k}</td><td class="num">${v}</td></tr>`).join('');
-    raw += `<details class="raw-details"><summary>${title} — ${Object.keys(activeQC[grp]).length} métriques (format brut, tel qu'affiché dans clin aujourd'hui)</summary>`
-         + `<div class="tablewrap" style="max-height:360px;border:0;border-radius:0"><table class="raw-table"><tbody>${body}</tbody></table></div></details>`;
-  });
-
-  // sélecteur de membre pour la section détail
-  const memSel = `<div class="seg ov-memsel">`
-    + QC_MEMBERS.map(m=>`<button type="button" data-mem="${m.key}"${m.key===OV_MEMBER?' class="active"':''}>${m.label}</button>`).join('')
-    + `</div>`;
+  // sélecteur de membre : menu déroulant (harmonisé avec la Couverture des gènes) — « relation (submitter ID) »
+  const memSel = `<select id="ovMemberSel">`
+    + QC_MEMBERS.map(m=>`<option value="${m.key}"${m.key===OV_MEMBER?' selected':''}>${m.label} (${m.sid})</option>`).join('')
+    + `</select>`;
   const derivedNote = OV_MEMBER==='proband' ? ''
-    : ` <span class="hint">— valeurs dérivées du proband (démo)</span>`;
+    : ` <span class="hint">— valeurs dérivées du cas-index (démo)</span>`;
 
   // corps du dialogue d'aide : un seuil expliqué par indicateur mis en évidence
   const helpRows = [{label:'Sexe estimé (ploïdie)', help:SEX_HELP}]
@@ -1269,21 +1274,24 @@ function renderOverview(){
     + `</dl><p class="muted" style="font-size:12px;margin-top:14px">Seuils repris des critères du laboratoire (clin).</p>`;
 
   el.innerHTML =
-      `<div class="ov-head"><h2>Vue d'ensemble — trio (proband ${QC_MEMBERS[0].sid})</h2></div>`
+      `<div class="ov-head"><h2>Indicateurs - famille</h2>`
+    +   `<a class="btn sm" href="QC_demo_multiqc_report.html" target="_blank" rel="noopener" title="Ouvrir le rapport MultiQC agrégé (1 par famille)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Rapport MultiQC</a></div>`
     + `<div class="ov-legend"><span>${ovDot('ok')} Conforme</span><span>${ovDot('warn')} Attention</span><span>${ovDot('err')} Échec / hors seuil</span>`
     +   `<button class="info-i" id="ovInfoBtn" title="Comprendre les seuils des indicateurs" aria-label="Seuils des indicateurs" style="margin-left:auto">i</button></div>`
     + `<div class="card" style="overflow:hidden"><table class="ov-trio"><thead><tr>${trioHead}</tr></thead><tbody>${trioBody}</tbody></table></div>`
-    + `<div class="ov-sub"><span>Détail des métriques — ${activeMember.label} (${activeMember.sid})${derivedNote}</span>${memSel}</div>`
-    + `<div class="ov-grid">${panels}</div>`
-    + `<div class="ov-sub">Toutes les métriques (format brut) — ${activeMember.label} (${activeMember.sid})</div>`
-    + raw;
+    + `<div class="ov-sub"><span>Principales métriques par échantillon${derivedNote}</span></div>`
+    + `<div class="ov-memrow">${memSel}`
+    +   `<button class="btn sm" id="ovDownload" title="Télécharger le rapport Dragen (JSON) de cet échantillon">`
+    +     `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Rapport Dragen (JSON)</button></div>`
+    + `<div class="ov-grid">${panels}</div>`;
 
   // câblage du sélecteur de membre (la section est re-rendue à chaque changement)
-  el.querySelectorAll('.ov-memsel button').forEach(b=>b.onclick=()=>{
-    OV_MEMBER = b.dataset.mem;
+  document.getElementById('ovMemberSel').onchange = e=>{
+    OV_MEMBER = e.target.value;
     renderOverview();
-  });
+  };
   document.getElementById('ovInfoBtn').onclick = ()=>document.getElementById('ovInfoDlg').showModal();
+  document.getElementById('ovDownload').onclick = ()=>downloadReport(OV_MEMBER);
 }
 
 // ---- init contrôles ----
