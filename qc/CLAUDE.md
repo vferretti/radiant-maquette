@@ -1,6 +1,6 @@
 # Section QC — couverture des gènes & qualité de séquençage
 
-Maquette de l'**onglet QC** de la page Case de Radiant. Fichier de travail : `qc_gene_coverage.html`. Les conventions transversales (HTML autonome, vérif headless, terminologie, en-tête, partage) sont dans le `CLAUDE.md` **racine**.
+Maquette de l'**onglet QC** de la page Case de Radiant. Fichier de travail : `qc_radiant.html`. Les conventions transversales (HTML autonome, vérif headless, terminologie, en-tête, partage) sont dans le `CLAUDE.md` **racine**.
 
 ## Contexte
 
@@ -8,10 +8,10 @@ Calquée sur l'onglet QC de l'app sœur **clin** (`~/src/clin-portal-ui`, `src/v
 
 ## Fichiers
 
-- `qc_gene_coverage.html` — maquette principale (autonome, données inlinées). C'est le fichier de travail.
+- `qc_radiant.html` — maquette principale (autonome, données inlinées). C'est le fichier de travail.
 - `build_mockup.py` — script qui a généré la première version de la maquette à partir de `test_gene_coverage.csv`. N'a pas été re-exécuté depuis l'ajout du modal exon et des autres features — le HTML est édité directement.
 - `test_gene_coverage.csv` — données de couverture par gène qui ont servi à alimenter la maquette initiale.
-- `QC_demo_multiqc_report.html` — rapport MultiQC (agrégé, 1 par famille). **Lié depuis la maquette** : bouton « Rapport MultiQC » de la vue d'ensemble (ouvert dans un nouvel onglet). Doit rester dans le même dossier que `qc_gene_coverage.html` pour que le lien fonctionne.
+- `QC_demo_multiqc_report.html` — rapport MultiQC (agrégé, 1 par famille). **Lié depuis la maquette** : bouton « Rapport MultiQC » de la vue d'ensemble (ouvert dans un nouvel onglet). Doit rester dans le même dossier que `qc_radiant.html` pour que le lien fonctionne.
 - `41267.qc-coverage-region-2_cov_report.bed` — rapport Dragen pour l'échantillon 41267 : **la source cible** pour brancher les vraies données par exon du modal drill-down (voir « Notes techniques » plus bas).
 - `47674.QC_report.json` — rapport JSON Dragen (niveau échantillon) pour l'échantillon 47674 : **source des données de la Vue d'ensemble**. Structure : `SamplesQC[0]` (groupes `DRAGEN_capture_coverage_metrics`, `DRAGEN_mapping_metrics`, `DRAGEN_cnv_metrics`, `DRAGEN_gvcf_metrics`, `DRAGEN_ploidy_estimation_metrics`, `Picard_CollectHsMetrics`) + `SequencingQC` (run/flowcell/kit). Les valeurs du proband sont inlinées telles quelles (`QC_RAW`/`SEQ_QC`).
 
@@ -50,7 +50,7 @@ Calquée sur l'onglet QC de l'app sœur **clin** (`~/src/clin-portal-ui`, `src/v
 ## Notes techniques
 
 ### Données simulées pour le drill-down
-Les données par exon sont inlinées dans `qc_gene_coverage.html` (constante `EXON_DATA`) pour 6 gènes en tête du tableau alphabétique : **AANAT, ABRAXAS2, ACKR4, ACTR3, AKR1B15, AKR1C2**.
+Les données par exon sont inlinées dans `qc_radiant.html` (constante `EXON_DATA`) pour 6 gènes en tête du tableau alphabétique : **AANAT, ABRAXAS2, ACKR4, ACTR3, AKR1B15, AKR1C2**.
 
 **AKR1B15 est le cas vedette de la démo** : marqué « Attention » (~85 % à 15x) au niveau du gène, mais le modal révèle que 4 exons sur 5 sont à 100 % et **un exon (150 pb) est totalement à 0**. C'est précisément le scénario qui justifie la vue drill-down.
 
