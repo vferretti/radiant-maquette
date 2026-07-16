@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aperçu · Cas 1008 · Radiant</title>
+<style>
+  :root{
+    --primary:#4f5fc3; --primary-fg:#f8fafc;
+    --bg:#ffffff; --fg:#1a1d3a; --muted:#f1f5f9; --muted-fg:#64748b;
+    --border:#e2e8f0; --table-header:#f1f5f9; --table-accent:#f8fafc;
+    --ok-bg:#dcfce7; --ok-fg:#166534;
+    --warn-bg:#fef9c3; --warn-fg:#92400e;
+    --orange-bg:#ffedd5; --orange-fg:#c2410c;
+    --err-bg:#fee2e2; --err-fg:#dc2626;
+    --dark-bg:#ede9fe; --dark-fg:#6d28d9;
+    --radius:8px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--fg);background:#f8fafc;font-size:14px;line-height:1.45}
+  a{color:var(--primary);text-decoration:none}
+  .app{max-width:1720px;margin:0 auto;padding:0 24px 64px}
+  /* en-tête de page — reproduction du PageHeader Radiant (apps/case layout/header) */
+  .rd-header{background:var(--bg)}
+  .rd-inner{max-width:1720px;margin:0 auto;padding:0 24px}
+  .rd-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:16px 0 2px}
+  .rd-title-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .rd-title{margin:0;font-size:24px;font-weight:700;line-height:1.2}
+  .rd-badge{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:3px 9px;
+            font-size:12px;font-weight:600;white-space:nowrap}
+  .rd-badge svg{width:13px;height:13px}
+  .rd-badge.secondary{background:var(--muted);color:#334155}
+  .rd-badge.outline{background:transparent;border:1px solid var(--border);color:var(--fg)}
+  .rd-badge.blue{background:#e0f2fe;color:#0369a1}
+  .rd-badge.pill{padding:5px 12px;border-radius:999px}
+  .rd-statuses{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .rd-ind{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .rd-ind.grey{background:#94a3b8}
+  /* main tabs */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-top:14px}
+  .tab{padding:9px 14px;color:var(--muted-fg);font-weight:500;border-bottom:2px solid transparent;
+       cursor:default;display:flex;align-items:center;gap:7px}
+  .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:650}
+  .tab .ic{width:15px;height:15px;opacity:.85}
+  /* ---- boîte de question façon assistant (texte libre) ---- */
+  .ask-wrap{display:flex;justify-content:center;margin:26px 0 8px}
+  .ask{display:flex;align-items:center;gap:10px;width:100%;max-width:760px;background:var(--bg);
+       border:1px solid var(--border);border-radius:999px;padding:8px 8px 8px 16px;
+       box-shadow:0 2px 12px rgba(79,95,195,.10)}
+  .ask:focus-within{border-color:var(--primary);box-shadow:0 4px 16px rgba(79,95,195,.20)}
+  .ask .spark{width:18px;height:18px;color:var(--primary);flex-shrink:0}
+  .ask input{flex:1;border:0;outline:0;font-size:14px;font-family:inherit;color:var(--fg);background:transparent}
+  .ask .send{width:34px;height:34px;border-radius:50%;border:0;background:var(--primary);color:#fff;
+             display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .ask .send:hover{filter:brightness(1.1)}
+  .ask .send svg{width:17px;height:17px}
+  /* card */
+  .card{background:var(--bg);border:1px solid var(--border);border-radius:12px;
+        box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card .hd{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:650;font-size:16px}
+  .card .hd.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .card .bd{padding:6px 18px 12px}
+  .muted{color:var(--muted-fg)}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+  .trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ---- en-têtes de groupe (distinguer annotations vs actions utilisateur) ---- */
+  .grp{display:flex;align-items:center;gap:9px;margin:28px 0 12px;font-size:12px;font-weight:700;
+       text-transform:uppercase;letter-spacing:.6px;color:var(--muted-fg)}
+  .grp svg{width:16px;height:16px;opacity:.75}
+  .grp .rule{flex:1;height:1px;background:var(--border)}
+  /* grilles */
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media(max-width:980px){.grid2{grid-template-columns:1fr}}
+  /* ligne / badges génériques */
+  .b{display:inline-block;padding:1px 9px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
+  .b.p{background:var(--err-bg);color:var(--err-fg)}
+  .b.outline{background:transparent;border:1px solid var(--border);color:var(--fg);font-weight:600}
+  .badges{display:flex;gap:8px;align-items:center}
+  .who{display:flex;flex-direction:column;min-width:0}
+  .hd-sub{font-weight:500;font-size:12px;color:var(--muted-fg);margin-left:2px}
+  /* ClinVar : liste plate (une ligne par variant) */
+  .cv-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;
+          border-bottom:1px solid var(--border)}
+  .cv-row:last-child{border-bottom:0}
+  .gene{font-weight:600}
+  .cv-row .aa{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--muted-fg);font-size:12px;margin-left:7px}
+  /* Priorisation : matrice variant × algorithme */
+  .prio-head,.prio-row{display:grid;grid-template-columns:1fr 62px 62px 62px;align-items:center;gap:8px}
+  .prio-head{padding:0 0 7px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;
+             text-transform:uppercase;letter-spacing:.4px;color:var(--muted-fg)}
+  .prio-head .ac{text-align:center}
+  .prio-row{padding:8px 0 8px 12px;border-bottom:1px solid var(--border);position:relative}
+  .prio-row:last-child{border-bottom:0}
+  .prio-row::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:var(--border)}
+  .prio-row.c3::before{background:var(--ok-fg)}
+  .prio-row.c2::before{background:var(--primary)}
+  .prio-var{display:flex;align-items:center;gap:8px;min-width:0}
+  .prio-var .aa{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--muted-fg);font-size:12px}
+  .cons{font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;white-space:nowrap}
+  .cons.c3{background:var(--ok-bg);color:var(--ok-fg)}
+  .cons.c2{background:#e0e7ff;color:#3730a3}
+  .rk{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:22px;border-radius:6px;
+      font-size:12px;font-weight:700;margin:0 auto}
+  .rk.on{background:#eef1fb;color:var(--primary)}
+  .rk.off{color:#cbd5e1;font-weight:400}
+  .prio-cap{font-size:11.5px;color:var(--muted-fg);margin:12px 0 2px;line-height:1.4}
+  /* ---- QC : résumé des statuts ---- */
+  .verdict{font-size:12px;font-weight:700;padding:3px 11px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
+  .verdict.ok{background:var(--ok-bg);color:var(--ok-fg)}
+  .verdict.warn{background:var(--orange-bg);color:var(--orange-fg)}
+  .verdict.fail{background:var(--err-bg);color:var(--err-fg)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot.ok{background:var(--ok-fg)} .dot.warn{background:var(--orange-fg)} .dot.fail{background:var(--err-fg)}
+  .qc-summary{display:flex;align-items:center;gap:16px;padding:8px 0}
+  .qc-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .qc-icon svg{width:24px;height:24px}
+  .qc-icon.ok{background:var(--ok-bg);color:var(--ok-fg)}
+  .qc-icon.warn{background:var(--orange-bg);color:var(--orange-fg)}
+  .qc-icon.fail{background:var(--err-bg);color:var(--err-fg)}
+  .qc-summary .txt{flex:1;min-width:0}
+  .qc-summary .qc-line{font-size:14px;font-weight:600}
+  .qc-summary .qc-desc{font-size:12.5px;color:var(--muted-fg);margin-top:2px}
+  .qc-link{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--primary)}
+  .qc-link:hover{text-decoration:underline;text-underline-offset:2px}
+  .qc-link svg{width:15px;height:15px}
+  @media(max-width:760px){.qc-summary{flex-wrap:wrap}.qc-link{margin-left:60px}}
+  /* ---- mise en page deux colonnes : Activités (gauche) + annotations/QC (droite) ---- */
+  .layout{display:grid;grid-template-columns:minmax(360px,410px) 1fr;gap:22px;align-items:start;margin-top:4px}
+  @media(max-width:1080px){.layout{grid-template-columns:1fr}}
+  .col-left,.col-right{min-width:0}
+  .col-left>.grp:first-child,.col-right>.grp:first-child{margin-top:10px}
+  .stack{display:flex;flex-direction:column;gap:16px}
+  .cnt{color:var(--fg);background:var(--muted);border-radius:999px;padding:0 8px;font-size:12px;font-weight:600}
+  .empty{color:var(--muted-fg);font-size:13px;padding:6px 0}
+  /* ---- Activités : variants en colonnes alignées ---- */
+  .av-head,.av-row{display:grid;grid-template-columns:1fr 84px 30px 20px;align-items:center;gap:8px}
+  .av-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted-fg);
+           padding-bottom:7px;border-bottom:1px solid var(--border)}
+  .av-head .c{text-align:center}
+  .av-head svg{width:14px;height:14px;vertical-align:middle}
+  .av-row{padding:8px 0;border-bottom:1px solid var(--border)}
+  .av-row:last-child{border-bottom:0}
+  .av-cell{display:flex;justify-content:center;color:var(--muted-fg)}
+  .cnum{font-weight:700;color:var(--fg);font-size:13px}
+  .dash{color:#cbd5e1}
+  .cls{display:inline-block;padding:1px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
+  .cls.path{background:var(--err-bg);color:var(--err-fg)}
+  .cls.likely{background:var(--orange-bg);color:var(--orange-fg)}
+  .cls.vus{background:var(--muted);color:#475569}
+  .flag{color:#ef4444;display:inline-flex}
+  .flag svg{width:15px;height:15px}
+  /* ---- Activités : commentaire libre sur le cas ---- */
+  .note{background:var(--muted);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+  .note-body{font-size:13px;color:#334155;white-space:pre-wrap}
+  .note-meta{font-size:11px;color:var(--muted-fg);margin-top:7px}
+  .note-add textarea{width:100%;min-height:66px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;
+        font-family:inherit;font-size:13px;resize:vertical;color:var(--fg);background:var(--bg)}
+  .note-add textarea:focus{outline:2px solid #c7d0f2;border-color:var(--primary)}
+  .note-actions{display:flex;justify-content:flex-end;margin-top:8px}
+  .btn-add{border:0;background:var(--primary);color:#fff;border-radius:6px;padding:7px 14px;font-weight:600;cursor:pointer;font-size:13px}
+  .btn-add:hover{filter:brightness(1.08)}
+  /* rapports (compacts) */
+  .rep{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+  .rep:last-child{border-bottom:0}
+  .rep-left{display:flex;align-items:center;gap:10px;min-width:0}
+  .rep-left svg{width:18px;height:18px;color:var(--muted-fg);flex-shrink:0}
+  .rep-name{font-weight:500;font-size:13px}
+  .rep-meta{color:var(--muted-fg);font-size:11px}
+  .icon-btn{width:30px;height:30px;border:1px solid var(--border);background:var(--bg);border-radius:6px;
+            cursor:pointer;color:var(--fg);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .icon-btn:hover{background:var(--muted)}
+  .icon-btn svg{width:15px;height:15px}
+</style>
+</head>
+<body>
+<header class="rd-header">
+  <div class="rd-inner">
+    <div class="rd-header-row">
+      <div class="rd-title-wrap">
+        <h1 class="rd-title">Cas 1008</h1>
+        <span class="rd-badge secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Germinal familial</span>
+        <span class="rd-badge outline" title="Analyse d'exome">EXM</span>
+      </div>
+      <div class="rd-statuses">
+        <span class="rd-badge outline pill" title="Priorité"><span class="rd-ind grey"></span>Routine</span>
+        <span class="rd-badge blue pill" title="Statut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg>En cours</span>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>Aperçu</div>
+      <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>Détails</div>
+      <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h3l3-9 4 18 3-9h7"/></svg>Variants</div>
+      <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Fichiers</div>
+      <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-6 3 4 4-7"/></svg>QC</div>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- boîte de texte libre façon assistant, centrée en haut -->
+  <div class="ask-wrap">
+    <form class="ask" onsubmit="return false">
+      <svg class="spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/></svg>
+      <input type="text" placeholder="Posez une question sur ce cas — variants, couverture, historique…">
+      <button class="send" type="submit" title="Envoyer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></button>
+    </form>
+  </div>
+
+  <div class="layout">
+
+    <!-- ============ COLONNE GAUCHE : ACTIVITÉS (actions de l'utilisateur) ============ -->
+    <div class="col-left">
+      <div class="grp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        Activités
+        <span class="rule"></span>
+      </div>
+      <div class="stack">
+
+        <!-- Variants : interprétation · commentaires · flags alignés en colonnes -->
+        <div class="card" data-cy="activity-variants-card">
+          <div class="hd row">Variants <span class="cnt" id="varCnt"></span></div>
+          <div class="bd">
+            <div class="av-head">
+              <span>Variant</span>
+              <span class="c">Interprétation</span>
+              <span class="c" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+              <span class="c" title="Flag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg></span>
+            </div>
+            <div id="variants"></div>
+          </div>
+        </div>
+
+        <!-- Rapports : un ou aucun -->
+        <div class="card" data-cy="activity-reports-card">
+          <div class="hd row">Rapports <span class="cnt" id="repCnt"></span></div>
+          <div class="bd" id="reports"></div>
+        </div>
+
+        <!-- Commentaire libre sur le cas : afficher / ajouter -->
+        <div class="card" data-cy="activity-note-card">
+          <div class="hd">Commentaire sur le cas</div>
+          <div class="bd" id="caseNote"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============ COLONNE DROITE : ANNOTATIONS + QC ============ -->
+    <div class="col-right">
+
+      <div class="grp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2M14 2v2M8 20a4 4 0 0 1 8 0M8 4a4 4 0 0 0 8 0M6 8h12M6 16h12"/></svg>
+        Annotations
+        <span class="rule"></span>
+      </div>
+      <div class="grid2">
+        <div class="card" data-cy="summary-clinvar-card">
+          <div class="hd">Gènes avec variants ClinVar pathogéniques / probablement pathogéniques</div>
+          <div class="bd" id="clinvar"></div>
+        </div>
+        <div class="card" data-cy="summary-prioritization-card">
+          <div class="hd">Priorisation des variants <span class="hd-sub">Exomiser · Phenovar · Franklin</span></div>
+          <div class="bd">
+            <div class="prio-head">
+              <span>Variant</span>
+              <span class="ac">Exomiser</span><span class="ac">Phenovar</span><span class="ac">Franklin</span>
+            </div>
+            <div id="prio"></div>
+            <p class="prio-cap"><b>#n</b> = rang dans le top 5 de l'algorithme. Les variants priorisés par plusieurs algorithmes (barre colorée à gauche) remontent en tête.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-6 3 4 4-7"/></svg>
+        Contrôle qualité
+        <span class="rule"></span>
+      </div>
+      <div class="card" data-cy="summary-qc-card">
+        <div class="hd row">
+          Qualité de séquençage
+          <span class="verdict warn" id="qcVerdict"></span>
+        </div>
+        <div class="bd"><div class="qc-summary" id="qcSummary"></div></div>
+      </div>
+
+    </div>
+
+  </div>
+
+<script>
+// ============ Données de démonstration ============
+// Annotations (automatiques) — variants affichés en changement d'acide aminé (pas de coordonnées)
+const CLINVAR = [
+  {symbol:'BRCA1', pathogenic:2, likelyPathogenic:1, variants:[
+    {aa:'R1699W', classification:'P'}, {aa:'E1449K', classification:'P'}, {aa:'K1183R', classification:'LP'}]},
+  {symbol:'TP53', pathogenic:1, likelyPathogenic:0, variants:[{aa:'R175H', classification:'P'}]},
+  {symbol:'MLH1', pathogenic:0, likelyPathogenic:1, variants:[{aa:'V384D', classification:'LP'}]},
+];
+// Priorisation : top 5 de chaque algorithme (ordre = rang). Union montrée dans une seule carte.
+const ALGOS = ['Exomiser','Phenovar','Franklin'];
+const PRIO = {
+  Exomiser: ['SCN1A R1648H','KCNQ2 R213W','STXBP1 R406H','GRIN2B N615K','CDKL5 R59X'],
+  Phenovar: ['SCN1A R1648H','STXBP1 R406H','SCN2A R1882Q','KCNQ2 R213W','MECP2 T158M'],
+  Franklin: ['SCN1A R1648H','KCNQ2 R213W','GRIN2B N615K','PCDH19 N340S','STXBP1 R406H'],
+};
+// QC — résumé des statuts (repris des indicateurs de la maquette QC ; verdict global = pire statut)
+const QC_INDICATORS = [
+  {label:'Sexe / ploïdie', status:'ok'},
+  {label:'Contamination', status:'ok'},
+  {label:'Couv. moyenne', status:'ok'},
+  {label:'Région ≥15x', status:'ok'},
+  {label:'Uniformité', status:'warn'},
+  {label:'CNV passants', status:'ok'},
+  {label:'Pédigrée / parenté', status:'ok'},
+];
+// Actions de l'utilisateur — variants (interprétés + commentés + flaggés fusionnés)
+const VARIANTS = [
+  {gene:'BRCA1', aa:'R1699W', classification:'Pathogenic', comments:2, flagged:true},
+  {gene:'TP53',  aa:'R175H',  classification:'Likely pathogenic', comments:0, flagged:false},
+  {gene:'MLH1',  aa:'V384D',  classification:'VUS', comments:0, flagged:false},
+  {gene:'MSH2',  aa:'A636P',  classification:null, comments:1, flagged:true},
+  {gene:'BRCA2', aa:'N372H',  classification:null, comments:3, flagged:false},
+];
+// Rapports — un ou aucun (mettre REPORTS = [] pour tester l'état « aucun rapport »)
+const REPORTS = [
+  {name:'Rapport clinique - Cas-index.html', size:'124 KB', date:'2026-04-15'},
+];
+// Commentaire libre sur le cas (mettre CASE_NOTE = null pour tester l'état vide)
+const CASE_NOTE = {
+  text:"Trio complet séquencé. BRCA1 R1699W retenu comme cause probable ; confirmation Sanger à prévoir et implications familiales à discuter en réunion.",
+  author:"Dre M.-C. Tremblay", date:"2026-04-15",
+};
+
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const ST_LABEL = {ok:'Conforme', warn:'Attention', fail:'Échec'};
+const CLS_MAP = {'Pathogenic':'path','Likely pathogenic':'likely','VUS':'vus'};
+const CLS_SHORT = {'Pathogenic':'Pathogène','Likely pathogenic':'Prob. path.','VUS':'VUS'};
+
+const IC_MSG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+const IC_FLAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>';
+const IC_FILE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+const IC_DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>';
+
+// ---- Annotations : ClinVar (liste plate, une ligne par variant) ----
+const CV_CLS = {'P':'p','LP':'outline'};
+const clinvarRows = CLINVAR.flatMap(g => g.variants.map(v => ({gene:g.symbol, aa:v.aa, classification:v.classification})));
+document.getElementById('clinvar').innerHTML = clinvarRows.map(v => `
+  <div class="cv-row">
+    <span class="vname"><span class="gene">${esc(v.gene)}</span><span class="aa">${esc(v.aa)}</span></span>
+    <span class="b ${CV_CLS[v.classification]}">${v.classification==='P'?'Pathogénique':'Prob. pathogénique'}</span>
+  </div>`).join('');
+
+// ---- Annotations : Priorisation (union des top 5, tri par consensus) ----
+const prioMap = {};
+ALGOS.forEach(algo => PRIO[algo].forEach((v,i) => {
+  if (!prioMap[v]) { const p=v.indexOf(' '); prioMap[v]={key:v, gene:v.slice(0,p), aa:v.slice(p+1), ranks:{}}; }
+  prioMap[v].ranks[algo] = i+1;
+}));
+const prioRows = Object.values(prioMap).map(r => {
+  const present = ALGOS.filter(a => r.ranks[a]);
+  return {...r, count:present.length, avg:present.reduce((s,a)=>s+r.ranks[a],0)/present.length};
+}).sort((a,b) => b.count-a.count || a.avg-b.avg);
+document.getElementById('prio').innerHTML = prioRows.map(r => `
+  <div class="prio-row c${r.count}">
+    <span class="prio-var">
+      <span class="gene">${esc(r.gene)}</span><span class="aa">${esc(r.aa)}</span>
+      ${r.count>=2 ? `<span class="cons c${r.count}">${r.count}/3</span>` : ''}
+    </span>
+    ${ALGOS.map(a => r.ranks[a]
+        ? `<span class="rk on">#${r.ranks[a]}</span>`
+        : `<span class="rk off">—</span>`).join('')}
+  </div>`).join('');
+
+// ---- QC : verdict global (pire statut) + phrase-type + lien vers l'onglet QC ----
+const rank = {ok:0, warn:1, fail:2};
+const worst = QC_INDICATORS.reduce((a,b)=> rank[b.status]>rank[a] ? b.status : a, 'ok');
+const vEl = document.getElementById('qcVerdict');
+vEl.className = 'verdict '+worst;
+vEl.innerHTML = `<span class="dot ${worst}"></span>${ST_LABEL[worst]}`;
+
+const attention = QC_INDICATORS.filter(i=>i.status==='warn').map(i=>i.label);
+const failed = QC_INDICATORS.filter(i=>i.status==='fail').map(i=>i.label);
+const QC_ICON = {
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>',
+  fail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
+};
+let qcLine, qcDesc;
+if (worst==='ok') {
+  qcLine = 'Tous les critères de qualité sont conformes.';
+  qcDesc = 'Aucun indicateur ne nécessite d’attention particulière.';
+} else if (worst==='warn') {
+  qcLine = 'La qualité est globalement conforme, avec des points à surveiller.';
+  qcDesc = 'À vérifier : ' + attention.join(', ') + '.';
+} else {
+  qcLine = 'Un ou plusieurs critères de qualité ne sont pas atteints.';
+  qcDesc = 'En échec : ' + failed.join(', ')
+         + (attention.length ? ' · à surveiller : ' + attention.join(', ') : '') + '.';
+}
+document.getElementById('qcSummary').innerHTML = `
+  <div class="qc-icon ${worst}">${QC_ICON[worst]}</div>
+  <div class="txt">
+    <div class="qc-line">${esc(qcLine)}</div>
+    <div class="qc-desc">${esc(qcDesc)}</div>
+  </div>
+  <a class="qc-link" href="../qc/qc_radiant.html" title="Ouvrir l’onglet QC">Ouvrir l’onglet QC
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </a>`;
+
+// ---- Activités : variants (interprétation · commentaires · flags, alignés en colonnes) ----
+document.getElementById('varCnt').textContent = VARIANTS.length;
+document.getElementById('variants').innerHTML = VARIANTS.map(v => `
+  <div class="av-row">
+    <span class="prio-var"><span class="gene">${esc(v.gene)}</span><span class="aa">${esc(v.aa)}</span></span>
+    <span class="av-cell">${v.classification
+        ? `<span class="cls ${CLS_MAP[v.classification]}" title="${esc(v.classification)}">${esc(CLS_SHORT[v.classification])}</span>`
+        : '<span class="dash">—</span>'}</span>
+    <span class="av-cell">${v.comments>0 ? `<span class="cnum">${v.comments}</span>` : '<span class="dash">—</span>'}</span>
+    <span class="av-cell">${v.flagged ? `<span class="flag" title="Marqué d’un drapeau">${IC_FLAG}</span>` : ''}</span>
+  </div>`).join('');
+
+// ---- Activités : rapports (un ou aucun) ----
+document.getElementById('repCnt').textContent = REPORTS.length;
+document.getElementById('reports').innerHTML = REPORTS.length
+  ? REPORTS.map(r => `
+    <div class="rep">
+      <div class="rep-left">
+        ${IC_FILE}
+        <div class="who"><span class="rep-name trunc">${esc(r.name)}</span><span class="rep-meta">${esc(r.size)} · ${esc(r.date)}</span></div>
+      </div>
+      <button class="icon-btn" type="button" title="Télécharger">${IC_DL}</button>
+    </div>`).join('')
+  : `<div class="empty">Aucun rapport généré pour ce cas.</div>`;
+
+// ---- Activités : commentaire libre sur le cas (afficher / ajouter) ----
+document.getElementById('caseNote').innerHTML = `
+  ${CASE_NOTE ? `
+    <div class="note">
+      <div class="note-body">${esc(CASE_NOTE.text)}</div>
+      <div class="note-meta">${esc(CASE_NOTE.author)} · ${esc(CASE_NOTE.date)}</div>
+    </div>` : ''}
+  <div class="note-add">
+    <textarea placeholder="Ajouter un commentaire sur le cas…"></textarea>
+    <div class="note-actions"><button class="btn-add" type="button">Enregistrer</button></div>
+  </div>`;
+</script>
+</body>
+</html>

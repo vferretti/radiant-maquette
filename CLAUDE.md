@@ -7,6 +7,7 @@ Ce dépôt contient des **maquettes HTML statiques** de différentes sections de
 Chaque section vit dans son propre sous-répertoire, avec son propre `CLAUDE.md` (détails spécifiques) :
 
 - **`qc/`** — QC : couverture des gènes + qualité de séquençage (niveau échantillon). Voir `qc/CLAUDE.md`.
+- **`dashboard/`** — Aperçu : vue d'ensemble du cas (onglet « Aperçu », premier onglet, à gauche de « Détails »). Voir `dashboard/CLAUDE.md`.
 - *(à venir : autres sections — ex. `variants/`, `files/`… — chacune avec son `CLAUDE.md`.)*
 
 Claude charge automatiquement ce `CLAUDE.md` racine **plus** celui du sous-répertoire où l'on travaille : garder ici ce qui est **transversal**, mettre le **spécifique** dans le sous-répertoire de la section.
