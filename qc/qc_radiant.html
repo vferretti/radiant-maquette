@@ -246,7 +246,7 @@
   .exon-tablewrap tbody tr.active td{background:#eef1fb}
   .exon-tablewrap td.num,.exon-tablewrap th.num{text-align:right;font-variant-numeric:tabular-nums}
   .exon-tablewrap th.num{text-align:right}
-  .exon-actions{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px}
+  .exon-actions{display:flex;justify-content:flex-end;align-items:center;margin-top:14px;gap:10px}
   td.gene.clickable{cursor:pointer;text-decoration:underline;
                     text-decoration-style:dotted;text-underline-offset:3px;
                     text-decoration-color:var(--muted-fg)}
@@ -446,7 +446,6 @@
       <span><i style="background:var(--err-bg)"></i>&lt;50 %</span>
     </div>
     <div class="exon-actions">
-      <button class="btn sm" id="copyBed" title="Copie les régions dont %≥Nx est sous le seuil de complétude, au format BED">Copier les régions sous-couvertes (BED)</button>
       <button class="btn sm primary" id="exonClose">Fermer</button>
     </div>
   </div>
@@ -958,33 +957,6 @@ function openExonDlg(gene){
   document.getElementById('exonDlg').showModal();
 }
 
-function copyExonBed(){
-  const gene = state.currentExonGene;
-  const data = gene && EXON_DATA[gene];
-  if(!data) return;
-  const {deg} = SAMPLE_DEG[state.sample];
-  const cutoff = state.cutoff;
-  const lines = data.ex.map((x,i)=>{
-    const cov = x.cov.map(v => Math.max(0, Math.min(1, 1-(1-v)*deg)));
-    return {i, x, v: cov[state.depthIdx]};
-  }).filter(r => r.v < cutoff)
-    .map(r => `${data.chr}\t${r.x.s-1}\t${r.x.e}\t${gene}_exon${r.i+1}\t${(r.v*100).toFixed(1)}\t${data.strand}`);
-  const btn = document.getElementById('copyBed');
-  const orig = btn.textContent;
-  if(!lines.length){
-    btn.textContent = '✓ Aucun exon sous-couvert';
-    setTimeout(()=>btn.textContent=orig, 1800);
-    return;
-  }
-  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
-    btn.textContent = `✓ ${lines.length} région(s) copiée(s)`;
-    setTimeout(()=>btn.textContent=orig, 1800);
-  }).catch(()=>{
-    btn.textContent = '✗ Échec copie';
-    setTimeout(()=>btn.textContent=orig, 1800);
-  });
-}
-
 // ---- note de limitation pour le rapport ----
 // Construit un texte pré-formaté listant les gènes sous les critères actifs.
 // Gènes analysés : sélection si présente, sinon le filtre courant (recherche/panel/liste).
@@ -1464,11 +1436,10 @@ function initControls(){
     }
     renderSelBar();
   });
-  // dialogue exon : fermeture + copie BED
+  // dialogue exon : fermeture
   const exonDlg = document.getElementById('exonDlg');
   document.getElementById('exonClose').onclick = ()=>exonDlg.close();
   exonDlg.addEventListener('click', e => { if(e.target===exonDlg) exonDlg.close(); });
-  document.getElementById('copyBed').onclick = copyExonBed;
 
   // info dialog (critères) — ouvrable depuis la barre de filtres ET depuis le dialogue exon
   const infoDlg=document.getElementById('infoDlg');
