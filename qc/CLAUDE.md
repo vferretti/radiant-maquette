@@ -10,6 +10,9 @@ Calquée sur l'onglet QC de l'app sœur **clin** (`~/src/clin-portal-ui`, `src/v
 
 - `qc_radiant.html` — maquette principale (autonome, données inlinées). C'est le fichier de travail.
 - `build_mockup.py` — script qui a généré la première version de la maquette à partir de `test_gene_coverage.csv`. N'a pas été re-exécuté depuis l'ajout du modal exon et des autres features — le HTML est édité directement.
+- `qc_radiant_v1.html` / `qc_radiant_v2.html` — **variantes allégées dérivées de `qc_radiant.html`** pour recueillir des commentaires sur un sous-ensemble de fonctionnalités. Éditées directement (comme la maquette principale) ; à re-dériver manuellement si `qc_radiant.html` évolue.
+  - **v1** retire : *Qualité de séquençage* → section Pédigrée/parenté + bouton Rapport MultiQC ; *Couverture des gènes* → colonne « Exons hors crit. », modal « Détail par exon » (et l'accès par clic sur le gène), **compteurs** SNV/CNV (les liens `SNV ↗`/`CNV ↗`/`IGV ↗` restent), bouton/dialogue Note de limitation. Le code mort associé (constantes `EXON_DATA`/`PEDIGREE`, fonctions, câblage, CSS) est nettoyé.
+  - **v2** = v1 **plus** la section Pédigrée/parenté restaurée (le reste des retraits de v1 est conservé, MultiQC compris).
 - `test_gene_coverage.csv` — données de couverture par gène qui ont servi à alimenter la maquette initiale.
 - `QC_demo_multiqc_report.html` — rapport MultiQC (agrégé, 1 par famille). **Lié depuis la maquette** : bouton « Rapport MultiQC » de la vue d'ensemble (ouvert dans un nouvel onglet). Doit rester dans le même dossier que `qc_radiant.html` pour que le lien fonctionne.
 - `41267.qc-coverage-region-2_cov_report.bed` — rapport Dragen pour l'échantillon 41267 : **la source cible** pour brancher les vraies données par exon du modal drill-down (voir « Notes techniques » plus bas).
