@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QC — Gene coverage · Case 1008 · Radiant</title>
+<style>
+  :root{
+    --primary:#4f5fc3; --primary-fg:#f8fafc;
+    --bg:#ffffff; --fg:#1a1d3a; --muted:#f1f5f9; --muted-fg:#64748b;
+    --border:#e2e8f0; --table-header:#f1f5f9; --table-accent:#f8fafc;
+    --ok-bg:#dcfce7; --ok-fg:#166534;
+    --warn-bg:#fef9c3; --warn-fg:#92400e;
+    --orange-bg:#ffedd5; --orange-fg:#c2410c;
+    --err-bg:#fee2e2; --err-fg:#dc2626;
+    --dark-bg:#ede9fe; --dark-fg:#6d28d9;
+    --radius:8px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--fg);background:#f8fafc;font-size:14px;line-height:1.45}
+  a{color:var(--primary);text-decoration:none}
+  .app{max-width:1720px;margin:0 auto;padding:0 24px 64px}
+  /* page header — reproduction of the Radiant PageHeader (apps/case layout/header) */
+  .rd-header{background:var(--bg)}
+  .rd-inner{max-width:1720px;margin:0 auto;padding:0 24px}
+  .rd-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:16px 0 2px}
+  .rd-title-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .rd-title{margin:0;font-size:24px;font-weight:700;line-height:1.2}
+  .rd-badge{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:3px 9px;
+            font-size:12px;font-weight:600;white-space:nowrap}
+  .rd-badge svg{width:13px;height:13px}
+  .rd-badge.secondary{background:var(--muted);color:#334155}
+  .rd-badge.outline{background:transparent;border:1px solid var(--border);color:var(--fg)}
+  .rd-badge.blue{background:#e0f2fe;color:#0369a1}
+  .rd-badge.pill{padding:5px 12px;border-radius:999px}
+  .rd-statuses{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .rd-ind{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .rd-ind.grey{background:#94a3b8}
+  /* main tabs */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-top:14px}
+  .tab{padding:9px 14px;color:var(--muted-fg);font-weight:500;border-bottom:2px solid transparent;
+       cursor:default;display:flex;align-items:center;gap:7px}
+  .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:650}
+  .tab .ic{width:15px;height:15px;opacity:.85}
+  /* sample selector */
+  .samples{display:flex;gap:10px;margin:18px 0 4px;align-items:center;flex-wrap:wrap}
+  .samples .lbl{color:var(--muted-fg);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+  .samples select,#ovMemberSel{border:1px solid var(--border);border-radius:6px;padding:7px 12px;
+                  font-size:13px;background:var(--bg);color:var(--fg);font-family:inherit;
+                  min-width:240px;cursor:pointer}
+  .samples select:focus,#ovMemberSel:focus{outline:2px solid #c7d0f2;border-color:var(--primary)}
+  /* segmented sub-tabs */
+  .seg{display:inline-flex;background:var(--muted);border-radius:var(--radius);padding:3px;margin:16px 0}
+  .seg button{border:0;background:transparent;padding:7px 16px;border-radius:6px;cursor:pointer;
+              font-size:13px;font-weight:600;color:var(--muted-fg)}
+  .seg button.active{background:var(--bg);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  /* card */
+  .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+        box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card .hd{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:650;display:flex;
+            justify-content:space-between;align-items:center;gap:12px}
+  .card .bd{padding:16px 18px}
+  /* filter bar */
+  .filters{display:flex;flex-wrap:wrap;gap:20px;align-items:stretch}
+  .fgroup{display:flex;flex-direction:column;gap:9px}
+  .fgroup-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+                color:var(--muted-fg);display:flex;align-items:center;gap:6px}
+  .fgroup-ic{font-size:12px;filter:grayscale(.2)}
+  .info-i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--muted-fg);
+          background:transparent;color:var(--muted-fg);font-size:10px;font-weight:700;font-style:italic;
+          font-family:Georgia,serif;cursor:pointer;line-height:1;padding:0;display:inline-flex;
+          align-items:center;justify-content:center;text-transform:none;letter-spacing:0}
+  .info-i:hover{border-color:var(--primary);color:var(--primary);background:#eef1fb}
+  .info-dl{margin:0;font-size:13px}
+  .info-dl dt{font-weight:700;margin-top:12px}
+  .info-dl dt:first-child{margin-top:0}
+  .info-dl dd{margin:3px 0 0;color:#334155}
+  .info-badges{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .info-badges .row{display:flex;align-items:flex-start;gap:9px}
+  .info-badges .row .txt{font-size:12px;color:#334155;flex:1}
+  .fgroup-fields{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+  .fdivider{width:1px;align-self:stretch;background:var(--border);margin:0 4px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:12px;color:var(--muted-fg);font-weight:600}
+  .field input,.field select{border:1px solid var(--border);border-radius:6px;padding:7px 9px;
+        font-size:13px;background:var(--bg);color:var(--fg);min-width:150px;font-family:inherit}
+  .field input:focus,.field select:focus{outline:2px solid #c7d0f2;border-color:var(--primary)}
+  .input-clear{position:relative;display:inline-block}
+  .input-clear input{padding-right:28px}
+  .clear-x{position:absolute;right:5px;top:50%;transform:translateY(-50%);border:0;background:transparent;
+           color:var(--muted-fg);cursor:pointer;font-size:16px;line-height:1;width:20px;height:20px;
+           border-radius:50%;display:none;align-items:center;justify-content:center;padding:0}
+  .clear-x:hover{color:var(--fg);background:var(--muted)}
+  .input-clear.has-value .clear-x{display:inline-flex}
+  .btn{border:1px solid var(--border);background:var(--bg);border-radius:6px;padding:7px 12px;
+       cursor:pointer;font-size:13px;font-weight:600;color:var(--fg)}
+  .btn:hover{background:var(--muted)}
+  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn.ghost{border-color:transparent}
+  .btn.sm{padding:4px 9px;font-size:12px}
+  /* summary cards */
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:16px 0}
+  .stat{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;
+        cursor:pointer;transition:box-shadow .12s,border-color .12s,transform .12s;position:relative;user-select:none}
+  .stat:hover{border-color:#c7d0f2;box-shadow:0 2px 6px rgba(79,95,195,.16);transform:translateY(-1px)}
+  .stat.sel{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary);background:#eef1fb}
+  .stat.ok.sel{background:var(--ok-bg)} .stat.warn.sel{background:var(--warn-bg)}
+  .stat.err.sel{background:var(--err-bg)} .stat.dark.sel{background:var(--dark-bg)}
+  .stat.sel::after{content:'✓';position:absolute;top:8px;right:10px;color:var(--primary);font-weight:700;font-size:12px}
+  .stat.dim{opacity:.55}
+  .stat .n{font-size:26px;font-weight:700;line-height:1}
+  .stat .t{font-size:12px;color:var(--muted-fg);margin-top:6px;font-weight:600}
+  /* filter hint below the summary cards */
+  .stats-hint{font-size:12px;color:var(--muted-fg);margin:-6px 0 14px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+  .stats-hint .fic{vertical-align:-2px;margin-right:5px;opacity:.7}
+  .stats-hint .filter-active{color:var(--fg);font-weight:700}
+  .stats-hint .reset{color:var(--primary);cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-weight:600;margin-left:8px}
+  .stats-hint .reset:hover{filter:brightness(.85)}
+  /* "per-exon detail" hint + icon on clickable genes */
+  .exon-ic{width:12px;height:12px;margin-left:5px;vertical-align:-1px;opacity:.5;color:var(--muted-fg)}
+  td.gene.clickable:hover .exon-ic,td.exon-cell:hover .exon-ic{opacity:1;color:var(--primary)}
+  td.exon-cell{cursor:pointer}
+  .legend-hint{font-size:12px;color:var(--muted-fg);display:inline-flex;align-items:center}
+  .legend-hint .exon-ic{opacity:.75;margin-left:0;margin-right:5px}
+  .stat.ok .n{color:var(--ok-fg)} .stat.warn .n{color:var(--warn-fg)}
+  .stat.err .n{color:var(--err-fg)} .stat.dark .n{color:var(--dark-fg)}
+  /* alert */
+  .alert{display:flex;gap:12px;border-radius:var(--radius);padding:12px 14px;font-size:13px;
+         align-items:flex-start;border:1px solid}
+  .alert.info{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+  .alert .ic{font-size:16px;line-height:1.2}
+  /* table */
+  .tablewrap{overflow:auto;border:1px solid var(--border);border-radius:var(--radius);max-height:640px}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+  thead th{position:sticky;top:0;background:var(--table-header);text-align:left;padding:9px 10px;
+           font-weight:650;white-space:nowrap;border-bottom:1px solid var(--border);cursor:pointer;z-index:2}
+  thead th.sortable:hover{background:#e7ecf6}
+  thead th .arrow{color:var(--primary);font-size:11px}
+  tbody td{padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+  tbody tr:hover td{background:var(--table-accent)}
+  td.gene{font-weight:600}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  th.num{text-align:right}
+  .covcell{text-align:right;font-variant-numeric:tabular-nums;border-radius:4px;padding:3px 8px;
+           display:inline-block;min-width:52px}
+  th.depth,td.depth{background:#eef1fb33;box-shadow:inset 2px 0 0 var(--primary),inset -2px 0 0 var(--primary)}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+  .badge.pass{background:var(--ok-bg);color:var(--ok-fg)}
+  .badge.warn{background:var(--warn-bg);color:var(--warn-fg)}
+  .badge.fail{background:var(--err-bg);color:var(--err-fg)}
+  .badge.dark{background:var(--dark-bg);color:var(--dark-fg)}
+  .bar{height:7px;border-radius:4px;background:var(--muted);overflow:hidden;min-width:90px;display:inline-block;vertical-align:middle}
+  .bar>i{display:block;height:100%}
+  .muted{color:var(--muted-fg)}
+  .pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px;font-size:13px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .chip{background:var(--muted);border-radius:6px;padding:3px 8px;font-size:12px}
+  .chip.miss{background:var(--err-bg);color:var(--err-fg)}
+  dialog{border:1px solid var(--border);border-radius:var(--radius);padding:0;max-width:520px;width:92%}
+  dialog .hd{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:650}
+  dialog .bd{padding:16px 18px}
+  dialog textarea{width:100%;height:150px;border:1px solid var(--border);border-radius:6px;padding:8px;
+        font-family:ui-monospace,Menlo,monospace;font-size:12px}
+  .hidden{display:none!important}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted-fg);margin-top:4px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  /* exon detail modal */
+  #exonDlg{max-width:1280px;width:96%}
+  /* limitation note modal */
+  #limitDlg{max-width:680px;width:94%}
+  #limitDlg textarea{height:300px;line-height:1.5}
+  #limitDlg .meta{color:var(--muted-fg);font-size:12px}
+  /* overview (sample level) */
+  #qcNav{margin:16px 0 4px}
+  .ov-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;margin:16px 0 6px}
+  a.btn{display:inline-flex;align-items:center;text-decoration:none}
+  .ov-head h2{margin:0;font-size:18px;font-weight:650}
+  .ov-head .ctx{color:var(--muted-fg);font-size:13px}
+  .ov-head .ctx b{color:var(--fg);font-weight:600}
+  .ov-intro{font-size:13px;color:#334155;margin:0 0 14px;max-width:1100px}
+  .ov-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted-fg);margin:2px 0 16px;align-items:center}
+  .ov-legend span{display:inline-flex;align-items:center;gap:6px}
+  .ov-sub{font-size:18px;font-weight:650;margin:24px 0 10px;display:flex;align-items:center;
+          justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .ov-sub .hint{font-weight:400}
+  .ov-trio{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  .ov-trio th,.ov-trio td{padding:8px 14px;border-bottom:1px solid var(--border)}
+  .ov-trio thead th{background:var(--table-header);font-weight:650;vertical-align:top;text-align:left}
+  .ov-trio td.num,.ov-trio th.num{text-align:left;font-variant-numeric:tabular-nums}
+  .ov-trio td.ml{color:var(--muted-fg);font-weight:600}
+  .ov-trio .mv{display:inline-flex;align-items:center;gap:7px;justify-content:flex-start;font-weight:600}
+  .ov-trio .hint{color:var(--muted-fg);font-weight:400;font-size:11px}
+  /* relatedness table (pedigree) */
+  .ped-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  .ped-table th,.ped-table td{padding:8px 14px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  .ped-table thead th{background:var(--table-header);font-weight:650}
+  .ped-table tbody tr:last-child td{border-bottom:0}
+  .ped-table td.num,.ped-table th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;align-items:start}
+  .ov-panel .bd{padding:4px 16px 8px}
+  .metric{display:flex;justify-content:space-between;gap:14px;padding:6px 0;border-bottom:1px solid var(--border)}
+  .metric:last-child{border-bottom:0}
+  .metric .ml{color:var(--muted-fg);font-size:13px}
+  .metric .mv{font-weight:600;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .dot.ok{background:#22c55e}.dot.warn{background:#f59e0b}.dot.err{background:#ef4444}
+  .raw-details{border:1px solid var(--border);border-radius:var(--radius);margin-top:12px;background:var(--bg)}
+  .raw-details summary{cursor:pointer;font-weight:600;padding:11px 16px;color:var(--fg);font-size:13px}
+  .raw-details summary:hover{color:var(--primary)}
+  .raw-details[open] summary{border-bottom:1px solid var(--border)}
+  .raw-table{width:100%;font-size:12px;border-collapse:separate;border-spacing:0}
+  .raw-table td{padding:5px 16px;border-bottom:1px solid var(--muted)}
+  .raw-table td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* member selector (detail section): tabs on the left + download button */
+  .ov-memrow{display:flex;align-items:center;gap:12px;margin:0 0 12px;flex-wrap:wrap}
+  .ov-memrow .btn svg{flex-shrink:0}
+  .ov-memrow #ovDownload{margin-left:auto}   /* right-aligned, below the MultiQC button */
+  .exon-summary{display:flex;flex-wrap:wrap;gap:22px;font-size:13px;
+                padding:11px 14px;background:var(--muted);border-radius:6px;margin-bottom:14px}
+  .exon-summary div{display:flex;flex-direction:column;gap:2px}
+  .exon-summary .k{color:var(--muted-fg);font-size:11px;text-transform:uppercase;
+                   letter-spacing:.4px;font-weight:600}
+  .exon-summary .v{font-weight:650}
+  .exon-schema-wrap{margin-bottom:14px}
+  .exon-schema-title{font-size:12px;color:var(--muted-fg);margin-bottom:6px;display:flex;
+                     justify-content:space-between;gap:12px}
+  .exon-schema{display:flex;gap:6px;height:32px;padding:2px 0;background:transparent}
+  .exon-schema > div{height:100%;border:1.5px solid rgba(15,23,42,.28);
+                     border-radius:999px;position:relative;cursor:pointer;
+                     transition:filter .1s;flex-shrink:0;flex-basis:0;min-width:10px}
+  .exon-schema > div:hover{filter:brightness(.92)}
+  .exon-schema > div.active{outline:2px solid var(--primary);outline-offset:2px;
+                            border-color:var(--primary);z-index:2}
+  .exon-schema > div .num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+                          font-size:10px;font-weight:700;color:#334155;pointer-events:none;
+                          white-space:nowrap}
+  .exon-tablewrap{overflow:auto;max-height:320px;border:1px solid var(--border);border-radius:6px}
+  .exon-tablewrap table{width:100%;font-size:12px;border-collapse:separate;border-spacing:0}
+  .exon-tablewrap thead th{background:var(--table-header);position:sticky;top:0;padding:7px 9px;
+                           text-align:left;font-weight:650;border-bottom:1px solid var(--border);
+                           z-index:2;white-space:nowrap}
+  .exon-tablewrap tbody td{padding:5px 9px;border-bottom:1px solid var(--border);white-space:nowrap}
+  .exon-tablewrap tbody tr:hover td{background:var(--table-accent)}
+  .exon-tablewrap tbody tr.active td{background:#eef1fb}
+  .exon-tablewrap td.num,.exon-tablewrap th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .exon-tablewrap th.num{text-align:right}
+  .exon-actions{display:flex;justify-content:flex-end;align-items:center;margin-top:14px;gap:10px}
+  td.gene.clickable{cursor:pointer;text-decoration:underline;
+                    text-decoration-style:dotted;text-underline-offset:3px;
+                    text-decoration-color:var(--muted-fg)}
+  td.gene.clickable:hover{color:var(--primary);text-decoration-color:var(--primary)}
+  /* checkbox column */
+  th.check,td.check{width:36px;text-align:center;padding-left:12px;padding-right:4px}
+  th.check input,td.check input{cursor:pointer;width:15px;height:15px;margin:0;
+                                accent-color:var(--primary);vertical-align:middle}
+  /* selection bar above the table */
+  .sel-bar{display:flex;align-items:center;gap:16px;font-size:13px;margin:0 0 4px;padding:0}
+  .sel-bar .info{color:var(--fg);font-weight:600}
+  .sel-bar .info.none{color:var(--muted-fg);font-weight:500}
+  .sel-bar .action{color:var(--primary);cursor:pointer;text-decoration:underline;
+                   text-underline-offset:2px;font-weight:600}
+  .sel-bar .action:hover{filter:brightness(.85)}
+  .sel-bar .kpi{margin-left:auto;font-weight:650;font-variant-numeric:tabular-nums}
+  .sel-bar .kpi .k{color:var(--muted-fg);font-weight:500;margin-right:6px}
+  /* actions column (SNV / CNV / IGV) */
+  td.actions{white-space:nowrap;font-size:12px}
+  td.actions .lnk{display:inline-block;padding:2px 8px;border-radius:4px;cursor:pointer;
+                  margin-right:4px;text-decoration:none;border:1px solid transparent;
+                  font-weight:600;font-variant-numeric:tabular-nums;transition:background .1s}
+  td.actions .lnk:last-child{margin-right:0}
+  td.actions .lnk:hover{background:var(--muted);border-color:var(--border)}
+  td.actions .lnk.zero{color:var(--muted-fg);font-weight:400}
+  td.actions .lnk.snv{color:#0369a1;background:#e0f2fe}
+  td.actions .lnk.cnv{color:#6d28d9;background:#ede9fe}
+  td.actions .lnk.igv{color:var(--primary);background:#eef1fb}
+  td.actions .lnk.zero.snv,td.actions .lnk.zero.cnv{background:transparent}
+</style>
+</head>
+<body>
+<header class="rd-header">
+  <div class="rd-inner">
+    <div class="rd-header-row">
+      <div class="rd-title-wrap">
+        <h1 class="rd-title">Case 1008</h1>
+        <span class="rd-badge secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Germline Family</span>
+        <span class="rd-badge outline" title="Exome analysis">EXM</span>
+      </div>
+      <div class="rd-statuses">
+        <span class="rd-badge outline pill" title="Priority"><span class="rd-ind grey"></span>Routine</span>
+        <span class="rd-badge blue pill" title="Status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg>In Progress</span>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>Details</div>
+      <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h3l3-9 4 18 3-9h7"/></svg>Variants</div>
+      <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Files</div>
+      <div class="tab active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-6 3 4 4-7"/></svg>QC</div>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- QC sub-navigation: sample level vs gene coverage -->
+  <div class="seg" id="qcNav" role="tablist">
+    <button type="button" data-sec="overview" class="active">Sequencing quality</button>
+    <button type="button" data-sec="genes">Gene coverage</button>
+  </div>
+
+  <!-- SECTION: overview (sample level, filled in by renderOverview) -->
+  <div id="secOverview"></div>
+
+  <!-- SECTION: gene coverage -->
+  <div id="secGenes" class="hidden">
+  <!-- sample selector -->
+  <div class="samples">
+    <select id="sampleSel">
+      <option value="proband">Proband (DM189234)</option>
+      <option value="mother">Mother (DM189235)</option>
+      <option value="father">Father (DM189236)</option>
+    </select>
+  </div>
+
+  <!-- filter card (shared) -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="bd">
+      <div class="filters">
+        <div class="fgroup">
+          <div class="fgroup-title"><span class="fgroup-ic">🔎</span>Gene selection</div>
+          <div class="fgroup-fields">
+            <div class="field">
+              <label>Search by gene</label>
+              <div class="input-clear" id="qWrap">
+                <input id="q" type="text" placeholder="e.g. BRCA1">
+                <button class="clear-x" id="qClear" title="Clear" aria-label="Clear search">×</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Predefined gene panel</label>
+              <select id="panel"><option value="">All genes</option></select>
+            </div>
+            <div class="field">
+              <label>Uploaded gene list</label>
+              <button class="btn" id="uploadBtn">Paste / upload…</button>
+            </div>
+          </div>
+        </div>
+        <div class="fdivider"></div>
+        <div class="fgroup">
+          <div class="fgroup-title"><span class="fgroup-ic">🎚️</span>Coverage criteria (QC)
+            <button class="info-i" id="infoBtn" title="Learn more about the criteria" aria-label="Information about the criteria">i</button>
+          </div>
+          <div class="fgroup-fields">
+            <div class="field">
+              <label>Minimum depth (clinical threshold)</label>
+              <select id="depth"></select>
+            </div>
+            <div class="field">
+              <label>Required completeness</label>
+              <select id="cutoff">
+                <option value="1">100% of bases</option>
+                <option value="0.98">≥ 98%</option>
+                <option value="0.95">≥ 95%</option>
+                <option value="0.90">≥ 90%</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chips" id="activeFilters"></div>
+    </div>
+  </div>
+
+  <!-- summary cards = clickable status filter -->
+  <div class="stats" id="stats"></div>
+  <div class="stats-hint" id="statsHint"></div>
+
+  <!-- single table -->
+  <div class="card">
+    <div class="hd">
+      <span id="tableTitle">Coverage by gene</span>
+      <span id="tableAvg" style="font-weight:650;font-variant-numeric:tabular-nums;font-size:13px"></span>
+    </div>
+    <div class="bd">
+      <div class="sel-bar" id="selBar"></div>
+      <div class="tablewrap"><table id="covTable"></table></div>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:12px;flex-wrap:wrap">
+        <div class="legend" style="margin-top:0">
+          <span><i style="background:var(--ok-bg)"></i>≥98%</span>
+          <span><i style="background:var(--warn-bg)"></i>90–98%</span>
+          <span><i style="background:var(--orange-bg)"></i>50–90%</span>
+          <span><i style="background:var(--err-bg)"></i>&lt;50%</span>
+        </div>
+        <span class="legend-hint"><svg class="exon-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Click an underlined gene name for per-exon coverage</span>
+        <div class="pagination pagination-row" style="display:flex;gap:8px;align-items:center;margin-left:auto">
+          <span class="muted" id="pageInfo"></span>
+          <button class="btn sm" id="prev">‹ Prev</button>
+          <button class="btn sm" id="next">Next ›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /secGenes -->
+</div>
+
+<dialog id="uploadDlg">
+  <div class="hd">Custom gene list</div>
+  <div class="bd">
+    <p class="muted" style="margin-top:0">Paste a list of gene symbols (one per line, or separated by commas/spaces), or upload a <code>.txt</code>/<code>.csv</code> file.</p>
+    <textarea id="geneList" placeholder="BRCA1&#10;BRCA2&#10;TP53"></textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+      <label class="btn sm">Upload a file<input id="listFile" type="file" accept=".txt,.csv" class="hidden"></label>
+      <span class="muted" id="listCount"></span>
+      <span style="flex:1"></span>
+      <button class="btn sm" id="clearList">Clear</button>
+      <button class="btn sm primary" id="applyList">Apply</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="exonDlg">
+  <div class="hd" style="display:flex;align-items:flex-start;gap:10px">
+    <div style="flex:1">
+      <div id="exonTitle">Per-exon detail</div>
+      <div id="exonCriteria" class="muted" style="font-size:12px;font-weight:normal;margin-top:2px"></div>
+    </div>
+    <button class="info-i" id="exonInfoBtn" title="Learn more about the criteria" aria-label="Information about the criteria">i</button>
+  </div>
+  <div class="bd">
+    <div class="exon-summary" id="exonSummary"></div>
+    <div class="exon-schema-wrap">
+      <div class="exon-schema-title">
+        <span>Exons of the gene</span>
+      </div>
+      <div class="exon-schema" id="exonSchema"></div>
+    </div>
+    <div class="exon-tablewrap">
+      <table id="exonTable"></table>
+    </div>
+    <div class="legend" style="margin-top:12px">
+      <span><i style="background:var(--ok-bg)"></i>≥98%</span>
+      <span><i style="background:var(--warn-bg)"></i>90–98%</span>
+      <span><i style="background:var(--orange-bg)"></i>50–90%</span>
+      <span><i style="background:var(--err-bg)"></i>&lt;50%</span>
+    </div>
+    <div class="exon-actions">
+      <button class="btn sm primary" id="exonClose">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="infoDlg">
+  <div class="hd">How the coverage criteria are evaluated</div>
+  <div class="bd">
+    <dl class="info-dl">
+      <dt>Minimum depth (clinical threshold)</dt>
+      <dd>Number of reads required at each base for it to count as reliably "read".
+          Each <code>%≥Nx</code> value gives the <b>fraction of the gene's bases</b> reaching at least N reads.
+          <br>Current setting: <b id="i-depth"></b>.</dd>
+      <dt>Required completeness</dt>
+      <dd>Proportion of bases that must reach the minimum depth for a gene to be rated <b>Pass</b>.
+          <br>Current setting: <b id="i-cutoff"></b> of bases at the depth above.</dd>
+      <dt>Status categories</dt>
+      <dd>
+        <div class="info-badges">
+          <div class="row"><span class="badge pass">Pass</span><span class="txt">The required completeness is reached at the minimum depth.</span></div>
+          <div class="row"><span class="badge warn">Warning</span><span class="txt">Between 90% and the completeness threshold — partial coverage, a few bases below the threshold.</span></div>
+          <div class="row"><span class="badge fail">Fail</span><span class="txt">Fewer than 90% of bases reach the minimum depth — a substantial portion of the gene is insufficiently covered.</span></div>
+          <div class="row"><span class="badge dark">Unmappable</span><span class="txt">Near-zero coverage (avg. cov. &lt; 5x or &lt;10% of bases at ≥5x) — multicopy/duplicated regions, generally not usable with short-read sequencing.</span></div>
+        </div>
+      </dd>
+    </dl>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn sm primary" id="infoClose">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="limitDlg">
+  <div class="hd">Limitation note for the report</div>
+  <div class="bd">
+    <p class="muted" style="margin-top:0">Pre-formatted text listing the analyzed genes whose coverage falls below the active criteria. Editable — review and adapt it before inserting it into the final report.</p>
+    <textarea id="limitText" spellcheck="false"></textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+      <span class="meta" id="limitMeta"></span>
+      <span style="flex:1"></span>
+      <button class="btn sm" id="limitCopy">Copy</button>
+      <button class="btn sm primary" id="limitClose">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="ovInfoDlg">
+  <div class="hd">Summary indicator thresholds</div>
+  <div class="bd">
+    <div id="ovInfoBody"></div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn sm primary" id="ovInfoClose">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+const DATA = {"genes": [["AANAT", 615, 201.5, [1.0, 1.0, 1.0, 1.0, 0.9902, 0.5561, 0.0, 0.0, 0.0, 0.0]], ["ABRAXAS2", 1227, 191.5, [1.0, 1.0, 1.0, 1.0, 0.8696, 0.5403, 0.0179, 0.0, 0.0, 0.0]], ["ACKR4", 1048, 49.9, [0.8368, 0.5448, 0.4208, 0.3645, 0.208, 0.0, 0.0, 0.0, 0.0, 0.0]], ["ACTR3", 1230, 129.1, [1.0, 1.0, 1.0, 1.0, 0.748, 0.0333, 0.0057, 0.0, 0.0, 0.0]], ["ADPRM", 1020, 159.6, [1.0, 1.0, 1.0, 1.0, 0.9549, 0.2745, 0.0, 0.0, 0.0, 0.0]], ["AKR1B15", 1012, 144.3, [0.8538, 0.8538, 0.8468, 0.75, 0.7431, 0.3004, 0.0, 0.0, 0.0, 0.0]], ["AKR1C2", 951, 119.6, [0.9296, 0.7518, 0.6677, 0.5762, 0.5247, 0.2324, 0.0641, 0.0, 0.0, 0.0]], ["ALG1L2", 629, 135.3, [0.7091, 0.7091, 0.7091, 0.7091, 0.6645, 0.3529, 0.0, 0.0, 0.0, 0.0]], ["ALPG", 1574, 272.0, [1.0, 0.932, 0.8844, 0.8793, 0.864, 0.7618, 0.5241, 0.0572, 0.0019, 0.0]], ["ANKH", 1452, 176.7, [1.0, 1.0, 1.0, 1.0, 0.9353, 0.2555, 0.0799, 0.0, 0.0, 0.0]], ["ANKRD63", 1138, 171.7, [1.0, 1.0, 1.0, 1.0, 0.9965, 0.2118, 0.0, 0.0, 0.0, 0.0]], ["APC", 8499, 165.6, [1.0, 1.0, 1.0, 1.0, 0.9527, 0.2079, 0.0, 0.0, 0.0, 0.0]], ["ASB1", 995, 211.4, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6211, 0.0342, 0.0, 0.0, 0.0]], ["ASCL2", 577, 177.6, [1.0, 1.0, 1.0, 1.0, 0.9705, 0.2444, 0.0, 0.0, 0.0, 0.0]], ["BRCA1", 5545, 143.7, [1.0, 0.9996, 0.9964, 0.9949, 0.868, 0.1098, 0.0022, 0.0, 0.0, 0.0]], ["BRCA2", 10202, 156.7, [1.0, 1.0, 1.0, 1.0, 0.9391, 0.1469, 0.0004, 0.0, 0.0, 0.0]], ["BRME1", 1988, 205.2, [1.0, 1.0, 1.0, 1.0, 0.9965, 0.5498, 0.0101, 0.0, 0.0, 0.0]], ["C4BPA", 1769, 157.7, [1.0, 1.0, 1.0, 1.0, 0.9333, 0.1317, 0.0, 0.0, 0.0, 0.0]], ["C9orf131", 3233, 211.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.5641, 0.0229, 0.0, 0.0, 0.0]], ["CABIN1", 6588, 200.7, [1.0, 1.0, 1.0, 1.0, 0.9775, 0.4516, 0.0568, 0.0, 0.0, 0.0]], ["CACNA1A", 7424, 175.1, [0.9815, 0.9815, 0.9815, 0.9815, 0.9142, 0.337, 0.0104, 0.0, 0.0, 0.0]], ["CASP8AP2", 5876, 136.8, [1.0, 1.0, 1.0, 1.0, 0.8919, 0.026, 0.0, 0.0, 0.0, 0.0]], ["CATSPER2", 1566, 133.3, [1.0, 0.9987, 0.9706, 0.901, 0.6858, 0.1341, 0.0, 0.0, 0.0, 0.0]], ["CAV1", 528, 179.3, [1.0, 1.0, 1.0, 1.0, 0.981, 0.3257, 0.0, 0.0, 0.0, 0.0]], ["CCDC148", 1745, 143.5, [1.0, 1.0, 1.0, 1.0, 0.9238, 0.0562, 0.0, 0.0, 0.0, 0.0]], ["CCDC195", 597, 146.1, [1.0, 1.0, 1.0, 1.0, 0.9246, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CCDC91", 1299, 121.2, [1.0, 1.0, 1.0, 1.0, 0.642, 0.0123, 0.0, 0.0, 0.0, 0.0]], ["CCND1", 875, 235.0, [1.0, 1.0, 1.0, 1.0, 1.0, 0.712, 0.1326, 0.0, 0.0, 0.0]], ["CCNE2", 1190, 168.6, [1.0, 1.0, 1.0, 1.0, 0.8916, 0.3101, 0.0, 0.0, 0.0, 0.0]], ["CCNP", 911, 210.9, [1.0, 1.0, 1.0, 1.0, 0.9857, 0.6257, 0.0165, 0.0, 0.0, 0.0]], ["CCZ1B", 1416, 55.5, [0.6624, 0.565, 0.4534, 0.4138, 0.238, 0.0064, 0.0, 0.0, 0.0, 0.0]], ["CDC26", 251, 102.9, [1.0, 1.0, 0.8207, 0.6374, 0.3147, 0.2829, 0.0, 0.0, 0.0, 0.0]], ["CDV3", 764, 158.6, [1.0, 1.0, 1.0, 0.9398, 0.7722, 0.2487, 0.0563, 0.0, 0.0, 0.0]], ["CELA3B", 794, 185.2, [0.9899, 0.8942, 0.8942, 0.8778, 0.8778, 0.4144, 0.0592, 0.0, 0.0, 0.0]], ["CFTR", 4386, 176.6, [1.0, 0.997, 0.9893, 0.9795, 0.946, 0.3069, 0.0098, 0.0, 0.0, 0.0]], ["CH507-42P11.1", 376, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CHMP2A", 656, 213.3, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6692, 0.0305, 0.0, 0.0, 0.0]], ["CITED4", 550, 72.0, [1.0, 1.0, 0.8436, 0.7345, 0.3345, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CLECL1", 497, 155.5, [1.0, 1.0, 1.0, 1.0, 0.998, 0.1127, 0.0, 0.0, 0.0, 0.0]], ["CORO1A", 1363, 168.8, [0.9266, 0.9266, 0.9266, 0.9266, 0.8122, 0.3228, 0.091, 0.0, 0.0, 0.0]], ["CT45A6", 559, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CT47A10", 860, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CTAG1A", 534, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["CTBP2", 2937, 182.2, [0.9629, 0.9571, 0.9571, 0.9571, 0.9268, 0.3742, 0.0289, 0.0, 0.0, 0.0]], ["CTD-2192J16.17", 1915, 188.1, [1.0, 1.0, 1.0, 1.0, 0.9671, 0.3927, 0.0606, 0.0, 0.0, 0.0]], ["CTD-3051L14.15", 2016, 162.8, [0.9306, 0.9306, 0.9306, 0.9306, 0.8953, 0.31, 0.0, 0.0, 0.0, 0.0]], ["CXCR5", 1112, 215.2, [1.0, 1.0, 1.0, 1.0, 0.9568, 0.6807, 0.0126, 0.0, 0.0, 0.0]], ["CYP3A5", 1480, 172.2, [1.0, 1.0, 1.0, 0.9939, 0.8392, 0.3304, 0.0155, 0.0, 0.0, 0.0]], ["CYP4F22", 1569, 181.3, [1.0, 1.0, 1.0, 1.0, 0.9745, 0.369, 0.0229, 0.0, 0.0, 0.0]], ["DCBLD1", 2115, 191.2, [1.0, 1.0, 1.0, 0.9986, 0.939, 0.3967, 0.06, 0.0, 0.0, 0.0]], ["DHX58", 2010, 175.1, [1.0, 1.0, 1.0, 0.9915, 0.9328, 0.3562, 0.0179, 0.0, 0.0, 0.0]], ["DMD", 10897, 125.6, [1.0, 1.0, 1.0, 0.9983, 0.7836, 0.0043, 0.0, 0.0, 0.0, 0.0]], ["DNALI1", 762, 190.1, [1.0, 1.0, 1.0, 1.0, 0.9318, 0.4291, 0.0, 0.0, 0.0, 0.0]], ["DPYSL5", 1668, 204.3, [1.0, 1.0, 1.0, 1.0, 0.9442, 0.494, 0.0779, 0.0, 0.0, 0.0]], ["EIF5AL1", 460, 89.0, [1.0, 1.0, 0.8022, 0.437, 0.3152, 0.1457, 0.0, 0.0, 0.0, 0.0]], ["ELK4", 1285, 163.2, [1.0, 1.0, 1.0, 1.0, 0.9813, 0.214, 0.0, 0.0, 0.0, 0.0]], ["EMG1", 720, 183.7, [1.0, 1.0, 1.0, 1.0, 1.0, 0.318, 0.0, 0.0, 0.0, 0.0]], ["EP400", 9265, 186.4, [0.949, 0.9353, 0.9271, 0.9192, 0.8807, 0.457, 0.064, 0.0, 0.0, 0.0]], ["EPS8L2", 2105, 215.1, [1.0, 1.0, 1.0, 1.0, 0.9986, 0.5378, 0.0755, 0.0166, 0.0, 0.0]], ["FAM131C", 826, 116.1, [1.0, 1.0, 0.7724, 0.7095, 0.4903, 0.1961, 0.0375, 0.0, 0.0, 0.0]], ["FAM25C", 261, 37.2, [0.5057, 0.5057, 0.5057, 0.2644, 0.1303, 0.0, 0.0, 0.0, 0.0, 0.0]], ["FAM3B", 689, 171.0, [1.0, 1.0, 1.0, 1.0, 0.9869, 0.2772, 0.0, 0.0, 0.0, 0.0]], ["FAM86B1", 974, 149.2, [0.8162, 0.7341, 0.6129, 0.5924, 0.4825, 0.3388, 0.1982, 0.0986, 0.0113, 0.0]], ["FAM90A7P", 1384, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["FAM98B", 1283, 145.7, [0.9478, 0.9291, 0.894, 0.848, 0.7295, 0.1738, 0.0624, 0.0, 0.0, 0.0]], ["FBLL1", 1000, 197.0, [1.0, 0.906, 0.893, 0.876, 0.829, 0.64, 0.053, 0.0, 0.0, 0.0]], ["FBN1", 8483, 182.7, [1.0, 1.0, 1.0, 1.0, 0.9705, 0.3437, 0.0038, 0.0, 0.0, 0.0]], ["FCRLB", 1266, 178.6, [1.0, 1.0, 1.0, 1.0, 0.8989, 0.3562, 0.0284, 0.0, 0.0, 0.0]], ["FGFBP1", 700, 235.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6071, 0.1929, 0.0, 0.0, 0.0]], ["FHAD1", 4371, 171.3, [0.9661, 0.9661, 0.9661, 0.9661, 0.93, 0.326, 0.0018, 0.0, 0.0, 0.0]], ["FKBP7", 658, 150.6, [1.0, 1.0, 1.0, 1.0, 0.9392, 0.0654, 0.0, 0.0, 0.0, 0.0]], ["FMO2", 1589, 167.4, [1.0, 1.0, 1.0, 1.0, 0.9069, 0.2882, 0.0, 0.0, 0.0, 0.0]], ["FNTB", 1287, 199.2, [1.0, 1.0, 1.0, 1.0, 0.9588, 0.4981, 0.0202, 0.0, 0.0, 0.0]], ["FOXK2", 1962, 191.4, [0.9648, 0.9572, 0.9541, 0.9439, 0.9225, 0.472, 0.0515, 0.0, 0.0, 0.0]], ["FRMD3", 1763, 182.7, [1.0, 1.0, 1.0, 1.0, 0.9654, 0.3709, 0.0085, 0.0, 0.0, 0.0]], ["GATAD1", 797, 144.6, [1.0, 1.0, 1.0, 1.0, 0.7729, 0.1857, 0.0, 0.0, 0.0, 0.0]], ["GNAO1", 1046, 176.2, [1.0, 1.0, 1.0, 0.9981, 0.8518, 0.347, 0.0669, 0.0, 0.0, 0.0]], ["GOLGA8Q", 1858, 74.3, [0.6959, 0.5011, 0.3897, 0.3439, 0.2422, 0.1685, 0.085, 0.0, 0.0, 0.0]], ["GPAT2", 2343, 61.5, [0.5557, 0.5318, 0.5079, 0.4306, 0.318, 0.0533, 0.0, 0.0, 0.0, 0.0]], ["H2AB2", 343, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["H2AL1RP", 442, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["HCAR3", 1159, 196.6, [1.0, 1.0, 0.8568, 0.7636, 0.7015, 0.5591, 0.2752, 0.0, 0.0, 0.0]], ["HMCN2", 15038, 220.2, [1.0, 1.0, 1.0, 1.0, 0.9864, 0.5634, 0.1377, 0.0143, 0.0006, 0.0]], ["HOXB5", 803, 201.7, [1.0, 1.0, 1.0, 1.0, 1.0, 0.325, 0.0859, 0.0, 0.0, 0.0]], ["IGHV3OR16-17", 345, 135.8, [1.0, 1.0, 0.8609, 0.6783, 0.5276, 0.3334, 0.0, 0.0, 0.0, 0.0]], ["IGLON5", 992, 196.9, [1.0, 1.0, 1.0, 1.0, 0.9788, 0.4587, 0.0343, 0.0, 0.0, 0.0]], ["IL18", 569, 186.1, [1.0, 1.0, 1.0, 1.0, 0.9719, 0.3884, 0.0, 0.0, 0.0, 0.0]], ["IL24", 606, 164.7, [1.0, 1.0, 1.0, 1.0, 0.9785, 0.264, 0.0, 0.0, 0.0, 0.0]], ["IL7R", 1361, 184.1, [1.0, 1.0, 1.0, 1.0, 0.9993, 0.2976, 0.0, 0.0, 0.0, 0.0]], ["ITPR2", 7989, 136.3, [1.0, 1.0, 0.9991, 0.9929, 0.7699, 0.0974, 0.001, 0.0, 0.0, 0.0]], ["IVL", 1753, 338.9, [1.0, 1.0, 1.0, 1.0, 0.9755, 0.8329, 0.6047, 0.3714, 0.0873, 0.0]], ["JAKMIP3", 2206, 244.8, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6922, 0.2208, 0.0494, 0.0, 0.0]], ["KCNMB3", 819, 159.4, [1.0, 1.0, 0.7473, 0.7179, 0.663, 0.4445, 0.0586, 0.0, 0.0, 0.0]], ["KCNN2", 2357, 135.4, [0.944, 0.863, 0.8104, 0.7683, 0.7285, 0.2181, 0.0, 0.0, 0.0, 0.0]], ["KCNQ3", 2586, 187.8, [1.0, 1.0, 1.0, 0.9818, 0.9281, 0.4439, 0.0336, 0.0, 0.0, 0.0]], ["KIR2DL4", 1232, 279.3, [1.0, 1.0, 1.0, 1.0, 0.9854, 0.8523, 0.3953, 0.0779, 0.0, 0.0]], ["KIRREL2", 2094, 188.3, [1.0, 1.0, 1.0, 1.0, 0.9962, 0.3696, 0.0267, 0.0, 0.0, 0.0]], ["KLHDC8A", 1040, 187.6, [1.0, 1.0, 1.0, 1.0, 0.9539, 0.4077, 0.0, 0.0, 0.0, 0.0]], ["KRTAP2-2", 367, 80.3, [1.0, 1.0, 0.6866, 0.3052, 0.248, 0.1526, 0.0, 0.0, 0.0, 0.0]], ["LACC1", 1280, 185.8, [1.0, 1.0, 1.0, 1.0, 0.9633, 0.3914, 0.0195, 0.0, 0.0, 0.0]], ["LAT", 677, 168.6, [1.0, 1.0, 1.0, 0.9542, 0.8774, 0.2615, 0.096, 0.0, 0.0, 0.0]], ["LCOR", 4665, 200.9, [1.0, 1.0, 1.0, 1.0, 0.9972, 0.4802, 0.0023, 0.0, 0.0, 0.0]], ["LILRB2", 1765, 302.0, [1.0, 1.0, 0.8991, 0.8895, 0.8895, 0.8317, 0.6108, 0.2091, 0.0453, 0.0]], ["LIPM", 1251, 186.1, [1.0, 1.0, 1.0, 1.0, 0.9808, 0.3613, 0.0056, 0.0, 0.0, 0.0]], ["LPAR2", 1049, 188.5, [1.0, 1.0, 1.0, 1.0, 0.9762, 0.2927, 0.0152, 0.0, 0.0, 0.0]], ["LRP10", 2125, 202.2, [1.0, 1.0, 1.0, 1.0, 0.9925, 0.4372, 0.0584, 0.0, 0.0, 0.0]], ["LTA4H", 1795, 114.4, [1.0, 1.0, 1.0, 0.9994, 0.7242, 0.0, 0.0, 0.0, 0.0, 0.0]], ["MAGED4", 2199, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["MECP2", 1488, 137.1, [1.0, 1.0, 1.0, 1.0, 0.8723, 0.0242, 0.0, 0.0, 0.0, 0.0]], ["MED12L", 6349, 185.9, [1.0, 1.0, 1.0, 1.0, 0.9622, 0.3679, 0.0183, 0.0, 0.0, 0.0]], ["MED4", 796, 175.5, [1.0, 1.0, 1.0, 1.0, 0.9183, 0.3229, 0.0, 0.0, 0.0, 0.0]], ["METTL16", 1668, 180.4, [1.0, 1.0, 1.0, 0.9946, 0.9095, 0.3573, 0.0174, 0.0, 0.0, 0.0]], ["METTL25", 1785, 134.0, [1.0, 1.0, 1.0, 0.9955, 0.6162, 0.1866, 0.0, 0.0, 0.0, 0.0]], ["MGRN1", 1694, 208.3, [1.0, 1.0, 1.0, 1.0, 0.9864, 0.4681, 0.0525, 0.0, 0.0, 0.0]], ["MIA2", 4178, 165.9, [1.0, 1.0, 1.0, 1.0, 0.9425, 0.2161, 0.0211, 0.0, 0.0, 0.0]], ["MIF", 339, 173.8, [1.0, 1.0, 1.0, 1.0, 1.0, 0.3038, 0.0, 0.0, 0.0, 0.0]], ["MLH1", 2230, 179.6, [1.0, 1.0, 1.0, 1.0, 0.9596, 0.3193, 0.004, 0.0, 0.0, 0.0]], ["MMP12", 1390, 179.5, [1.0, 1.0, 1.0, 1.0, 0.9633, 0.3338, 0.0, 0.0, 0.0, 0.0]], ["MSH2", 2770, 161.2, [1.0, 1.0, 0.9986, 0.9906, 0.9249, 0.187, 0.0, 0.0, 0.0, 0.0]], ["MT-ND6", 523, 5.0, [0.4455, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["NADK2", 1302, 152.8, [1.0, 0.9923, 0.9593, 0.9278, 0.8441, 0.1951, 0.0, 0.0, 0.0, 0.0]], ["NBEAL1", 8059, 150.5, [0.9895, 0.9895, 0.9895, 0.9888, 0.8928, 0.1063, 0.0, 0.0, 0.0, 0.0]], ["NBPF20", 16664, 23.9, [0.0907, 0.0806, 0.0735, 0.0723, 0.0673, 0.0536, 0.0353, 0.0216, 0.0104, 0.0]], ["NF1", 8401, 158.7, [0.9758, 0.9758, 0.9758, 0.975, 0.8969, 0.187, 0.0021, 0.0, 0.0, 0.0]], ["NGDN", 923, 188.6, [1.0, 1.0, 1.0, 1.0, 0.9675, 0.4063, 0.0, 0.0, 0.0, 0.0]], ["NOTCH2NLR", 812, 140.8, [1.0, 1.0, 1.0, 0.9975, 0.7463, 0.1404, 0.0, 0.0, 0.0, 0.0]], ["NRG2", 2530, 165.5, [1.0, 0.9945, 0.9834, 0.966, 0.836, 0.3229, 0.0233, 0.0, 0.0, 0.0]], ["OGFOD2", 1036, 233.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6882, 0.1178, 0.0, 0.0, 0.0]], ["OR2A5", 931, 277.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.8034, 0.3888, 0.0816, 0.0, 0.0]], ["OR51A7", 934, 153.8, [1.0, 1.0, 1.0, 1.0, 1.0, 0.1221, 0.0, 0.0, 0.0, 0.0]], ["OR52D1", 952, 211.2, [1.0, 1.0, 1.0, 1.0, 0.9821, 0.5924, 0.0, 0.0, 0.0, 0.0]], ["PAGR1", 756, 111.9, [1.0, 1.0, 1.0, 0.9973, 0.7275, 0.0, 0.0, 0.0, 0.0, 0.0]], ["PAIP2B", 363, 132.5, [1.0, 1.0, 1.0, 0.9614, 0.6281, 0.0468, 0.0, 0.0, 0.0, 0.0]], ["PCTP", 630, 154.7, [1.0, 1.0, 1.0, 1.0, 0.7952, 0.2841, 0.0, 0.0, 0.0, 0.0]], ["PDZRN4", 3088, 162.1, [1.0, 0.9926, 0.9851, 0.9735, 0.9032, 0.2931, 0.0, 0.0, 0.0, 0.0]], ["PIAS2", 1835, 182.6, [1.0, 1.0, 1.0, 0.9956, 0.8719, 0.4365, 0.0, 0.0, 0.0, 0.0]], ["PIP5K1B", 1596, 171.1, [1.0, 1.0, 1.0, 1.0, 0.8985, 0.2519, 0.0, 0.0, 0.0, 0.0]], ["PPIAL4C", 490, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["PPIAL4D", 490, 0.4, [0.0041, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["PRAMEF20", 1419, 398.0, [1.0, 1.0, 1.0, 1.0, 1.0, 0.9894, 0.8851, 0.4595, 0.1029, 0.0]], ["PRAMEF7", 1416, 187.6, [0.5946, 0.5946, 0.5946, 0.5819, 0.5177, 0.4527, 0.3326, 0.1695, 0.0685, 0.0]], ["PRR20B", 659, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["PSD2", 2285, 210.3, [1.0, 1.0, 1.0, 1.0, 0.9934, 0.5225, 0.0915, 0.0096, 0.0, 0.0]], ["PSMB6", 705, 210.7, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6199, 0.0298, 0.0, 0.0, 0.0]], ["PTEN", 1191, 159.1, [1.0, 1.0, 1.0, 1.0, 0.9001, 0.1713, 0.0, 0.0, 0.0, 0.0]], ["RAB33A", 707, 161.2, [1.0, 1.0, 1.0, 1.0, 1.0, 0.0297, 0.0, 0.0, 0.0, 0.0]], ["RAB6C", 760, 126.2, [1.0, 0.9803, 0.8263, 0.7592, 0.5, 0.2711, 0.0, 0.0, 0.0, 0.0]], ["RAET1L", 730, 239.8, [1.0, 1.0, 0.889, 0.8562, 0.8493, 0.7027, 0.3589, 0.0534, 0.0, 0.0]], ["RAP1B", 540, 116.8, [1.0, 1.0, 1.0, 0.9944, 0.6982, 0.0019, 0.0, 0.0, 0.0, 0.0]], ["RARA", 1370, 184.7, [1.0, 1.0, 1.0, 0.992, 0.8949, 0.3577, 0.0642, 0.0, 0.0, 0.0]], ["RB1", 2730, 187.4, [1.0, 1.0, 1.0, 1.0, 0.9542, 0.3623, 0.0396, 0.0, 0.0, 0.0]], ["REN", 1198, 158.3, [1.0, 1.0, 1.0, 1.0, 0.7988, 0.2187, 0.0459, 0.0, 0.0, 0.0]], ["RGS2", 623, 119.9, [1.0, 1.0, 1.0, 1.0, 0.5875, 0.0995, 0.0, 0.0, 0.0, 0.0]], ["RNASE1", 466, 249.9, [1.0, 1.0, 1.0, 1.0, 1.0, 0.8369, 0.118, 0.0, 0.0, 0.0]], ["RP1-137D17.4", 682, 148.0, [0.7698, 0.7698, 0.7698, 0.7698, 0.7698, 0.3563, 0.0, 0.0, 0.0, 0.0]], ["RP11-1035H13.3", 697, 92.9, [0.693, 0.693, 0.693, 0.693, 0.6026, 0.0, 0.0, 0.0, 0.0, 0.0]], ["RP11-438F14.11", 420, 165.2, [0.7119, 0.7119, 0.7119, 0.7119, 0.7047, 0.369, 0.2214, 0.0, 0.0, 0.0]], ["RP9", 651, 133.0, [1.0, 1.0, 0.8909, 0.8295, 0.702, 0.109, 0.0, 0.0, 0.0, 0.0]], ["RPL31", 367, 0.3, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["RPS5", 602, 227.2, [1.0, 1.0, 1.0, 1.0, 1.0, 0.8007, 0.0449, 0.0, 0.0, 0.0]], ["RUNX3", 1235, 193.6, [1.0, 1.0, 1.0, 1.0, 0.9903, 0.4364, 0.0154, 0.0, 0.0, 0.0]], ["RXFP4", 1120, 232.2, [1.0, 1.0, 1.0, 1.0, 1.0, 0.7571, 0.0848, 0.0, 0.0, 0.0]], ["SAMD7", 1324, 184.8, [1.0, 1.0, 1.0, 1.0, 0.9736, 0.4049, 0.0, 0.0, 0.0, 0.0]], ["SCN1A", 5975, 185.1, [1.0, 1.0, 1.0, 1.0, 0.9518, 0.328, 0.0924, 0.0, 0.0, 0.0]], ["SDK1", 6549, 211.8, [0.975, 0.9721, 0.9698, 0.9669, 0.9542, 0.5943, 0.0913, 0.0, 0.0, 0.0]], ["SIGLEC14", 1174, 284.6, [0.8603, 0.8339, 0.8024, 0.7734, 0.6737, 0.6227, 0.5468, 0.3671, 0.1976, 0.0]], ["SLC27A2", 1840, 190.1, [1.0, 1.0, 1.0, 1.0, 0.9859, 0.3402, 0.0125, 0.0, 0.0, 0.0]], ["SLC30A8", 1091, 217.6, [1.0, 1.0, 1.0, 1.0, 0.9991, 0.6242, 0.0321, 0.0, 0.0, 0.0]], ["SLC9B2", 1589, 164.9, [1.0, 1.0, 1.0, 1.0, 0.9377, 0.2014, 0.0, 0.0, 0.0, 0.0]], ["SMR3B", 233, 251.6, [1.0, 1.0, 0.8455, 0.7768, 0.7768, 0.7683, 0.4593, 0.0301, 0.0, 0.0]], ["SNX19", 2954, 202.8, [1.0, 1.0, 1.0, 1.0, 0.9675, 0.5139, 0.0443, 0.0, 0.0, 0.0]], ["SOX4", 1420, 136.7, [1.0, 0.9979, 0.9592, 0.8521, 0.6979, 0.1577, 0.0, 0.0, 0.0, 0.0]], ["SPATA20", 2372, 171.9, [1.0, 1.0, 1.0, 1.0, 0.9726, 0.2563, 0.0008, 0.0, 0.0, 0.0]], ["SSU72P7", 580, 58.8, [0.5707, 0.5293, 0.5172, 0.4793, 0.2448, 0.0, 0.0, 0.0, 0.0, 0.0]], ["STAT5A", 2346, 169.4, [1.0, 0.997, 0.9851, 0.9412, 0.7775, 0.3431, 0.0648, 0.0, 0.0, 0.0]], ["SWAP70", 1731, 178.6, [1.0, 1.0, 1.0, 1.0, 0.9746, 0.3524, 0.0, 0.0, 0.0, 0.0]], ["TAB1", 1490, 218.6, [1.0, 1.0, 1.0, 1.0, 0.9866, 0.5496, 0.153, 0.0, 0.0, 0.0]], ["TAF3", 2773, 182.6, [0.9697, 0.9574, 0.9488, 0.9437, 0.8843, 0.4302, 0.0635, 0.0, 0.0, 0.0]], ["TBX15", 1790, 162.6, [1.0, 1.0, 1.0, 0.9961, 0.8073, 0.3201, 0.0173, 0.0, 0.0, 0.0]], ["TENT5D", 1165, 103.9, [1.0, 1.0, 1.0, 1.0, 0.6077, 0.0, 0.0, 0.0, 0.0, 0.0]], ["TEX28", 1222, 0.0, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["TIMM44", 1330, 212.0, [1.0, 1.0, 1.0, 1.0, 0.9887, 0.5556, 0.0744, 0.0, 0.0, 0.0]], ["TMEM231", 934, 216.7, [1.0, 0.939, 0.864, 0.8201, 0.8062, 0.6081, 0.3287, 0.0, 0.0, 0.0]], ["TMEM240", 511, 187.0, [1.0, 1.0, 1.0, 1.0, 0.9961, 0.4657, 0.0, 0.0, 0.0, 0.0]], ["TMIE", 460, 138.7, [0.7717, 0.7717, 0.7717, 0.7717, 0.7652, 0.2261, 0.0, 0.0, 0.0, 0.0]], ["TMLHE", 1249, 103.5, [0.8903, 0.8863, 0.8607, 0.8022, 0.6533, 0.0, 0.0, 0.0, 0.0, 0.0]], ["TP53", 1159, 187.6, [1.0, 1.0, 1.0, 1.0, 0.9819, 0.2908, 0.0, 0.0, 0.0, 0.0]], ["TRIL", 2431, 193.5, [1.0, 1.0, 1.0, 1.0, 0.9803, 0.4122, 0.0609, 0.0, 0.0, 0.0]], ["TRIM51GP", 1344, 114.0, [0.9286, 0.9286, 0.9286, 0.8854, 0.381, 0.2262, 0.0, 0.0, 0.0, 0.0]], ["TRMT61A", 861, 219.2, [1.0, 1.0, 1.0, 1.0, 0.9884, 0.5958, 0.0917, 0.0, 0.0, 0.0]], ["TSPY8", 912, 0.3, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["TTLL8", 2474, 233.6, [1.0, 1.0, 1.0, 1.0, 0.9915, 0.7377, 0.0946, 0.0, 0.0, 0.0]], ["UCK1", 817, 202.1, [1.0, 1.0, 1.0, 1.0, 0.978, 0.5422, 0.038, 0.0, 0.0, 0.0]], ["UHRF1BP1L", 4350, 129.9, [1.0, 1.0, 1.0, 0.9993, 0.8023, 0.0501, 0.0, 0.0, 0.0, 0.0]], ["USP17L8", 1588, 0.3, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["VHL", 633, 236.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.6935, 0.1469, 0.0, 0.0, 0.0]], ["VPS37A", 1169, 177.7, [1.0, 1.0, 1.0, 1.0, 0.9743, 0.231, 0.0, 0.0, 0.0, 0.0]], ["WASHC3", 568, 98.6, [1.0, 1.0, 1.0, 0.9842, 0.4736, 0.0, 0.0, 0.0, 0.0, 0.0]], ["XAGE5", 316, 78.5, [1.0, 0.807, 0.6076, 0.6076, 0.5253, 0.0, 0.0, 0.0, 0.0, 0.0]], ["XKR5", 2044, 232.1, [1.0, 1.0, 1.0, 1.0, 1.0, 0.7118, 0.1047, 0.0, 0.0, 0.0]], ["ZBED1", 4160, 98.9, [0.5, 0.5, 0.5, 0.5, 0.4933, 0.2596, 0.0, 0.0, 0.0, 0.0]], ["ZBTB32", 1451, 215.5, [1.0, 1.0, 1.0, 1.0, 0.9869, 0.6258, 0.0427, 0.0, 0.0, 0.0]], ["ZNF417", 1719, 147.2, [1.0, 1.0, 0.8644, 0.7539, 0.5783, 0.3351, 0.0942, 0.0, 0.0, 0.0]], ["ZNF454", 1558, 165.6, [1.0, 1.0, 1.0, 1.0, 0.9499, 0.1681, 0.0051, 0.0, 0.0, 0.0]], ["ZNF543", 1792, 260.8, [1.0, 1.0, 1.0, 1.0, 0.9911, 0.721, 0.3398, 0.038, 0.0, 0.0]], ["ZNF585B", 2299, 177.3, [1.0, 1.0, 1.0, 0.9974, 0.8899, 0.3719, 0.0343, 0.0, 0.0, 0.0]], ["ZNF679", 1225, 110.5, [1.0, 1.0, 0.849, 0.7984, 0.4939, 0.0359, 0.0, 0.0, 0.0, 0.0]], ["ZNF705D", 890, 0.1, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], ["ZNF713", 1321, 156.4, [1.0, 1.0, 1.0, 1.0, 0.841, 0.1476, 0.0, 0.0, 0.0, 0.0]], ["ZNF714", 1659, 61.1, [0.8361, 0.7499, 0.4376, 0.3894, 0.3412, 0.0, 0.0, 0.0, 0.0, 0.0]], ["ZNF727", 1489, 88.1, [1.0, 1.0, 0.8576, 0.6219, 0.3976, 0.006, 0.0, 0.0, 0.0, 0.0]], ["ZNF804B", 4039, 135.3, [1.0, 1.0, 1.0, 0.9921, 0.8916, 0.0388, 0.0, 0.0, 0.0, 0.0]], ["ZSWIM5", 3527, 161.7, [0.9966, 0.9918, 0.987, 0.9767, 0.8968, 0.2243, 0.015, 0.0, 0.0, 0.0]]], "panels": {"Hereditary breast/ovarian cancer": ["BRCA1", "BRCA2", "TP53", "PTEN", "MLH1", "MSH2", "APC"], "ACMG SF predispositions (excerpt)": ["BRCA1", "BRCA2", "TP53", "PTEN", "MLH1", "MSH2", "APC", "RB1", "VHL", "NF1"], "Neurodevelopment (excerpt)": ["MECP2", "SCN1A", "DMD", "NF1"]}, "thresholds": [5, 15, 30, 50, 100, 200, 300, 400, 500, 1000], "total_csv": 19574};
+const THRESH = DATA.thresholds;
+
+// ---- simulated per-exon data (target source: Dragen *.qc-coverage-region-2_cov_report.bed) ----
+// Format: {tr: transcript, chr, strand, ex: [{s:start, e:end, avg, min, cov:[..%≥Nx for each THRESH]}]}
+// Approximate GRCh38 coordinates (fictitious, for illustration).
+const EXON_DATA = {
+  "AANAT": {tr:"NM_001088.3", chr:"chr17", strand:"+", ex:[
+    {s:74449434, e:74449588, avg:189.4, min:128, cov:[1,1,1,1,0.97,0.47,0,0,0,0]},
+    {s:74450101, e:74450258, avg:208.7, min:152, cov:[1,1,1,1,1,0.58,0,0,0,0]},
+    {s:74450844, e:74450998, avg:213.2, min:168, cov:[1,1,1,1,1,0.62,0,0,0,0]},
+    {s:74451485, e:74451631, avg:195.5, min:148, cov:[1,1,1,1,0.98,0.53,0,0,0,0]}
+  ]},
+  "ABRAXAS2": {tr:"NM_018288.4", chr:"chr10", strand:"+", ex:[
+    {s:105410123, e:105410333, avg:198.2, min:142, cov:[1,1,1,1,0.94,0.58,0.02,0,0,0]},
+    {s:105411501, e:105411780, avg:189.7, min:138, cov:[1,1,1,1,0.88,0.54,0.01,0,0,0]},
+    {s:105413044, e:105413290, avg:205.4, min:156, cov:[1,1,1,1,0.95,0.61,0.02,0,0,0]},
+    {s:105414800, e:105415024, avg:172.6, min:98, cov:[1,1,1,1,0.72,0.42,0.01,0,0,0]},
+    {s:105415501, e:105415767, avg:191.6, min:145, cov:[1,1,1,1,0.87,0.55,0.02,0,0,0]}
+  ]},
+  "ACKR4": {tr:"NM_016557.4", chr:"chr3", strand:"-", ex:[
+    {s:132600123, e:132600530, avg:71.4, min:12, cov:[0.94,0.72,0.62,0.55,0.32,0,0,0,0,0]},
+    {s:132604211, e:132604440, avg:42.1, min:4,  cov:[0.85,0.53,0.38,0.30,0.14,0,0,0,0,0]},
+    {s:132608100, e:132608511, avg:34.8, min:0,  cov:[0.74,0.38,0.24,0.18,0.09,0,0,0,0,0]}
+  ]},
+  "ACTR3": {tr:"NM_005721.5", chr:"chr2", strand:"+", ex:[
+    {s:114255010, e:114255188, avg:127.3, min:94, cov:[1,1,1,1,0.72,0.03,0,0,0,0]},
+    {s:114256500, e:114256692, avg:132.5, min:98, cov:[1,1,1,1,0.78,0.05,0,0,0,0]},
+    {s:114258120, e:114258332, avg:125.1, min:89, cov:[1,1,1,1,0.70,0.02,0,0,0,0]},
+    {s:114260500, e:114260709, avg:130.8, min:92, cov:[1,1,1,1,0.76,0.04,0,0,0,0]},
+    {s:114262450, e:114262662, avg:128.7, min:91, cov:[1,1,1,1,0.74,0.03,0,0,0,0]},
+    {s:114264800, e:114265023, avg:129.9, min:95, cov:[1,1,1,1,0.77,0.03,0,0,0,0]}
+  ]},
+  // ⭐ Showcase case: gene at 85% overall but one exon entirely at 0
+  "AKR1B15": {tr:"NM_001080538.3", chr:"chr7", strand:"+", ex:[
+    {s:134120100, e:134120309, avg:158.6, min:104, cov:[1,1,0.98,0.94,0.85,0.32,0,0,0,0]},
+    {s:134125441, e:134125635, avg:167.2, min:118, cov:[1,1,1,0.97,0.90,0.35,0,0,0,0]},
+    {s:134130810, e:134131049, avg:172.8, min:126, cov:[1,1,0.99,0.95,0.88,0.34,0,0,0,0]},
+    {s:134136200, e:134136349, avg:2.1,   min:0,   cov:[0.05,0,0,0,0,0,0,0,0,0]},
+    {s:134142788, e:134143004, avg:169.3, min:122, cov:[1,1,1,0.98,0.92,0.38,0,0,0,0]}
+  ]},
+  "AKR1C2": {tr:"NM_001354.7", chr:"chr10", strand:"-", ex:[
+    {s:5030101, e:5030296, avg:128.2, min:52, cov:[1,0.94,0.86,0.78,0.65,0.30,0.08,0,0,0]},
+    {s:5034550, e:5034733, avg:112.4, min:38, cov:[0.98,0.86,0.72,0.62,0.51,0.24,0.06,0,0,0]},
+    {s:5038800, e:5039045, avg:98.7,  min:14, cov:[0.85,0.62,0.54,0.46,0.42,0.19,0.05,0,0,0]},
+    {s:5041200, e:5041526, avg:132.8, min:64, cov:[0.94,0.78,0.68,0.60,0.55,0.28,0.08,0,0,0]}
+  ]}
+};
+
+// ---- state ----
+const state = {
+  sample: 'proband',
+  q: '',
+  panel: '',
+  uploaded: null,          // Set of upper-cased gene symbols, or null
+  depthIdx: 1,             // 15x by default
+  cutoff: 1.0,
+  statusFilter: new Set(), // statuses selected through the cards; empty = all
+  sortKey: 'gene', sortDir: 1,
+  page: 0, pageSize: 50,
+  currentExonGene: null,
+  selected: new Set(),     // genes selected (via checkbox)
+};
+const SAMPLE_DEG = { proband:{deg:1.0,avg:1.0}, mother:{deg:1.6,avg:0.9}, father:{deg:2.3,avg:0.82} };
+
+// ---- helpers ----
+function adjRows(){
+  const {deg,avg} = SAMPLE_DEG[state.sample];
+  return DATA.genes.map(g=>{
+    const cov = g[3].map(v => Math.max(0, Math.min(1, 1-(1-v)*deg)));
+    return { gene:g[0], size:g[1], avg:+(g[2]*avg).toFixed(1), cov };
+  });
+}
+function isDark(r){ return r.avg < 5 || r.cov[0] < 0.10; }
+// Simulated SNV/CNV counts (deterministic per gene name). Target source: Radiant variant calls.
+function mockCount(gene, kind){
+  let h = 0; const s = gene + kind;
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) | 0;
+  const r = Math.abs(h);
+  if(kind === 'snv'){
+    const bucket = r % 10;
+    if(bucket < 4) return 0;
+    if(bucket < 7) return 1 + ((r>>4) % 3);
+    if(bucket < 9) return 4 + ((r>>4) % 5);
+    return 9 + ((r>>4) % 12);
+  }
+  // cnv: mostly 0
+  const bucket = r % 20;
+  if(bucket < 17) return 0;
+  if(bucket < 19) return 1;
+  return 2 + ((r>>4) % 2);
+}
+function statusOf(r){
+  if(isDark(r)) return 'dark';
+  const v = r.cov[state.depthIdx];
+  if(v >= state.cutoff) return 'pass';
+  if(v >= 0.90) return 'warn';
+  return 'fail';
+}
+function band(v){
+  if(v>=0.98) return 'var(--ok-bg)';
+  if(v>=0.90) return 'var(--warn-bg)';
+  if(v>=0.50) return 'var(--orange-bg)';
+  return 'var(--err-bg)';
+}
+function pct(v){ return (v*100).toFixed(1)+'%'; }
+
+function filtered(){
+  let rows = adjRows();
+  if(state.q){ const q=state.q.toUpperCase(); rows = rows.filter(r=>r.gene.toUpperCase().includes(q)); }
+  if(state.panel){ const set=new Set(DATA.panels[state.panel]); rows=rows.filter(r=>set.has(r.gene)); }
+  if(state.uploaded){ rows=rows.filter(r=>state.uploaded.has(r.gene.toUpperCase())); }
+  return rows;
+}
+function sortRows(rows){
+  const k=state.sortKey, d=state.sortDir;
+  return rows.slice().sort((a,b)=>{
+    let av,bv;
+    if(k==='gene'){av=a.gene;bv=b.gene;return av<bv?-d:av>bv?d:0;}
+    if(k==='size'){av=a.size;bv=b.size;}
+    else if(k==='avg'){av=a.avg;bv=b.avg;}
+    else {const i=+k; av=a.cov[i];bv=b.cov[i];}
+    return (av-bv)*d;
+  });
+}
+
+const STATUS_LABEL={pass:'Pass',warn:'Warning',fail:'Fail',dark:'Unmappable'};
+
+// ---- summary cards = clickable status filter ----
+const STATUS_CARDS=[
+  {cat:'',    key:null,   label:'Genes analyzed'},
+  {cat:'ok',  key:'pass', label:'Pass'},
+  {cat:'warn',key:'warn', label:'Warning'},
+  {cat:'err', key:'fail', label:'Fail'},
+  {cat:'dark',key:'dark', label:'Unmappable'},
+];
+function renderStats(rows){
+  const counts={pass:0,warn:0,fail:0,dark:0};
+  rows.forEach(r=>counts[statusOf(r)]++);
+  const sf=state.statusFilter;
+  const el=document.getElementById('stats');
+  el.innerHTML=STATUS_CARDS.map(c=>{
+    const n = c.key? counts[c.key] : rows.length;
+    const sel = c.key ? sf.has(c.key) : sf.size===0;   // "Genes analyzed" active when no filter is set
+    const dim = c.key && sf.size && !sf.has(c.key);
+    const title = c.key? 'Click to filter on this status' : 'Click to show everything';
+    return `<div class="stat ${c.cat}${sel?' sel':''}${dim?' dim':''}" data-key="${c.key||''}" title="${title}">`
+      +`<div class="n">${n.toLocaleString('en-CA')}</div><div class="t">${c.label}</div></div>`;
+  }).join('');
+  el.querySelectorAll('.stat').forEach(card=>card.onclick=()=>{
+    const k=card.dataset.key;
+    if(!k) sf.clear();
+    else if(sf.has(k)) sf.delete(k); else sf.add(k);
+    state.page=0; render();
+  });
+  // hint below the cards: invitation to filter, or active filter state + reset
+  const hint=document.getElementById('statsHint');
+  if(sf.size){
+    const labels=STATUS_CARDS.filter(c=>c.key && sf.has(c.key)).map(c=>c.label).join(', ');
+    hint.innerHTML=`Filtered list: <span class="filter-active">${labels}</span>`
+      +`<a class="reset" id="statsReset">✕ Show all</a>`;
+    document.getElementById('statsReset').onclick=()=>{ sf.clear(); state.page=0; render(); };
+  } else {
+    hint.innerHTML=`<svg class="fic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>`
+      +`Click a category to filter the list below.`;
+  }
+}
+
+// ---- single table ----
+function renderTable(){
+  let all = filtered();
+  if(state.statusFilter.size) all = all.filter(r=>state.statusFilter.has(statusOf(r)));
+  all = sortRows(all);
+  const total = all.length;
+  const pages = Math.max(1, Math.ceil(total/state.pageSize));
+  if(state.page>=pages) state.page=pages-1;
+  if(state.page<0) state.page=0;
+  const start=state.page*state.pageSize;
+  const rows = all.slice(start, start+state.pageSize);
+
+  const covCols = THRESH.map((tt,i)=>({t:tt,i}));
+  const ncols = covCols.length+7;
+  const arrow = k => state.sortKey===k ? `<span class="arrow">${state.sortDir>0?'▲':'▼'}</span>` : '';
+  let h = '<thead><tr>'
+    + '<th class="check"><input type="checkbox" id="selAllPage" aria-label="Select page"></th>'
+    + '<th>Actions</th>'
+    + `<th class="sortable" data-k="gene">Gene ${arrow('gene')}</th>`
+    + `<th class="sortable num" data-k="size">Size (bp) ${arrow('size')}</th>`
+    + `<th class="sortable num" data-k="avg">Avg. cov. (x) ${arrow('avg')}</th>`
+    + `<th class="num" title="Number of exons whose coverage is below the active criteria (depth + completeness), out of the total number of exons">Exons below crit.</th>`
+    + '<th>Status</th>'
+    + covCols.map(c=>`<th class="sortable num ${c.i===state.depthIdx?'depth':''}" data-k="${c.i}">%≥${c.t}x ${arrow(''+c.i)}</th>`).join('')
+    + '</tr></thead><tbody>';
+  for(const r of rows){
+    const st = statusOf(r);
+    const hasExon = !!EXON_DATA[r.gene];
+    const snv = mockCount(r.gene, 'snv');
+    const cnv = mockCount(r.gene, 'cnv');
+    const isSel = state.selected.has(r.gene);
+    h += `<tr${isSel?' class="selected"':''}>`
+      + `<td class="check"><input type="checkbox" data-gene="${r.gene}"${isSel?' checked':''} aria-label="Select ${r.gene}"></td>`
+      + `<td class="actions">`
+      +   `<a class="lnk snv${snv?'':' zero'}" data-gene="${r.gene}" data-kind="snv" data-n="${snv}" title="${snv} SNV — view in the Variants tab">${snv} SNV</a>`
+      +   `<a class="lnk cnv${cnv?'':' zero'}" data-gene="${r.gene}" data-kind="cnv" data-n="${cnv}" title="${cnv} CNV — view in the Variants tab">${cnv} CNV</a>`
+      +   `<a class="lnk igv" data-gene="${r.gene}" data-kind="igv" title="Open ${r.gene} in IGV">IGV ↗</a>`
+      + `</td>`
+      + `<td class="gene${hasExon?' clickable':''}" data-gene="${r.gene}" ${hasExon?`title="View per-exon detail"`:''}>${r.gene}${hasExon?' <svg class="exon-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>':''}</td>`
+      + `<td class="num">${r.size.toLocaleString('en-CA')}</td>`
+      + `<td class="num">${r.avg}</td>`
+      + exonFailCell(r.gene)
+      + `<td>${badge(st)}</td>`
+      + covCols.map(c=>{
+          const cv=r.cov[c.i];
+          return `<td class="num ${c.i===state.depthIdx?'depth':''}"><span class="covcell" style="background:${band(cv)}">${(cv*100).toFixed(1)}</span></td>`;
+        }).join('')
+      + `</tr>`;
+  }
+  if(!rows.length) h += `<tr><td colspan="${ncols}" class="muted" style="padding:24px;text-align:center">No gene matches the filters.</td></tr>`;
+  h += '</tbody>';
+  document.getElementById('covTable').innerHTML = h;
+  const fn = state.statusFilter.size ? ` · status: ${[...state.statusFilter].map(k=>STATUS_LABEL[k]).join(', ')}` : '';
+  document.getElementById('tableTitle').textContent = `Coverage by gene — ${total.toLocaleString('en-CA')} gene(s)${fn}`;
+  document.getElementById('pageInfo').textContent = total? `${start+1}–${Math.min(start+state.pageSize,total)} of ${total.toLocaleString('en-CA')}` : '0 results';
+  bindSort();
+  syncHeaderCheckbox();
+}
+
+function syncHeaderCheckbox(){
+  const cb = document.getElementById('selAllPage');
+  if(!cb) return;
+  const rowCbs = [...document.querySelectorAll('#covTable tbody input[type=checkbox]')];
+  if(!rowCbs.length){ cb.checked=false; cb.indeterminate=false; return; }
+  const nSel = rowCbs.filter(x=>x.checked).length;
+  cb.checked = nSel === rowCbs.length;
+  cb.indeterminate = nSel > 0 && nSel < rowCbs.length;
+}
+
+// ---- selection bar + average coverage ----
+function renderSelBar(){
+  const all = filtered();
+  const visible = state.statusFilter.size ? all.filter(r=>state.statusFilter.has(statusOf(r))) : all;
+  const total = visible.length;
+  const nSel = state.selected.size;
+  // basis for the average: the selection if any, otherwise all filtered rows
+  const base = nSel > 0 ? visible.filter(r => state.selected.has(r.gene)) : visible;
+  const totalSize = base.reduce((s,r)=>s+r.size, 0);
+  const meanCov = totalSize > 0 ? base.reduce((s,r)=>s+r.avg*r.size, 0)/totalSize : 0;
+
+  // average coverage in the card header
+  document.getElementById('tableAvg').innerHTML =
+    `<span style="color:var(--muted-fg);font-weight:500;margin-right:6px">Avg. coverage${nSel>0?' (selection)':''}:</span>${meanCov.toFixed(2)}x`;
+
+  // bar above the table: selection controls (left) + export button (right)
+  const bar = document.getElementById('selBar');
+  const parts = [];
+  if(nSel > 0){
+    parts.push(`<span class="info">${nSel.toLocaleString('en-CA')} item(s) selected</span>`);
+    if(nSel < total){
+      parts.push(`<a class="action" id="selAllFiltered">Select all results (${total.toLocaleString('en-CA')})</a>`);
+    }
+    parts.push(`<a class="action" id="selClear">Clear selection</a>`);
+  }
+  parts.push(`<button class="btn sm" id="limitNote" style="margin-left:auto">Limitation note…</button>`);
+  parts.push(`<button class="btn sm" id="exportTable">Export</button>`);
+  bar.innerHTML = parts.join('');
+
+  const selAll = document.getElementById('selAllFiltered');
+  if(selAll) selAll.onclick = ()=>{
+    visible.forEach(r => state.selected.add(r.gene));
+    render();
+  };
+  const selClear = document.getElementById('selClear');
+  if(selClear) selClear.onclick = ()=>{
+    state.selected.clear();
+    render();
+  };
+  document.getElementById('exportTable').onclick = ()=>{
+    let rows=filtered();
+    if(state.statusFilter.size) rows=rows.filter(r=>state.statusFilter.has(statusOf(r)));
+    exportCSV(sortRows(rows),'filtered_coverage.csv',false);
+  };
+  document.getElementById('limitNote').onclick = openLimitDlg;
+}
+function badge(st){
+  return `<span class="badge ${st}">${STATUS_LABEL[st]}</span>`;
+}
+function bindSort(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    th.onclick=()=>{ const k=th.dataset.k;
+      if(state.sortKey===k) state.sortDir*=-1; else {state.sortKey=k;state.sortDir=1;}
+      renderTable(); };
+  });
+}
+
+// ---- active filters (chips) ----
+function renderChips(){
+  const c=[];
+  if(state.q) c.push(`Search: "${state.q}"`);
+  if(state.panel) c.push(`Panel: ${state.panel} (${DATA.panels[state.panel].length} genes)`);
+  if(state.uploaded){
+    const present=new Set(adjRows().map(r=>r.gene.toUpperCase()));
+    const miss=[...state.uploaded].filter(g=>!present.has(g));
+    c.push(`Uploaded list: ${state.uploaded.size} genes`);
+    document.getElementById('activeFilters').dataset.miss = miss.join(', ');
+  }
+  const el=document.getElementById('activeFilters');
+  el.innerHTML = c.map(x=>`<span class="chip">${x}</span>`).join('');
+  if(state.uploaded){
+    const present=new Set(adjRows().map(r=>r.gene.toUpperCase()));
+    const miss=[...state.uploaded].filter(g=>!present.has(g));
+    if(miss.length) el.innerHTML += `<span class="chip miss">${miss.length} gene(s) not found: ${miss.slice(0,8).join(', ')}${miss.length>8?'…':''}</span>`;
+  }
+}
+
+// ---- render global ----
+function render(){
+  renderChips();
+  renderStats(filtered());
+  renderTable();
+  renderSelBar();
+}
+
+// ---- "Per-exon detail" dialog ----
+function exonStatus(x, depthIdx, cutoff){
+  if(x.avg < 5 || x.cov[0] < 0.10) return 'dark';
+  const v = x.cov[depthIdx];
+  if(v >= cutoff) return 'pass';
+  if(v >= 0.90) return 'warn';
+  return 'fail';
+}
+// Counts the exons that do not meet the active criteria (depth + completeness),
+// using the same per-sample degradation as the modal.
+function exonFailStats(gene){
+  const data = EXON_DATA[gene];
+  if(!data) return null;
+  const {deg} = SAMPLE_DEG[state.sample];
+  let fail = 0;
+  data.ex.forEach(x=>{
+    const v = Math.max(0, Math.min(1, 1-(1-x.cov[state.depthIdx])*deg));
+    if(v < state.cutoff) fail++;
+  });
+  return {fail, total:data.ex.length};
+}
+function exonFailCell(gene){
+  const s = exonFailStats(gene);
+  if(!s) return `<td class="num muted" title="Per-exon detail not available in this mockup">—</td>`;
+  const pct = Math.round(100*s.fail/s.total);
+  const val = s.fail>0
+    ? `<b style="color:var(--err-fg)">${s.fail}/${s.total}</b>`
+    : `<span style="color:var(--ok-fg)">0/${s.total}</span>`;
+  const title = s.fail>0
+    ? `${s.fail} of ${s.total} exon(s) below the active criteria (${pct}%) — click for the per-exon detail`
+    : `All exons pass (0%) — click for the per-exon detail`;
+  const ic = ` <svg class="exon-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`;
+  return `<td class="num exon-cell" data-gene="${gene}" title="${title}">${val}${ic}</td>`;
+}
+function fmtCoord(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+
+function openExonDlg(gene){
+  const data = EXON_DATA[gene];
+  if(!data) return;
+  state.currentExonGene = gene;
+
+  const t = THRESH[state.depthIdx];
+  const cutoff = state.cutoff;
+  const {deg, avg:avgMult} = SAMPLE_DEG[state.sample];
+
+  // apply the current sample degradation to the exons
+  const adjExons = data.ex.map((x,i)=>({
+    num: i+1, s: x.s, e: x.e,
+    avg: +(x.avg * avgMult).toFixed(1),
+    min: Math.round(x.min * avgMult),
+    cov: x.cov.map(v => Math.max(0, Math.min(1, 1-(1-v)*deg)))
+  }));
+
+  // aggregates weighted by exon size
+  const totalSize = adjExons.reduce((s,x)=>s+(x.e-x.s+1),0);
+  const wAvg   = adjExons.reduce((s,x)=>s+x.avg*(x.e-x.s+1),0) / totalSize;
+  const wPctT  = adjExons.reduce((s,x)=>s+x.cov[state.depthIdx]*(x.e-x.s+1),0) / totalSize;
+  const wPct5  = adjExons.reduce((s,x)=>s+x.cov[0]*(x.e-x.s+1),0) / totalSize;
+  const geneStatus =
+    (wAvg < 5 || wPct5 < 0.10) ? 'dark' :
+    (wPctT >= cutoff) ? 'pass' :
+    (wPctT >= 0.90) ? 'warn' : 'fail';
+
+  document.getElementById('exonTitle').textContent = `${gene} — Per-exon detail`;
+  document.getElementById('exonSummary').innerHTML =
+      `<div><span class="k">Transcript</span><span class="v">${data.tr}</span></div>`
+    + `<div><span class="k">Locus</span><span class="v">${data.chr} (${data.strand})</span></div>`
+    + `<div><span class="k">Exons</span><span class="v">${adjExons.length}</span></div>`
+    + `<div><span class="k">Coding size</span><span class="v">${totalSize.toLocaleString('en-CA')} bp</span></div>`
+    + `<div><span class="k">Avg. coverage</span><span class="v">${wAvg.toFixed(1)}x</span></div>`
+    + `<div><span class="k">%≥${t}x</span><span class="v">${(wPctT*100).toFixed(1)}%</span></div>`
+    + `<div><span class="k">Overall status</span><span class="v">${badge(geneStatus)}</span></div>`;
+
+  document.getElementById('exonCriteria').textContent =
+    `Depth: ${t}x · Required completeness: ${(cutoff*100).toFixed(0)}%`;
+
+  // horizontal schematic
+  const schema = document.getElementById('exonSchema');
+  schema.innerHTML = adjExons.map((x,i)=>{
+    const size = x.e - x.s + 1;
+    const frac = size / totalSize;
+    const st = exonStatus(x, state.depthIdx, cutoff);
+    const bg = st==='dark' ? 'var(--dark-bg)' : band(x.cov[state.depthIdx]);
+    const label = frac >= 0.05 ? `<span class="num">${i+1}</span>` : '';
+    return `<div data-i="${i}" style="flex-grow:${size};background:${bg}" `
+      + `title="Exon ${i+1} · ${size.toLocaleString('en-CA')} bp · ${(x.cov[state.depthIdx]*100).toFixed(1)}% ≥${t}x · ${STATUS_LABEL[st]}">${label}</div>`;
+  }).join('');
+
+  // detailed table (thresholds ≤ 200x for readability; the active depth is kept even if higher)
+  const covCols = THRESH.map((tt,i)=>({t:tt,i})).filter(c=>c.t<=200 || c.i===state.depthIdx);
+  let h = '<thead><tr>'
+    + '<th>Exon</th>'
+    + '<th>Coord. (GRCh38)</th>'
+    + '<th class="num">Size (bp)</th>'
+    + '<th class="num">Avg. cov. (x)</th>'
+    + '<th class="num" title="Lowest coverage observed within the exon">Min. cov. (x)</th>'
+    + covCols.map(c=>`<th class="num ${c.i===state.depthIdx?'depth':''}">%≥${c.t}x</th>`).join('')
+    + '<th>Status</th></tr></thead><tbody>';
+  for(const x of adjExons){
+    const size = x.e - x.s + 1;
+    const st = exonStatus(x, state.depthIdx, cutoff);
+    const minStyle = x.min < t ? 'color:var(--err-fg);font-weight:700' : '';
+    h += `<tr data-i="${x.num-1}"><td><b>${x.num}</b></td>`
+      + `<td class="muted">${data.chr}:${fmtCoord(x.s)}–${fmtCoord(x.e)}</td>`
+      + `<td class="num">${size.toLocaleString('en-CA')}</td>`
+      + `<td class="num">${x.avg}</td>`
+      + `<td class="num" style="${minStyle}">${x.min}</td>`
+      + covCols.map(c=>{
+          const cv=x.cov[c.i];
+          return `<td class="num ${c.i===state.depthIdx?'depth':''}"><span class="covcell" style="background:${band(cv)}">${(cv*100).toFixed(1)}</span></td>`;
+        }).join('')
+      + `<td>${badge(st)}</td></tr>`;
+  }
+  h += '</tbody>';
+  document.getElementById('exonTable').innerHTML = h;
+
+  // link schematic <-> table
+  const rows = [...document.querySelectorAll('#exonTable tbody tr')];
+  schema.querySelectorAll('div[data-i]').forEach(seg=>{
+    seg.onclick = ()=>{
+      const i = seg.dataset.i;
+      schema.querySelectorAll('div').forEach(d=>d.classList.remove('active'));
+      seg.classList.add('active');
+      rows.forEach(r=>r.classList.remove('active'));
+      const row = rows.find(r=>r.dataset.i===i);
+      if(row){ row.classList.add('active'); row.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+    };
+  });
+
+  document.getElementById('exonDlg').showModal();
+}
+
+// ---- limitation note for the report ----
+// Builds pre-formatted text listing the genes below the active criteria.
+// Genes analyzed: the selection if any, otherwise the current filter (search/panel/list).
+// The status filter (cards) is deliberately ignored: the note must cover
+// the whole set of genes of interest, not the transient view.
+function buildLimitationNote(){
+  const sampleTxt = document.getElementById('sampleSel').selectedOptions[0].textContent.trim();
+  const depth = THRESH[state.depthIdx];
+  const cutoffPct = (state.cutoff*100).toFixed(0);
+  const all = filtered();
+  const nSel = state.selected.size;
+  const scope = nSel > 0 ? all.filter(r=>state.selected.has(r.gene)) : all;
+
+  let scopeDesc;
+  if(nSel > 0)              scopeDesc = `${nSel} selected gene(s)`;
+  else if(state.panel)      scopeDesc = `panel "${state.panel}" (${scope.length} genes)`;
+  else if(state.uploaded)   scopeDesc = `uploaded list (${scope.length} genes)`;
+  else if(state.q)          scopeDesc = `search "${state.q}" (${scope.length} genes)`;
+  else                      scopeDesc = `all ${scope.length} genes`;
+
+  const grp = {fail:[], warn:[], dark:[]};
+  scope.forEach(r=>{ const st=statusOf(r); if(grp[st]) grp[st].push(r); });
+  const byGene = (a,b)=>a.gene<b.gene?-1:a.gene>b.gene?1:0;
+  Object.values(grp).forEach(a=>a.sort(byGene));
+  const nProblem = grp.fail.length + grp.warn.length + grp.dark.length;
+
+  const L = [];
+  L.push('LIMITATION NOTE — SEQUENCING COVERAGE');
+  L.push('');
+  L.push(`Sample: ${sampleTxt}`);
+  L.push(`Applied criteria: depth ≥ ${depth}x over ${cutoffPct}% of bases.`);
+  L.push(`Genes analyzed: ${scopeDesc}.`);
+  L.push('');
+
+  if(nProblem === 0){
+    L.push(`All analyzed genes meet the coverage criteria `
+         + `(≥ ${depth}x over ${cutoffPct}% of bases). No limitation to report.`);
+    return {text:L.join('\n'), nProblem, nScope:scope.length};
+  }
+
+  L.push(`The following genes show coverage below the criteria and may require `
+       + `additional verification (e.g. Sanger sequencing, retest, or an alternative method):`);
+
+  // floored to 1 decimal: the note lists genes BELOW the threshold, so a value
+  // such as 99.96% must never display as "100.0%" next to "partial".
+  const floorPct = v => (Math.floor(v*1000)/10).toFixed(1);
+  const line = r => `  • ${r.gene} — ${floorPct(r.cov[state.depthIdx])}% of bases `
+                  + `≥ ${depth}x (avg. coverage ${r.avg}x)`;
+
+  if(grp.fail.length){
+    L.push('');
+    L.push(`Insufficient coverage (< 90% of bases ≥ ${depth}x):`);
+    grp.fail.forEach(r=>L.push(line(r)));
+  }
+  if(grp.warn.length){
+    L.push('');
+    L.push(`Partial coverage (90% – ${cutoffPct}% of bases ≥ ${depth}x):`);
+    grp.warn.forEach(r=>L.push(line(r)));
+  }
+  if(grp.dark.length){
+    L.push('');
+    L.push('Unmappable regions (near-zero coverage — multicopy / duplicated regions, '
+         + 'generally not usable with short-read sequencing):');
+    grp.dark.forEach(r=>L.push(`  • ${r.gene}`));
+  }
+  return {text:L.join('\n'), nProblem, nScope:scope.length};
+}
+function openLimitDlg(){
+  const {text, nProblem, nScope} = buildLimitationNote();
+  document.getElementById('limitText').value = text;
+  document.getElementById('limitMeta').textContent =
+    nProblem ? `${nProblem} gene(s) below the criteria out of ${nScope} analyzed`
+             : `No limitation — ${nScope} gene(s) pass`;
+  document.getElementById('limitDlg').showModal();
+  // showModal() focuses the textarea and scrolls to the caret:
+  // bring caret + scroll back to the very start of the text.
+  const ta = document.getElementById('limitText');
+  ta.setSelectionRange(0, 0);
+  ta.scrollTop = 0;
+}
+
+// ======================================================================
+// OVERVIEW (sample level) — source: Dragen JSON report
+// (e.g. 47674.QC_report.json). Proband data = real; mother/father =
+// indicators derived from the proband for the trio demo.
+// ======================================================================
+const QC_RAW = {"DRAGEN_capture_coverage_metrics": {"Aligned bases": 16544265985, "Aligned bases in QC coverage region": 11044747094, "Aligned reads": 175121320, "Aligned reads in QC coverage region": 138848036, "Average alignment coverage over QC coverage region": 252.44, "Average autosomal coverage over QC coverage region": 255.77, "Average mitochondrial coverage over QC coverage region": 0.0, "Mean/Median autosomal coverage ratio over QC coverage region": 1.01, "Median autosomal coverage over QC coverage region": 254.0, "Median chr X coverage (ignore 0x regions) over QC coverage region": 184.0, "Median chr Y coverage (ignore 0x regions) over QC coverage region": 183.0, "PCT of QC coverage region with coverage [   0x:   1x)": 0.96, "PCT of QC coverage region with coverage [   0x: inf)": 100.0, "PCT of QC coverage region with coverage [   1x:   3x)": 0.24, "PCT of QC coverage region with coverage [   1x: inf)": 99.04, "PCT of QC coverage region with coverage [   3x:  10x)": 0.31, "PCT of QC coverage region with coverage [   3x: inf)": 98.8, "PCT of QC coverage region with coverage [  10x:  15x)": 0.14, "PCT of QC coverage region with coverage [  10x: inf)": 98.48, "PCT of QC coverage region with coverage [  15x:  20x)": 0.12, "PCT of QC coverage region with coverage [  15x: inf)": 98.35, "PCT of QC coverage region with coverage [  20x:  50x)": 0.64, "PCT of QC coverage region with coverage [  20x: inf)": 98.22, "PCT of QC coverage region with coverage [  50x: 100x)": 2.87, "PCT of QC coverage region with coverage [  50x: inf)": 97.58, "PCT of QC coverage region with coverage [ 100x: 500x)": 92.94, "PCT of QC coverage region with coverage [ 100x: inf)": 94.71, "PCT of QC coverage region with coverage [ 500x: inf)": 1.77, "PCT of QC coverage region with coverage [ 500x:1000x)": 1.75, "PCT of QC coverage region with coverage [1000x: inf)": 0.02, "PCT of QC coverage region with coverage [1000x:1500x)": 0.01, "PCT of QC coverage region with coverage [1500x: inf)": 0.01, "Uniformity of coverage (PCT > 0.2*mean) over QC coverage region": 97.56, "Uniformity of coverage (PCT > 0.4*mean) over QC coverage region": 94.6}, "DRAGEN_mapping_metrics": {"Bases in reference genome": 3217346917, "Bases in target bed [% of genome]": "NA", "DRAGEN mapping rate [mil. reads/second]": 1.87, "Estimated read length": 101.0, "Estimated sample contamination": 0.004, "Estimated sample contamination standard error": 0.0002, "Hard-clipped bases": 0, "Hard-clipped bases R1": 0, "Hard-clipped bases R2": 0, "Input bases divided by reference genome size": 7.77, "Input bases divided by target bed size": "NA", "Insert length: mean": 150.95, "Insert length: median": 134.0, "Insert length: standard deviation": 107.57, "Linked alignments from proximity-aware mapping": "NA", "Mapped bases": 24780316973, "Mapped bases R1": 12435450068, "Mapped bases R2": 12344866905, "Mapped reads": 245349673, "Mapped reads (RNA) to chrM and excluded from metrics": "NA", "Mapped reads (RNA) to rRNA and filtered": "NA", "Mapped reads R1": 123123268, "Mapped reads R2": 122226405, "Mapped reads including ref-external or filtered or excluded": 246450364, "Mapped reads to non-ref decoys (NRD)": 703319, "Mapped reads to pop-alt insertions (PAI)": 397372, "Mapped reads to ref-external sequences (PAI or NRD)": 1100691, "Mismatched bases R1": 22780265, "Mismatched bases R1 (excl. indels)": 20055540, "Mismatched bases R2": 26033616, "Mismatched bases R2 (excl. indels)": 23262605, "Not properly paired reads (discordant)": 725958, "Number of duplicate marked and mate reads removed": "NA", "Number of duplicate marked reads": 58647781, "Number of unique reads (excl. duplicate marked reads)": 188835099, "Paired reads (itself & mate mapped)": 244391816, "Paired reads mapped to different chromosomes": 598556, "Paired reads mapped to different chromosomes (MAPQ>=10)": 482542, "Properly paired reads": 243665858, "Provided sex chromosome ploidy": "NA", "Q30 bases": 24246777193, "Q30 bases (excl. dups & clipped bases)": 17461764011, "Q30 bases R1": 12204044254, "Q30 bases R2": 12042732939, "QC-failed reads": 0, "Reads kept by fractional downsampling [% of input reads]": "NA", "Reads mapping to multiple locations": 13210245, "Reads with MAPQ NA (Unmapped reads)": 2133207, "Reads with MAPQ [ 0:10)": 14786387, "Reads with MAPQ [10:20)": 2195220, "Reads with MAPQ [20:30)": 2355956, "Reads with MAPQ [30:40)": 652185, "Reads with MAPQ [40:inf)": 225359925, "Reads with indel R1": 1133658, "Reads with indel R2": 1169926, "Reads with mate sequenced": 247482880, "Reads with splice junction": "NA", "Reads without mate sequenced": 0, "Remapped alignments from proximity-aware mapping": "NA", "Secondary alignments": 0, "Singleton reads (itself mapped; mate unmapped)": 957857, "Soft-clipped bases": 1458106093, "Soft-clipped bases R1": 725272392, "Soft-clipped bases R2": 732833701, "Supplementary (chimeric) alignments": 382498, "Total alignments": 245732171, "Total bases": 24995770880, "Total bases R1": 12497885440, "Total bases R2": 12497885440, "Total bases removed by downsampling": "NA", "Total input reads": 247482880, "Total input reads for fractional downsampling": "NA", "Total reads removed by downsampling": "NA", "Unmapped reads": 2133207, "Unmapped reads minus excluded mappings": 2133207, "Unmapped reads minus filtered mappings": 2133207, "Unmapped reads minus ref-external mappings": 1032516, "Unmapped reads minus ref-external or filtered or excluded": 1032516}, "Picard_CollectHsMetrics": {"AT_DROPOUT": 3.165275, "BAIT_DESIGN_EFFICIENCY": 0.867924, "BAIT_SET": "HyperExomeV2_capture_targets", "BAIT_TERRITORY": 43181552, "FOLD_80_BASE_PENALTY": 1.450077, "FOLD_ENRICHMENT": 48.020374, "GC_DROPOUT": 0.000123, "GENOME_SIZE": 3217346917, "HET_SNP_Q": 20, "HET_SNP_SENSITIVITY": 0.989078, "HS_LIBRARY_SIZE": 178777643, "HS_PENALTY_100X": 4.673884, "HS_PENALTY_10X": 3.869348, "HS_PENALTY_20X": 3.944538, "HS_PENALTY_30X": 4.01221, "HS_PENALTY_40X": 4.094919, "HS_PENALTY_50X": 4.180636, "MAX_TARGET_COVERAGE": 2231, "MEAN_BAIT_COVERAGE": 348.372905, "MEAN_TARGET_COVERAGE": 179.809556, "MEDIAN_TARGET_COVERAGE": 175, "MIN_TARGET_COVERAGE": 0, "NEAR_BAIT_BASES": 4216778299, "OFF_BAIT_BASES": 4080791930, "ON_BAIT_BASES": 15043282727, "ON_BAIT_VS_SELECTED": 0.781061, "ON_TARGET_BASES": 6738959360, "PCT_EXC_ADAPTER": 0, "PCT_EXC_BASEQ": 0.002231, "PCT_EXC_DUPE": 0.242853, "PCT_EXC_MAPQ": 0.045139, "PCT_EXC_OFF_TARGET": 0.217863, "PCT_EXC_OVERLAP": 0.203209, "PCT_OFF_BAIT": 0.174835, "PCT_PF_READS": 1, "PCT_PF_UQ_READS": 0.759979, "PCT_PF_UQ_READS_ALIGNED": 0.992663, "PCT_SELECTED_BASES": 0.825165, "PCT_TARGET_BASES_100X": 0.896684, "PCT_TARGET_BASES_10X": 0.984887, "PCT_TARGET_BASES_1X": 0.990637, "PCT_TARGET_BASES_20X": 0.982105, "PCT_TARGET_BASES_2X": 0.988853, "PCT_TARGET_BASES_30X": 0.979669, "PCT_TARGET_BASES_40X": 0.976908, "PCT_TARGET_BASES_50X": 0.973058, "PCT_USABLE_BASES_ON_BAIT": 0.601833, "PCT_USABLE_BASES_ON_TARGET": 0.269604, "PF_BASES": 24995770880, "PF_BASES_ALIGNED": 23340852956, "PF_READS": 247482880, "PF_UNIQUE_READS": 188081888, "PF_UQ_BASES_ALIGNED": 17672454579, "PF_UQ_READS_ALIGNED": 186701892, "TARGET_TERRITORY": 37478316, "TOTAL_READS": 247482880, "ZERO_CVG_TARGETS_PCT": 0.006651}, "DRAGEN_cnv_metrics": {"Average alignment coverage over genome": 5.41, "Bases in reference genome": 3217346917, "Coverage MAD": 0.07621, "Median Bin Count": 2.54, "Number of alignment records": 247865378, "Number of amplifications": 59, "Number of deletions": 90, "Number of filtered records (MAPQ)": 3814924, "Number of filtered records (duplicates)": 59493862, "Number of filtered records (total)": 63688095, "Number of filtered records (unmapped)": 2133207, "Number of normal samples": 100, "Number of passing amplifications": 49, "Number of passing deletions": 71, "Number of segments": 10798, "Number of target intervals": 411407, "PMAD": 0.078734, "Post-Normalization Bin Count Sigma": 0.08008}, "DRAGEN_gvcf_metrics": {"(Chr X SNPs)/(chr Y SNPs) ratio over genome": 13.0, "Biallelic": 462615, "Chr X number of SNPs over genome": 6162, "Chr Y number of SNPs over genome": 474, "Deletions": 43006, "Deletions (Hap)": 505, "Deletions (Het)": 18764, "Deletions (Hom)": 23737, "Het/Hom ratio": 0.9, "Heterozygous": 230121, "Homozygous": 256639, "In dbSNP": 0, "Indel Mosaics": 502, "Indels (Het)": 2019, "Insertions": 39326, "Insertions (Hap)": 455, "Insertions (Het)": 17187, "Insertions (Hom)": 21684, "Multiallelic": 24145, "Not in dbSNP": 0, "Percent Autosome Callability": 11.3882, "Percent Callability": 11.0246, "Percent QC Region Callability in Region 1": 98.8017, "Percent QC Region Callability in Region 2": 98.5771, "Percent QC Region Callability in Region 3": 27.4275, "SNP Mosaics": 1886, "SNP Transitions": 433269, "SNP Transversions": 186579, "SNPs": 408419, "Single allelic": 6068, "Ti/Tv ratio": 2.32, "Total": 492828}, "DRAGEN_ploidy_estimation_metrics": {"Autosomal coverage percentile": 194.21, "Coverage skewness": 1.0, "Ploidy estimation": "XY", "X / Autosomal ratio": 0.66, "X coverage percentile": 128.01, "Y / Autosomal ratio": 0.49, "Y coverage percentile": 95.96}};
+const SEQ_QC = {"captureKit": "Roche HyperExomeV2", "flowcell": "B23LFFTLT3", "runName": "20260629_LH00336_0448_B23LFFTLT3", "runNameShort": "LH00336_0448", "sequencer": "LH00336", "sequencingDate": "20260629"};
+
+const G = (grp,key)=>QC_RAW[grp][key];
+// id = sequencing ID (internal); sid = sample submitter ID (DMxxxxxx), shown on screen
+const QC_MEMBERS = [
+  {key:'proband', label:'Proband', id:'47674', sid:'DM189234', dsex:'M'},
+  {key:'mother',  label:'Mother',  id:'47675', sid:'DM189235', dsex:'F'},
+  {key:'father',  label:'Father',  id:'47676', sid:'DM189236', dsex:'M'},
+];
+// ---- trio derivation (demo) ----
+// Proband = real data; mother/father = copy of QC_RAW with the relevant metrics
+// degraded by a factor (everything else passes through unchanged). Once integrated,
+// each member will have its own QC_report.json.
+const MEMBER_DEG = {
+  mother: {cov:0.85, covPct:0.99,  unif:0.985, fold80:1.18, contam:1.6, dup:1.12, ampl:57, del:81},
+  father: {cov:0.62, covPct:0.977, unif:0.970, fold80:1.42, contam:2.8, dup:1.30, ampl:70, del:95},
+};
+const _mqCache = {};
+function memberQC(key){
+  if(key==='proband') return QC_RAW;
+  if(_mqCache[key]) return _mqCache[key];
+  const f = MEMBER_DEG[key];
+  const q = JSON.parse(JSON.stringify(QC_RAW));
+  const cap=q.DRAGEN_capture_coverage_metrics, pic=q.Picard_CollectHsMetrics,
+        map=q.DRAGEN_mapping_metrics, cnv=q.DRAGEN_cnv_metrics;
+  const r2=x=>+x.toFixed(2), r4=x=>+x.toFixed(4);
+  // mean/median coverages
+  ['Average alignment coverage over QC coverage region','Average autosomal coverage over QC coverage region',
+   'Median autosomal coverage over QC coverage region','Median chr X coverage (ignore 0x regions) over QC coverage region',
+   'Median chr Y coverage (ignore 0x regions) over QC coverage region'].forEach(k=> cap[k]=r2(cap[k]*f.cov));
+  pic.MEAN_TARGET_COVERAGE=r2(pic.MEAN_TARGET_COVERAGE*f.cov);
+  pic.MEDIAN_TARGET_COVERAGE=Math.round(pic.MEDIAN_TARGET_COVERAGE*f.cov);
+  // % of region ≥ Nx (slight step down; ≥0x stays at 100)
+  Object.keys(cap).forEach(k=>{ if(k.includes(': inf)') && !k.includes('[   0x: inf)')) cap[k]=r2(Math.min(100,cap[k]*f.covPct)); });
+  ['PCT_TARGET_BASES_1X','PCT_TARGET_BASES_2X','PCT_TARGET_BASES_10X','PCT_TARGET_BASES_20X',
+   'PCT_TARGET_BASES_30X','PCT_TARGET_BASES_40X','PCT_TARGET_BASES_50X','PCT_TARGET_BASES_100X'].forEach(k=> pic[k]=r4(Math.min(1,pic[k]*f.covPct)));
+  // uniformity, fold-80, contamination, duplication
+  cap['Uniformity of coverage (PCT > 0.2*mean) over QC coverage region']=r2(cap['Uniformity of coverage (PCT > 0.2*mean) over QC coverage region']*f.unif);
+  cap['Uniformity of coverage (PCT > 0.4*mean) over QC coverage region']=r2(cap['Uniformity of coverage (PCT > 0.4*mean) over QC coverage region']*f.unif);
+  pic.FOLD_80_BASE_PENALTY=r4(pic.FOLD_80_BASE_PENALTY*f.fold80);
+  map['Estimated sample contamination']=r4(map['Estimated sample contamination']*f.contam);
+  pic.PCT_EXC_DUPE=r4(Math.min(1,pic.PCT_EXC_DUPE*f.dup));
+  // read counts (scale with coverage)
+  ['Total input reads','Mapped reads','Number of unique reads (excl. duplicate marked reads)',
+   'Properly paired reads','Reads with MAPQ [40:inf)'].forEach(k=> map[k]=Math.round(map[k]*f.cov));
+  // passing CNVs (per-member demo values)
+  cnv['Number of passing amplifications']=f.ampl;
+  cnv['Number of passing deletions']=f.del;
+  _mqCache[key]=q;
+  return q;
+}
+
+// Head indicators = the ones highlighted by clin (QualityControlSummary),
+// in the same order — Sex (dedicated row) · Contamination · Avg. coverage · ≥15x ·
+// Uniformity · CNVs. (Fold-80 was removed from the indicators on 2026-07-13; it is
+// still shown as a raw value in the "Capture enrichment" detail panel.)
+// Each indicator reads memberQC(member) → consistent with the detail panels.
+const HEAD_IND = [
+  {label:'Estimated contamination', unit:'%', dec:1, scale:100,
+   group:'DRAGEN_mapping_metrics', key:'Estimated sample contamination',
+   help:'Fraction of the sample estimated to be cross-contamination (DNA from another individual). Warning above 2%, fail above 5%.',
+   verdict:v=> v>0.05?{l:'err',t:'Strong contamination (> 5%)'}:v>0.02?{l:'warn',t:'Light contamination (> 2%)'}:null},
+  {label:'Avg. coverage (QC region)', unit:'x', dec:0,
+   group:'DRAGEN_capture_coverage_metrics', key:'Average alignment coverage over QC coverage region',
+   help:'Mean alignment depth over the QC region (exome). Fail below 100x.',
+   verdict:v=> v<100?{l:'err',t:'Insufficient coverage (< 100x)'}:null},
+  {label:'Region ≥ 15x', unit:'%', dec:1,
+   group:'DRAGEN_capture_coverage_metrics', key:'PCT of QC coverage region with coverage [  15x: inf)',
+   help:'Proportion of the QC region covered at 15x or more (minimum depth for a reliable call). Fail below 95%.',
+   verdict:v=> v<95?{l:'err',t:'< 95% of the region at 15x'}:null},
+  {label:'Uniformity (> 0.4×mean)', unit:'%', dec:1,
+   group:'DRAGEN_capture_coverage_metrics', key:'Uniformity of coverage (PCT > 0.4*mean) over QC coverage region',
+   help:'Coverage homogeneity: share of bases covered at more than 0.4× the mean. Warning below 93.91%.',
+   verdict:v=> v<93.91?{l:'warn',t:'Suboptimal uniformity (< 93.91%)'}:null},
+  {label:'CNVs (passing)', unit:'', dec:0, cnv:true,
+   help:'Number of CNVs (amplifications + deletions) passing the filters. Warning above 504 (abnormally high count, often a sign of technical noise).',
+   verdict:v=> v>504?{l:'warn',t:'High number of CNVs (> 504)'}:null},
+];
+const SEX_HELP = 'Sex estimated from ploidy (X and Y chromosome coverage) then compared with the patient\'s reported sex. Warning on a moderate inconsistency, fail on a strong one — flags a possible sample swap or error.';
+function headRaw(h, mq){
+  return h.cnv ? mq.DRAGEN_cnv_metrics['Number of passing amplifications'] + mq.DRAGEN_cnv_metrics['Number of passing deletions']
+               : mq[h.group][h.key];
+}
+const SEX_PLOIDY = {proband:'XY', mother:'XX', father:'XY'};
+function sexVerdict(ploidy, dsex){
+  const est = ploidy==='XY'?'M':ploidy==='XX'?'F':'?';
+  if(est==='?') return {l:'warn',t:'Sex undetermined'};
+  if(est!==dsex) return {l:'err',t:'Estimated sex ≠ reported sex'};
+  return null;
+}
+
+// Detail panels. Row = [label, key, format, decimals?, verdict?, group?]
+// Order (left→right): Alignment · Coverage · Enrichment · Sex · Variants · CNV.
+const OV_PANELS = [
+  {title:'Alignment & reads (DRAGEN)', group:'DRAGEN_mapping_metrics', rows:[
+    ['Total reads','Total input reads','int'],
+    ['Mapped reads','Mapped reads','int'],
+    ['Unique reads (excl. duplicates)','Number of unique reads (excl. duplicate marked reads)','int'],
+    ['Properly paired reads','Properly paired reads','int'],
+    ['Estimated contamination','Estimated sample contamination','pct01',2, v=>v>0.05?{l:'err',t:'> 5%'}:v>0.02?{l:'warn',t:'> 2%'}:null],
+    ['Estimated read length','Estimated read length','num',0],
+    ['Insert size (median)','Insert length: median','num',0],
+    ['Reads with MAPQ ≥ 40','Reads with MAPQ [40:inf)','int'],
+    ['Duplicate reads (Picard)','PCT_EXC_DUPE','pct01',1, null,'Picard_CollectHsMetrics'],
+  ]},
+  {title:'Coverage & uniformity (QC region)', group:'DRAGEN_capture_coverage_metrics', rows:[
+    ['Avg. coverage (alignment)','Average alignment coverage over QC coverage region','x',1, v=>v<100?{l:'err',t:'< 100x'}:null],
+    ['Mean autosomal coverage','Average autosomal coverage over QC coverage region','x',1],
+    ['Median autosomal coverage','Median autosomal coverage over QC coverage region','x',0],
+    ['Mean/median ratio','Mean/Median autosomal coverage ratio over QC coverage region','ratio',2],
+    ['Region ≥ 15x','PCT of QC coverage region with coverage [  15x: inf)','pctRaw',2, v=>v<95?{l:'err',t:'< 95%'}:null],
+    ['Region ≥ 20x','PCT of QC coverage region with coverage [  20x: inf)','pctRaw',2],
+    ['Region ≥ 50x','PCT of QC coverage region with coverage [  50x: inf)','pctRaw',2],
+    ['Region ≥ 100x','PCT of QC coverage region with coverage [ 100x: inf)','pctRaw',2],
+    ['Uniformity (> 0.2×mean)','Uniformity of coverage (PCT > 0.2*mean) over QC coverage region','pctRaw',2],
+    ['Uniformity (> 0.4×mean)','Uniformity of coverage (PCT > 0.4*mean) over QC coverage region','pctRaw',2, v=>v<93.91?{l:'warn',t:'< 93.91%'}:null],
+  ]},
+  {title:'Capture enrichment (Picard)', group:'Picard_CollectHsMetrics', rows:[
+    ['Mean target coverage','MEAN_TARGET_COVERAGE','x',1],
+    ['Median target coverage','MEDIAN_TARGET_COVERAGE','x',0],
+    ['Fold-80 (penalty)','FOLD_80_BASE_PENALTY','ratio',2],
+    ['Fold enrichment','FOLD_ENRICHMENT','ratio',1],
+    ['Selected bases','PCT_SELECTED_BASES','pct01',1],
+    ['Off-bait bases','PCT_OFF_BAIT','pct01',1],
+    ['Zero-coverage targets','ZERO_CVG_TARGETS_PCT','pct01',2],
+    ['AT dropout','AT_DROPOUT','ratio',2],
+    ['GC dropout','GC_DROPOUT','ratio',3],
+  ]},
+  {title:'Sex & ploidy', group:'DRAGEN_ploidy_estimation_metrics', rows:[
+    ['Estimated ploidy','Ploidy estimation','text'],
+    ['X / autosomal ratio','X / Autosomal ratio','ratio',2],
+    ['Y / autosomal ratio','Y / Autosomal ratio','ratio',2],
+    ['Median chr X coverage','Median chr X coverage (ignore 0x regions) over QC coverage region','x',0,null,'DRAGEN_capture_coverage_metrics'],
+    ['Median chr Y coverage','Median chr Y coverage (ignore 0x regions) over QC coverage region','x',0,null,'DRAGEN_capture_coverage_metrics'],
+  ]},
+  {title:'Variants (gVCF)', group:'DRAGEN_gvcf_metrics', rows:[
+    ['Total','Total','int'],
+    ['SNPs','SNPs','int'],
+    ['Ti/Tv','Ti/Tv ratio','ratio',2],
+    ['Het/Hom','Het/Hom ratio','ratio',2],
+    ['Insertions','Insertions','int'],
+    ['Deletions','Deletions','int'],
+    ['Callability region 1','Percent QC Region Callability in Region 1','pctRaw',2],
+    ['Callability region 2','Percent QC Region Callability in Region 2','pctRaw',2],
+  ]},
+  {title:'CNV', group:'DRAGEN_cnv_metrics', rows:[
+    ['Amplifications (passing)','Number of passing amplifications','int'],
+    ['Deletions (passing)','Number of passing deletions','int'],
+    ['Amplifications (total)','Number of amplifications','int'],
+    ['Deletions (total)','Number of deletions','int'],
+    ['Segments','Number of segments','int'],
+    ['Coverage MAD','Coverage MAD','ratio',4],
+  ]},
+];
+
+function ovDot(level){ return `<span class="dot ${level}"></span>`; }
+function fmtHead(h, raw){
+  if(raw==null) return '—';
+  return (raw*(h.scale||1)).toFixed(h.dec)+(h.unit||'');
+}
+function fmtMetric(fmt, val, dec){
+  if(val==='NA'||val==null) return 'NA';
+  const n = typeof val==='number'?val:parseFloat(val);
+  if(fmt==='text' || isNaN(n)) return String(val);
+  switch(fmt){
+    case 'int':    return Math.round(n).toLocaleString('en-CA');
+    case 'x':      return n.toFixed(dec==null?1:dec)+'x';
+    case 'pctRaw': return n.toFixed(dec==null?1:dec)+'%';
+    case 'pct01':  return (n*100).toFixed(dec==null?1:dec)+'%';
+    case 'ratio':  return n.toFixed(dec==null?2:dec);
+    case 'num':    return n.toFixed(dec==null?0:dec);
+    default:       return String(val);
+  }
+}
+
+// Rebuilds a member's JSON report (original structure) for download.
+function memberReportJSON(key){
+  const m = QC_MEMBERS.find(x=>x.key===key);
+  const sample = Object.assign({}, memberQC(key), {SampleLabo: m.id});
+  return JSON.stringify({SamplesQC:[sample], SequencingQC: SEQ_QC}, null, 2);
+}
+function downloadReport(key){
+  const m = QC_MEMBERS.find(x=>x.key===key);
+  const blob = new Blob([memberReportJSON(key)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${m.sid}.QC_report.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// --- Pedigree / relatedness (Somalier) — SIMULATED data for the trio ---
+// rel = measured relatedness; exp = expected (0.5 = 1st degree parent-child; -1 = expected unrelated).
+const PEDIGREE = [
+  {a:'proband', b:'mother', rel:0.49, exp:0.5, ibs0:0,  ibs2:331},
+  {a:'proband', b:'father', rel:0.51, exp:0.5, ibs0:0,  ibs2:324},
+  {a:'mother',  b:'father', rel:0.02, exp:-1,  ibs0:38, ibs2:251},
+];
+const PED_HELP = 'Compares the measured relatedness between samples (Somalier) with the declared pedigree: '
+  + 'parent-child expected ≈ 0.5, unrelated samples ≈ 0. Fail when a measured link does not '
+  + 'match the expectation (possible sample swap or mix-up).';
+function pedPass(p){ return p.exp>=0.4 ? p.rel>=0.35 : p.rel<0.20; }
+
+let OV_MEMBER = 'proband';   // member shown in the detail section
+
+function renderOverview(){
+  const el = document.getElementById('secOverview');
+  const date = SEQ_QC.sequencingDate.replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3');
+  const MQ = {proband:memberQC('proband'), mother:memberQC('mother'), father:memberQC('father')};
+
+  // --- trio table: indicators highlighted by clin + overall verdict per member ---
+  const memberLvls = {proband:[], mother:[], father:[]};
+  // sex/ploidy row first (clin ordering)
+  let sexCells = '';
+  QC_MEMBERS.forEach(m=>{
+    const ploidy = SEX_PLOIDY[m.key];
+    const vd = sexVerdict(ploidy, m.dsex);
+    const lvl = vd?vd.l:'ok';
+    memberLvls[m.key].push(lvl);
+    sexCells += `<td class="num"><span class="mv">${ovDot(lvl)}${ploidy} <span class="hint">· reported: ${m.dsex==='M'?'male':'female'}</span></span></td>`;
+  });
+  let trioBody = `<tr><td class="ml">Estimated sex (ploidy)</td>${sexCells}</tr>`;
+  HEAD_IND.forEach(h=>{
+    let cells = '';
+    QC_MEMBERS.forEach(m=>{
+      const raw = headRaw(h, MQ[m.key]);
+      const vd = h.verdict ? h.verdict(raw) : null;
+      const lvl = vd?vd.l:'ok';
+      memberLvls[m.key].push(lvl);
+      cells += `<td class="num"><span class="mv">${ovDot(lvl)}${fmtHead(h,raw)}</span></td>`;
+    });
+    trioBody += `<tr><td class="ml">${h.label}${h.hint?` <span class="hint">(${h.hint})</span>`:''}</td>${cells}</tr>`;
+  });
+
+  const overall = lvls => lvls.includes('err')?{c:'fail',t:'Fail'}:lvls.includes('warn')?{c:'warn',t:'Warning'}:{c:'pass',t:'Pass'};
+  // overall verdict: worst status across all indicators × all samples
+  const globalV = overall([].concat(memberLvls.proband, memberLvls.mother, memberLvls.father));
+  let trioHead = '<th>Indicator</th>';
+  QC_MEMBERS.forEach(m=>{
+    const ov = overall(memberLvls[m.key]);
+    const active = m.key===OV_MEMBER ? ' style="background:#eef1fb"' : '';
+    trioHead += `<th class="num"${active}><div>${m.label}</div><div class="hint">${m.sid}</div><div style="margin-top:4px"><span class="badge ${ov.c}">${ov.t}</span></div></th>`;
+  });
+
+  // --- detail panels: selected member (OV_MEMBER) ---
+  const activeMember = QC_MEMBERS.find(m=>m.key===OV_MEMBER);
+  const activeQC = MQ[OV_MEMBER];
+  let panels = '';
+  OV_PANELS.forEach(p=>{
+    let rows = '';
+    p.rows.forEach(r=>{
+      const [label,key,fmt,dec,verdict,grpOv] = r;
+      const grp = grpOv||p.group;
+      const val = activeQC[grp][key];
+      let dot = '';
+      if(verdict && val!=='NA' && val!=null){
+        const vd = verdict(typeof val==='number'?val:parseFloat(val));
+        dot = ovDot(vd?vd.l:'ok');
+      }
+      rows += `<div class="metric"><span class="ml">${label}</span><span class="mv">${dot}${fmtMetric(fmt,val,dec)}</span></div>`;
+    });
+    panels += `<div class="card ov-panel"><div class="hd">${p.title}</div><div class="bd">${rows}</div></div>`;
+  });
+  // sequencing (run) metadata card — shown in the grid rather than in the title
+  const seqRows = [
+    ['Analysis (run)', SEQ_QC.runName],
+    ['Run', SEQ_QC.runNameShort],
+    ['Flowcell', SEQ_QC.flowcell],
+    ['Sequencer', SEQ_QC.sequencer],
+    ['Sequencing date', date],
+    ['Capture kit', SEQ_QC.captureKit],
+  ].map(([k,v])=>`<div class="metric"><span class="ml">${k}</span><span class="mv">${v}</span></div>`).join('');
+  panels += `<div class="card ov-panel"><div class="hd">Sequencing (run)</div><div class="bd">${seqRows}</div></div>`;
+
+  // member selector: dropdown (harmonized with Gene coverage) — "relationship (submitter ID)"
+  const memSel = `<select id="ovMemberSel">`
+    + QC_MEMBERS.map(m=>`<option value="${m.key}"${m.key===OV_MEMBER?' selected':''}>${m.label} (${m.sid})</option>`).join('')
+    + `</select>`;
+  const derivedNote = OV_MEMBER==='proband' ? ''
+    : ` <span class="hint">— values derived from the proband (demo)</span>`;
+
+  // help dialog body: one threshold explained per highlighted indicator.
+  // The status words (Warning / Fail) are colored to tie them back to the badges.
+  const colorStatus = t => (t||'').replace(/\b(warning|fail)\b/gi, m =>
+    `<span style="color:var(${m.toLowerCase()==='fail'?'--err-fg':'--warn-fg'});font-weight:600">${m}</span>`);
+  const helpRows = [{label:'Estimated sex (ploidy)', help:SEX_HELP}]
+    .concat(HEAD_IND.map(h=>({label:h.label + (h.hint?` (${h.hint})`:''), help:h.help})));
+  document.getElementById('ovInfoBody').innerHTML =
+      `<dl class="info-dl">`
+    + helpRows.map(r=>`<dt>${r.label}</dt><dd>${colorStatus(r.help)}</dd>`).join('')
+    + `</dl>`;
+
+  // detailed pedigree section (pairs), below the indicator table
+  const memLabelFull = k => { const m = QC_MEMBERS.find(x=>x.key===k); return `${m.label} <span class="hint">(${m.sid})</span>`; };
+  const pedRows = PEDIGREE.map(p=>{
+    const ok = pedPass(p);
+    const expTxt = p.exp>=0.4 ? '0.50 <span class="hint">(1<sup>st</sup> degree)</span>' : 'unrelated';
+    return `<tr><td>${memLabelFull(p.a)}</td><td>${memLabelFull(p.b)}</td>`
+      + `<td class="num">${p.rel.toFixed(2)}</td>`
+      + `<td class="num">${expTxt}</td>`
+      + `<td class="num">${p.ibs0}</td><td class="num">${p.ibs2}</td>`
+      + `<td><span class="badge ${ok?'pass':'fail'}">${ok?'Pass':'Fail'}</span></td></tr>`;
+  }).join('');
+  const pedAllPass = PEDIGREE.every(pedPass);
+  const pedV = pedAllPass ? {c:'pass',t:'Pass'} : {c:'fail',t:'Fail'};
+  const pedSection =
+      `<div class="ov-sub"><span style="display:inline-flex;align-items:center;gap:10px">`
+    +   `<span title="${PED_HELP}">Pedigree — relatedness</span>`
+    +   `<span class="badge ${pedV.c}">${pedV.t}</span></span></div>`
+    + `<div class="card" style="overflow:hidden"><table class="ped-table">`
+    + `<thead><tr><th>Sample A</th><th>Sample B</th><th class="num">Relatedness</th><th class="num">Expected</th><th class="num">IBS0</th><th class="num">IBS2</th><th>Status</th></tr></thead>`
+    + `<tbody>${pedRows}</tbody></table></div>`;
+
+  el.innerHTML =
+      `<div class="ov-head"><span style="display:inline-flex;align-items:center;gap:10px"><h2>Indicators</h2><span class="badge ${globalV.c}">${globalV.t}</span></span>`
+    +   `<a class="btn sm" href="QC_demo_multiqc_report.html" target="_blank" rel="noopener" title="Open the aggregated MultiQC report (1 per family)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>MultiQC report</a></div>`
+    + `<div class="ov-legend"><span>${ovDot('ok')} Pass</span><span>${ovDot('warn')} Warning</span><span>${ovDot('err')} Fail / out of threshold</span>`
+    +   `<button class="info-i" id="ovInfoBtn" title="Understand the indicator thresholds" aria-label="Indicator thresholds">i</button></div>`
+    + `<div class="card" style="overflow:hidden"><table class="ov-trio"><thead><tr>${trioHead}</tr></thead><tbody>${trioBody}</tbody></table></div>`
+    + pedSection
+    + `<div class="ov-sub"><span>Key metrics per sample${derivedNote}</span></div>`
+    + `<div class="ov-memrow">${memSel}`
+    +   `<button class="btn sm" id="ovDownload" title="Download the Dragen (JSON) report for this sample">`
+    +     `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Dragen report (JSON)</button></div>`
+    + `<div class="ov-grid">${panels}</div>`;
+
+  // wiring of the member selector (the section is re-rendered on every change)
+  document.getElementById('ovMemberSel').onchange = e=>{
+    OV_MEMBER = e.target.value;
+    renderOverview();
+  };
+  document.getElementById('ovInfoBtn').onclick = ()=>document.getElementById('ovInfoDlg').showModal();
+  document.getElementById('ovDownload').onclick = ()=>downloadReport(OV_MEMBER);
+}
+
+// ---- controls init ----
+function initControls(){
+  const panelSel=document.getElementById('panel');
+  Object.keys(DATA.panels).forEach(p=>{
+    const o=document.createElement('option'); o.value=p; o.textContent=`${p} (${DATA.panels[p].length})`; panelSel.appendChild(o);
+  });
+  const depthSel=document.getElementById('depth');
+  THRESH.forEach((t,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=t+'x'; depthSel.appendChild(o);});
+  depthSel.value=state.depthIdx;
+
+  panelSel.onchange=e=>{state.panel=e.target.value;state.page=0;render();};
+  depthSel.onchange=e=>{state.depthIdx=+e.target.value;render();};
+  document.getElementById('cutoff').onchange=e=>{state.cutoff=+e.target.value;render();};
+  const qInput=document.getElementById('q'), qWrap=document.getElementById('qWrap'), qClear=document.getElementById('qClear');
+  const syncQ=()=>qWrap.classList.toggle('has-value', qInput.value.length>0);
+  qInput.oninput=()=>{state.q=qInput.value.trim();state.page=0;syncQ();render();};
+  qClear.onclick=()=>{qInput.value='';state.q='';state.page=0;syncQ();render();qInput.focus();};
+
+  document.getElementById('sampleSel').onchange = e => {
+    state.sample = e.target.value; state.page = 0; render();
+  };
+  document.getElementById('prev').onclick=()=>{if(state.page>0){state.page--;renderTable();}};
+  document.getElementById('next').onclick=()=>{state.page++;renderTable();};
+
+  // opening the exon dialog + SNV/CNV/IGV links from the table (event delegation)
+  const covTbl = document.getElementById('covTable');
+  covTbl.addEventListener('click', e => {
+    if(e.target.matches('input[type=checkbox]')) return; // leave it to the 'change' handler
+    const lnk = e.target.closest('td.actions .lnk');
+    if(lnk){
+      const g = lnk.dataset.gene, k = lnk.dataset.kind, n = lnk.dataset.n;
+      if(k === 'igv')      alert(`Demo: would open ${g} in IGV.`);
+      else if(k === 'snv') alert(`Demo: would filter the Variants tab on ${g} (${n} SNV).`);
+      else if(k === 'cnv') alert(`Demo: would filter the CNV Variants tab on ${g} (${n} CNV).`);
+      return;
+    }
+    const cell = e.target.closest('td.gene.clickable, td.exon-cell');
+    if(cell) openExonDlg(cell.dataset.gene);
+  });
+  // selection: row checkbox + header checkbox (current page)
+  covTbl.addEventListener('change', e => {
+    const cb = e.target;
+    if(!cb.matches('input[type=checkbox]')) return;
+    if(cb.id === 'selAllPage'){
+      const rows = [...document.querySelectorAll('#covTable tbody input[type=checkbox]')];
+      rows.forEach(x => {
+        x.checked = cb.checked;
+        if(cb.checked) state.selected.add(x.dataset.gene);
+        else state.selected.delete(x.dataset.gene);
+      });
+    } else {
+      if(cb.checked) state.selected.add(cb.dataset.gene);
+      else state.selected.delete(cb.dataset.gene);
+      syncHeaderCheckbox();
+    }
+    renderSelBar();
+  });
+  // exon dialog: closing
+  const exonDlg = document.getElementById('exonDlg');
+  document.getElementById('exonClose').onclick = ()=>exonDlg.close();
+  exonDlg.addEventListener('click', e => { if(e.target===exonDlg) exonDlg.close(); });
+
+  // info dialog (criteria) — openable from the filter bar AND from the exon dialog
+  const infoDlg=document.getElementById('infoDlg');
+  const openInfoDlg=()=>{
+    document.getElementById('i-depth').textContent = THRESH[state.depthIdx]+'x';
+    document.getElementById('i-cutoff').textContent = (state.cutoff*100).toFixed(0)+'%';
+    infoDlg.showModal();
+  };
+  document.getElementById('infoBtn').onclick=openInfoDlg;
+  document.getElementById('exonInfoBtn').onclick=openInfoDlg;
+  document.getElementById('infoClose').onclick=()=>infoDlg.close();
+  infoDlg.addEventListener('click',e=>{ if(e.target===infoDlg) infoDlg.close(); });
+
+  // indicator help dialog (overview) — opening wired up in renderOverview
+  const ovInfoDlg=document.getElementById('ovInfoDlg');
+  document.getElementById('ovInfoClose').onclick=()=>ovInfoDlg.close();
+  ovInfoDlg.addEventListener('click',e=>{ if(e.target===ovInfoDlg) ovInfoDlg.close(); });
+
+  // limitation note
+  const limitDlg=document.getElementById('limitDlg');
+  document.getElementById('limitClose').onclick=()=>limitDlg.close();
+  limitDlg.addEventListener('click',e=>{ if(e.target===limitDlg) limitDlg.close(); });
+  document.getElementById('limitCopy').onclick=()=>{
+    const btn=document.getElementById('limitCopy'), orig=btn.textContent;
+    navigator.clipboard.writeText(document.getElementById('limitText').value).then(()=>{
+      btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent=orig,1600);
+    }).catch(()=>{ btn.textContent='✗ Copy failed'; setTimeout(()=>btn.textContent=orig,1600); });
+  };
+
+  // upload dialog
+  const dlg=document.getElementById('uploadDlg');
+  document.getElementById('uploadBtn').onclick=()=>dlg.showModal();
+  document.getElementById('listFile').onchange=e=>{
+    const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
+    rd.onload=()=>{document.getElementById('geneList').value=rd.result; updateListCount();}; rd.readAsText(f);
+  };
+  document.getElementById('geneList').oninput=updateListCount;
+  document.getElementById('clearList').onclick=()=>{
+    document.getElementById('geneList').value=''; state.uploaded=null; updateListCount();
+    document.getElementById('uploadBtn').textContent='Paste / upload…'; dlg.close(); render();
+  };
+  document.getElementById('applyList').onclick=()=>{
+    const genes=parseGenes(document.getElementById('geneList').value);
+    state.uploaded = genes.size? genes : null;
+    document.getElementById('uploadBtn').textContent = genes.size? `List: ${genes.size} genes ✎` : 'Paste / upload…';
+    state.page=0; dlg.close(); render();
+  };
+
+  // QC sub-navigation: overview (sample) / gene coverage
+  renderOverview();
+  document.querySelectorAll('#qcNav button').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#qcNav button').forEach(x=>x.classList.toggle('active', x===b));
+    const sec = b.dataset.sec;
+    document.getElementById('secOverview').classList.toggle('hidden', sec!=='overview');
+    document.getElementById('secGenes').classList.toggle('hidden', sec!=='genes');
+  });
+
+  // the Export button handler is now attached in renderSelBar() (the button is created there)
+}
+function updateListCount(){
+  const n=parseGenes(document.getElementById('geneList').value).size;
+  document.getElementById('listCount').textContent = n? `${n} gene(s)` : '';
+}
+function parseGenes(txt){
+  return new Set(txt.split(/[\s,;]+/).map(s=>s.trim().toUpperCase()).filter(Boolean));
+}
+function exportCSV(rows,name,alertsMode){
+  const t=THRESH[state.depthIdx];
+  let head, body;
+  if(alertsMode){
+    head=['gene','status','pct_min_depth','depth','bases_below_threshold','avg','size'];
+    body=rows.map(r=>{const v=r.cov[state.depthIdx];return [r.gene,statusOf(r),(v*100).toFixed(2),t+'x',Math.round(r.size*(1-v)),r.avg,r.size].join(',');});
+  }else{
+    head=['gene','size','avg',...THRESH.map(x=>'cov'+x),'status'];
+    body=rows.map(r=>[r.gene,r.size,r.avg,...r.cov.map(v=>(v).toFixed(4)),statusOf(r)].join(','));
+  }
+  const blob=new Blob([head.join(',')+'\n'+body.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+}
+
+initControls();
+render();
+</script>
+</body>
+</html>
