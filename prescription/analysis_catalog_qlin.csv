@@ -1,0 +1,38 @@
+id,code,name,description,primary_condition,condition_code_system,analysis_type_code,tenant_code
+1,MMG,55340 - Maladies musculaires globales,,MONDO:0019056,mondo,germline,qlin
+2,DYSM,55330 - Dystrophies musculaires,,MONDO:0020121,mondo,germline,qlin
+3,RHAB,55338 - Rhabdomyolyse,,HP:0003201,hpo,germline,qlin
+4,MITN,55370 - Mitochondriopathies nucléaires,,MONDO:0044970,mondo,germline,qlin
+5,MYOC,55332 - Myopathies congénitales,,MONDO:0019952,mondo,germline,qlin
+6,MYAC,55334 - Myasthénies congénitales,,MONDO:0018940,mondo,germline,qlin
+7,HYPM,55336 - Hyperthermie maligne,,MONDO:0007783,mondo,germline,qlin
+8,RGDI,55360 - Retard global de développement / Déficience intellectuelle (Trio),,MONDO:0700092,mondo,germline,qlin
+9,POLYM,55372 - Polymalformation contexte postnatal,,MONDO:0019755,mondo,germline,qlin
+10,TRATU,65217 - Transcriptome tumoral,,MONDO:0004992,mondo,somatic,qlin
+11,TUHEM,55393 - Prédisposition hémopathies malignes,,MONDO:0015356,mondo,germline,qlin
+12,TUPED,55392 - Prédisposition cancers pédiatriques,,MONDO:0015356,mondo,germline,qlin
+13,EXTUM,65218 - Analyse tumorale,,MONDO:0004992,mondo,somatic,qlin
+14,SHEMA,65091 - Leucémie (somatique),,MONDO:0005059,mondo,somatic,qlin
+15,SCID,55405 - Déficit immunitaire combiné sévère,,MONDO:0015974,mondo,germline,qlin
+16,STMO,65174 - Sarcome des tissus mous et osseux,,MONDO:0005089,mondo,somatic,qlin
+17,FEAN,55373 - Anomalies fœtales,,MONDO:0019755,mondo,germline,qlin
+18,DPSO,55414 - Défaut de production de superoxyde,,MONDO:0018305,mondo,germline,qlin
+19,EIDC,55404 - Erreurs innées du complément,,MONDO:0003832,mondo,germline,qlin
+20,EIDI,55403 - Erreurs innées de l'immunité,,MONDO:0003778,mondo,germline,qlin
+21,EIII,55413 - Erreurs innées de l'immunité intrinsèque,,MONDO:0003778,mondo,germline,qlin
+22,EPIL,55415 - Epilepsie sans déficience intellectuelle,,MONDO:0005027,mondo,germline,qlin
+23,RAPIDE,Exome rapide : diagnostic monogénique et orientation thérapeutique,,,,germline,qlin
+24,HDIP,55408 - Hypogammaglobulinémie et dysrégulation immunitaire primitive,,MONDO:0015517,mondo,germline,qlin
+25,HLEB,55412 - Hémophagocytose lymphohistiocytaire et à l'infection chronique active au virus Epstein Barr,,MONDO:0015540,mondo,germline,qlin
+26,HLH,55412 - Hémophagocytose lymphohistiocytaire,,MONDO:0015540,mondo,germline,qlin
+27,MAI,55409 - Maladies auto-inflammatoires,,MONDO:0019751,mondo,germline,qlin
+28,MSMD,55410 - Syndrome de prédisposition mendélienne aux infections mycobactériennes (MSMD),,MONDO:0003778,mondo,germline,qlin
+29,NPC,55411 - Neutropénie congénitale,,MONDO:0018542,mondo,germline,qlin
+30,RETINO,Rétinopathies,,MONDO:0005283,mondo,germline,qlin
+31,SHIGE,55407 - Syndrome d'hyper-IgE,,MONDO:0018037,mondo,germline,qlin
+32,SLA,55350 - Sclérose latérale amyotrophique,,MONDO:0004976,mondo,germline,qlin
+33,SURD,Surdité,,MONDO:0021945,mondo,germline,qlin
+34,VEOIB,55406 - Maladie inflammatoire de l’intestin très précoce,,MONDO:0005265,mondo,germline,qlin
+35,GENOR,75022 - Séquençage du génome entier - non spécifique,,,,germline,qlin
+36,NEUTP,Neutropénie congénitale,,MONDO:0018542,mondo,germline,qlin
+37,CONCO,55374 - Prédisposition aux tumeurs solides de l'adulte,,MONDO:0015356,mondo,germline,qlin

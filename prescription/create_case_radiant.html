@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cas · Radiant</title>
+<style>
+  :root{
+    --primary:#4f5fc3; --primary-fg:#f8fafc;
+    --bg:#ffffff; --fg:#1a1d3a; --muted:#f1f5f9; --muted-fg:#64748b;
+    --border:#e2e8f0; --input:#cbd5e1; --table-header:#f1f5f9; --table-accent:#f8fafc;
+    --err-fg:#dc2626; --dark-bg:#ede9fe; --dark-fg:#6d28d9;
+    --radius:8px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--fg);background:var(--muted);font-size:14px;line-height:1.45}
+  a{color:var(--primary);text-decoration:none}
+  .hidden{display:none !important}
+  .muted{color:var(--muted-fg)}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+  /* ---- HeaderNavigation Radiant ---- */
+  .rd-header{background:var(--bg);border-bottom:1px solid var(--border)}
+  .rd-inner{max-width:1720px;margin:0 auto;padding:0 20px}
+  .rd-header-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:13px 0}
+  .rd-title-wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .rd-title{margin:0;font-size:20px;font-weight:700;line-height:1.2}
+  .rd-badge{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:2px 8px;
+            font-size:12px;font-weight:600;white-space:nowrap}
+  .rd-badge svg{width:13px;height:13px}
+  .rd-badge.secondary{background:var(--muted);color:#334155}
+  .rd-badge.outline{background:transparent;border:1px solid var(--border);color:var(--fg)}
+  .rd-badge.pill{padding:4px 11px;border-radius:999px}
+  .rd-crumb{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted-fg);padding-top:12px}
+  .rd-crumb svg{width:14px;height:14px}
+  .rd-crumb a{cursor:pointer}
+
+  /* ---- boutons ---- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 14px;
+       border-radius:var(--radius);font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;
+       border:1px solid transparent;background:transparent;color:var(--fg);white-space:nowrap}
+  .btn svg{width:15px;height:15px}
+  .btn.primary{background:var(--primary);color:var(--primary-fg)}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.primary:disabled{opacity:.45;cursor:not-allowed;filter:none}
+  .btn.outline{border-color:var(--input);background:var(--bg)}
+  .btn.outline:hover{background:var(--muted)}
+  .btn.ghost:hover{background:var(--muted)}
+  .btn.link{height:auto;padding:0;color:var(--primary);font-weight:600}
+  .btn.link:hover{text-decoration:underline;text-underline-offset:2px}
+  .btn.sm{height:30px;padding:0 10px;font-size:13px}
+
+  main{padding:12px 20px 40px;max-width:1720px;margin:0 auto}
+  .card{background:var(--bg);border:1px solid var(--border);border-radius:12px;
+        box-shadow:0 1px 2px rgba(0,0,0,.04)}
+
+  /* ---- barre d'outils du tableau ---- */
+  .toolbar{display:flex;align-items:center;gap:10px;padding:12px 14px;flex-wrap:wrap}
+  .srch{position:relative;flex:0 1 300px}
+  .srch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted-fg)}
+  .srch input{width:100%;height:32px;padding:0 10px 0 31px;border:1px solid var(--input);
+              border-radius:var(--radius);font-family:inherit;font-size:13.5px;color:var(--fg);outline:0}
+  .fchip{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border:1px dashed var(--input);
+         border-radius:var(--radius);font-size:13px;color:var(--muted-fg);background:var(--bg);cursor:pointer;font-family:inherit}
+  .fchip svg{width:13px;height:13px}
+  .toolbar .grow{flex:1}
+
+  /* ---- tableau ---- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{background:var(--table-header);text-align:left;font-weight:600;font-size:12.5px;color:#475569;
+           padding:8px 12px;white-space:nowrap;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  tbody td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tbody tr:hover{background:var(--table-accent)}
+  td.c{text-align:center}
+  .tnum{font-variant-numeric:tabular-nums}
+  .ind{width:9px;height:9px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:6px}
+  .ind.routine{background:#94a3b8} .ind.urgent{background:#f59e0b}
+  .ind.asap{background:#f97316}    .ind.stat{background:#dc2626}
+  .st{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+  .st.draft{background:var(--muted);color:#475569}
+  .st.in_progress{background:#e0f2fe;color:#0369a1}
+  .st.submitted{background:#e0e7ff;color:#3730a3}
+  .st.incomplete{background:#fef3c7;color:#92400e}
+  .st.completed{background:#dcfce7;color:#166534}
+  .st.revoke{background:#fee2e2;color:#b91c1c}
+  /* badge de type — icône seule, comme AnalysisTypeCodeCell de Radiant */
+  .tb{display:inline-flex;align-items:center;justify-content:center;width:24px;height:22px;border-radius:6px;
+      background:var(--muted);color:#334155}
+  .tb svg{width:14px;height:14px}
+  .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;background:var(--dark-bg);
+        color:var(--dark-fg);border-radius:5px;padding:0 6px;font-size:12px}
+  .tfoot{padding:9px 14px;font-size:12.5px;color:var(--muted-fg);border-top:1px solid var(--border)}
+
+  /* ---- formulaire de création ---- */
+  .form-wrap{max-width:640px}
+  label.lbl{display:block;font-size:13px;font-weight:650;margin-bottom:6px}
+  .req{color:var(--err-fg)}
+  .card>.hd{padding:14px 18px;border-bottom:1px solid var(--border)}
+  .card>.hd h2{margin:0;font-size:16px;font-weight:650}
+  .card>.bd{padding:18px}
+  .card>.ft{padding:12px 18px;border-top:1px solid var(--border);display:flex;
+            justify-content:space-between;align-items:center;gap:10px}
+  /* combobox : le champ EST la recherche */
+  .cbx{position:relative}
+  .cbx .box{display:flex;align-items:center;gap:8px;height:38px;padding:0 11px;
+            border:1px solid var(--input);border-radius:var(--radius);background:var(--bg)}
+  .cbx .box:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,95,195,.14)}
+  .cbx .box svg{width:15px;height:15px;color:var(--muted-fg);flex-shrink:0}
+  .cbx .box input{flex:1;border:0;outline:0;background:transparent;font-family:inherit;
+                  font-size:14px;color:var(--fg)}
+  .cbx .drop{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;max-height:420px;
+             overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+             box-shadow:0 8px 24px rgba(0,0,0,.12);padding:5px}
+    .picked{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+          padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius);
+          background:var(--table-accent)}
+  .picked .nm{font-size:14px;font-weight:650}
+  .picked .chg{margin-left:auto}
+
+  /* ---- liste déroulante : la seule surface de choix ---- */
+  .opt{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:6px 8px;
+       border:0;border-radius:6px;background:transparent;font-family:inherit;cursor:pointer}
+  .opt .cw{flex:0 0 56px}
+  .opt .nm{font-size:13.5px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt .tg{margin-left:auto;flex-shrink:0;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px}
+  .opt .tg.germline{background:#e0e7ff;color:#3730a3}
+  .opt .tg.somatic{background:#ffedd5;color:#c2410c}
+  .opt:hover,.opt.cur{background:var(--muted)}
+  .opt.cur{box-shadow:inset 0 0 0 1px var(--primary)}
+  .opt.sel .nm{font-weight:650}
+  .empty{padding:24px 8px;color:var(--muted-fg);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- ======================= VUE 1 : LISTE DES CAS ======================= -->
+<div id="viewList">
+  <header class="rd-header"><div class="rd-inner">
+    <div class="rd-header-row"><h1 class="rd-title" id="caseCount">8 Cas</h1></div>
+  </div></header>
+
+  <main>
+    <div class="card">
+      <div class="toolbar">
+        <div class="srch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" placeholder="Cas, séquençage, patient ou MRN">
+        </div>
+        <button class="fchip" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>Statut</button>
+        <button class="fchip" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>Priorité</button>
+        <button class="fchip" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>Analyse</button>
+        <span class="grow"></span>
+        <!-- le bouton demandé, au-dessus du tableau -->
+        <button class="btn primary" type="button" onclick="openForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
+          Créer un cas
+        </button>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Cas</th><th>Dossier</th><th>Priorité</th><th>Statut</th>
+          <th class="c" title="Somatique · Germinal seul · Lignée germinale familiale">Type</th>
+          <th>Analyse</th><th>Req. par</th><th>Dernière modification</th><th></th>
+        </tr></thead>
+        <tbody id="caseRows"></tbody>
+      </table>
+      <div class="tfoot" id="caseFoot"></div>
+    </div>
+  </main>
+</div>
+
+<!-- =================== VUE 2 : CRÉATION D'UN CAS =================== -->
+<div id="viewForm" class="hidden">
+  <header class="rd-header"><div class="rd-inner">
+    <div class="rd-crumb">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      <a onclick="closeForm()">Cas</a>
+    </div>
+    <div class="rd-header-row">
+      <div class="rd-title-wrap">
+        <h1 class="rd-title">Nouveau cas</h1>
+        <span class="rd-badge secondary hidden" id="hdrType"></span>
+        <span class="rd-badge outline hidden" id="hdrCode"></span>
+      </div>
+      <span class="rd-badge outline pill">Brouillon</span>
+    </div>
+  </div></header>
+
+  <main>
+    <div class="card form-wrap">
+      <div class="hd"><h2>Analyse</h2></div>
+      <div class="bd">
+        <label class="lbl" for="qi">Analyse demandée <span class="req">*</span></label>
+
+        <!-- le champ EST la recherche : au focus, la liste complète tombe en dessous -->
+        <div class="cbx" id="cbx">
+          <div class="box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="qi" autocomplete="off" placeholder="Rechercher une analyse…"
+                   oninput="onQuery()" onkeydown="onKeys(event)" onfocus="openInline()">
+          </div>
+          <div class="drop hidden" id="li"></div>
+        </div>
+
+        <div class="hidden" id="pickedWrap">
+          <div class="picked">
+            <span class="code" id="pkCode"></span>
+            <span class="nm" id="pkName"></span>
+            <button class="btn link chg" type="button" onclick="reopen()">Changer</button>
+          </div>
+        </div>
+
+      </div>
+      <div class="ft">
+        <button class="btn ghost" type="button" onclick="closeForm()">Annuler</button>
+        <button class="btn primary" type="button" id="next" disabled>
+          Suivant
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ===========================================================================
+   CATALOGUE — généré depuis prescription/analysis_catalog_qlin.csv, lui-même
+   construit à partir du CodeSystem FHIR du CQGC, de la semence qlin de Radiant
+   et des codes MSSS (clin-localstack addMSSSCode.ts + CLIN-5831 pour CONCO).
+   Colonnes = modèle Notion « Radiant Prescription » §5 (analysis_catalog).
+   `name` porte le code du ministère en préfixe.
+   =========================================================================== */
+const ANALYSES = [
+  {"code": "MMG", "name": "55340 - Maladies musculaires globales", "analysis_type_code": "germline"},
+  {"code": "DYSM", "name": "55330 - Dystrophies musculaires", "analysis_type_code": "germline"},
+  {"code": "RHAB", "name": "55338 - Rhabdomyolyse", "analysis_type_code": "germline"},
+  {"code": "MITN", "name": "55370 - Mitochondriopathies nucléaires", "analysis_type_code": "germline"},
+  {"code": "MYOC", "name": "55332 - Myopathies congénitales", "analysis_type_code": "germline"},
+  {"code": "MYAC", "name": "55334 - Myasthénies congénitales", "analysis_type_code": "germline"},
+  {"code": "HYPM", "name": "55336 - Hyperthermie maligne", "analysis_type_code": "germline"},
+  {"code": "RGDI", "name": "55360 - Retard global de développement / Déficience intellectuelle (Trio)", "analysis_type_code": "germline"},
+  {"code": "POLYM", "name": "55372 - Polymalformation contexte postnatal", "analysis_type_code": "germline"},
+  {"code": "TRATU", "name": "65217 - Transcriptome tumoral", "analysis_type_code": "somatic"},
+  {"code": "TUHEM", "name": "55393 - Prédisposition hémopathies malignes", "analysis_type_code": "germline"},
+  {"code": "TUPED", "name": "55392 - Prédisposition cancers pédiatriques", "analysis_type_code": "germline"},
+  {"code": "EXTUM", "name": "65218 - Analyse tumorale", "analysis_type_code": "somatic"},
+  {"code": "SHEMA", "name": "65091 - Leucémie (somatique)", "analysis_type_code": "somatic"},
+  {"code": "SCID", "name": "55405 - Déficit immunitaire combiné sévère", "analysis_type_code": "germline"},
+  {"code": "STMO", "name": "65174 - Sarcome des tissus mous et osseux", "analysis_type_code": "somatic"},
+  {"code": "FEAN", "name": "55373 - Anomalies fœtales", "analysis_type_code": "germline"},
+  {"code": "DPSO", "name": "55414 - Défaut de production de superoxyde", "analysis_type_code": "germline"},
+  {"code": "EIDC", "name": "55404 - Erreurs innées du complément", "analysis_type_code": "germline"},
+  {"code": "EIDI", "name": "55403 - Erreurs innées de l'immunité", "analysis_type_code": "germline"},
+  {"code": "EIII", "name": "55413 - Erreurs innées de l'immunité intrinsèque", "analysis_type_code": "germline"},
+  {"code": "EPIL", "name": "55415 - Epilepsie sans déficience intellectuelle", "analysis_type_code": "germline"},
+  {"code": "RAPIDE", "name": "Exome rapide : diagnostic monogénique et orientation thérapeutique", "analysis_type_code": "germline"},
+  {"code": "HDIP", "name": "55408 - Hypogammaglobulinémie et dysrégulation immunitaire primitive", "analysis_type_code": "germline"},
+  {"code": "HLEB", "name": "55412 - Hémophagocytose lymphohistiocytaire et à l'infection chronique active au virus Epstein Barr", "analysis_type_code": "germline"},
+  {"code": "HLH", "name": "55412 - Hémophagocytose lymphohistiocytaire", "analysis_type_code": "germline"},
+  {"code": "MAI", "name": "55409 - Maladies auto-inflammatoires", "analysis_type_code": "germline"},
+  {"code": "MSMD", "name": "55410 - Syndrome de prédisposition mendélienne aux infections mycobactériennes (MSMD)", "analysis_type_code": "germline"},
+  {"code": "NPC", "name": "55411 - Neutropénie congénitale", "analysis_type_code": "germline"},
+  {"code": "RETINO", "name": "Rétinopathies", "analysis_type_code": "germline"},
+  {"code": "SHIGE", "name": "55407 - Syndrome d'hyper-IgE", "analysis_type_code": "germline"},
+  {"code": "SLA", "name": "55350 - Sclérose latérale amyotrophique", "analysis_type_code": "germline"},
+  {"code": "SURD", "name": "Surdité", "analysis_type_code": "germline"},
+  {"code": "VEOIB", "name": "55406 - Maladie inflammatoire de l’intestin très précoce", "analysis_type_code": "germline"},
+  {"code": "GENOR", "name": "75022 - Séquençage du génome entier - non spécifique", "analysis_type_code": "germline"},
+  {"code": "NEUTP", "name": "Neutropénie congénitale", "analysis_type_code": "germline"},
+  {"code": "CONCO", "name": "55374 - Prédisposition aux tumeurs solides de l'adulte", "analysis_type_code": "germline"},
+];
+
+const TYPE_LABEL = { germline:'Germinal', somatic:'Somatique' };
+
+/* --- cas de démonstration pour la liste ------------------------------- */
+const CASES = [
+  {id:1041, mrn:'594383-CHUSJ', priority:'routine',  status:'in_progress', type:'germline_family', analysis:'RGDI',  org:'CHUSJ', updated:'2026-08-21'},
+  {id:1040, mrn:'601277-CHUSJ', priority:'urgent',   status:'submitted',   type:'germline',        analysis:'DYSM',  org:'CHUSJ', updated:'2026-08-20'},
+  {id:1039, mrn:'588910-CHUQ',  priority:'stat',     status:'in_progress', type:'somatic',         analysis:'EXTUM', org:'CHUQ',  updated:'2026-08-20'},
+  {id:1038, mrn:'612044-CHUSJ', priority:'routine',  status:'draft',       type:'germline_family', analysis:'FEAN',  org:'CHUSJ', updated:'2026-08-19'},
+  {id:1037, mrn:'573221-CUSM',  priority:'routine',  status:'completed',   type:'germline',        analysis:'MITN',  org:'CUSM',  updated:'2026-08-18'},
+  {id:1036, mrn:'609855-CHUSJ', priority:'asap',     status:'incomplete',  type:'germline',        analysis:'EIDI',  org:'CHUSJ', updated:'2026-08-17'},
+  {id:1035, mrn:'594102-CHUQ',  priority:'routine',  status:'in_progress', type:'somatic',         analysis:'SHEMA', org:'CHUQ',  updated:'2026-08-17'},
+  {id:1034, mrn:'581470-CHUSJ', priority:'routine',  status:'revoke',      type:'germline_family', analysis:'POLYM', org:'CHUSJ', updated:'2026-08-14'},
+];
+const STATUS_LABEL = { draft:'Brouillon', in_progress:'En cours', submitted:'Soumis',
+                       incomplete:'Incomplet', completed:'Completé', revoke:'Refusé' };
+const PRIORITY_LABEL = { routine:'Routine', urgent:'Urgent', asap:'ASAP', stat:'STAT' };
+/* icônes lucide de AnalysisTypeCodeCell : Biohazard · User · Users */
+const TYPE_ICON = {
+  somatic:'<circle cx="12" cy="11.9" r="2"/><path d="M12 2v4M4.9 7.5 8 9.3M19.1 7.5 16 9.3M12 22v-4M4.9 16.5 8 14.7M19.1 16.5 16 14.7"/>',
+  germline:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  germline_family:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+};
+const TYPE_TITLE = { somatic:'Somatique', germline:'Germinal seul', germline_family:'Lignée germinale familiale' };
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const svg = i => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${i}</svg>`;
+const byCode = c => ANALYSES.find(a => a.code === c);
+const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'')
+  .replace(/œ/g,'oe').replace(/æ/g,'ae').toLowerCase();
+
+/* --- liste des cas ---------------------------------------------------- */
+function renderCases(){
+  document.getElementById('caseRows').innerHTML = CASES.map(c => {
+    const a = byCode(c.analysis);
+    return `<tr>
+      <td><a href="#">${c.id}</a></td>
+      <td class="mono">${esc(c.mrn)}</td>
+      <td><span class="ind ${c.priority}"></span>${PRIORITY_LABEL[c.priority]}</td>
+      <td><span class="st ${c.status}">${STATUS_LABEL[c.status]}</span></td>
+      <td class="c"><span class="tb" title="${TYPE_TITLE[c.type]}">${svg(TYPE_ICON[c.type])}</span></td>
+      <td><span class="code">${c.analysis}</span></td>
+      <td>${esc(c.org)}</td>
+      <td class="tnum">${c.updated}</td>
+      <td class="c"><span class="muted">⋯</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('caseCount').textContent = `${CASES.length} Cas`;
+  document.getElementById('caseFoot').textContent = `1–${CASES.length} de ${CASES.length}`;
+}
+renderCases();
+
+/* --- navigation entre les deux vues ----------------------------------- */
+function openForm(){
+  document.getElementById('viewList').classList.add('hidden');
+  document.getElementById('viewForm').classList.remove('hidden');
+  window.scrollTo(0,0);
+  if(!picked) el('qi').focus();   /* on arrive, on tape */
+}
+function closeForm(){
+  document.getElementById('viewForm').classList.add('hidden');
+  document.getElementById('viewList').classList.remove('hidden');
+}
+
+/* --- la liste déroulante est la seule surface de choix ----------------
+   La recherche porte sur le CODE et le NOM de l'analyse. Le code du
+   ministère (MSSS) n'est pas indexé à part : il est déjà dans le nom, en
+   préfixe. L'application reste ainsi générique — pas de notion propre au
+   Québec dans le champ de recherche. ------------------------------------ */
+let picked = null, cursor = 0, visible = [];
+
+const el = id => document.getElementById(id);
+
+function matches(a, q){ return !q || norm(a.code + ' ' + a.name).includes(q); }
+
+function render(){
+  const q = norm(el('qi').value.trim());
+  visible = [];
+  const rows = ANALYSES.filter(a => matches(a, q)).map(a => {
+    const i = visible.length; visible.push(a.code);
+    /* mousedown, pas click : il doit passer avant le blur du champ */
+    return `<button class="opt ${i===cursor?'cur':''} ${picked===a.code?'sel':''}" type="button"
+              data-i="${i}" onmousedown="event.preventDefault();choose('${a.code}')"
+              onmousemove="moveTo(${i})">
+              <span class="cw"><span class="code">${a.code}</span></span>
+              <span class="nm">${esc(a.name)}</span>
+              <span class="tg ${a.analysis_type_code}">${TYPE_LABEL[a.analysis_type_code]}</span>
+            </button>`;
+  }).join('');
+  el('li').innerHTML = rows || `<div class="empty">Aucun résultat.</div>`;
+  if(cursor >= visible.length) cursor = Math.max(0, visible.length - 1);
+}
+function onQuery(){ cursor = 0; render(); scrollCursor(); }
+function moveTo(i){ if(i!==cursor){ cursor = i; paintCursor(); } }
+function paintCursor(){
+  el('li').querySelectorAll('.opt').forEach(o => o.classList.toggle('cur', +o.dataset.i === cursor));
+}
+function scrollCursor(){
+  const o = el('li').querySelector(`.opt[data-i="${cursor}"]`);
+  if(o) o.scrollIntoView({block:'nearest'});
+}
+function onKeys(e){
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    openInline();
+    if(!visible.length) return;
+    cursor = (cursor + (e.key === 'ArrowDown' ? 1 : -1) + visible.length) % visible.length;
+    paintCursor(); scrollCursor();
+  } else if(e.key === 'Enter'){
+    e.preventDefault();
+    if(visible[cursor]) choose(visible[cursor]);
+  } else if(e.key === 'Escape'){
+    closeInline();
+  }
+}
+
+/* au focus, les analyses tombent sous le champ ; un clic ailleurs referme */
+function openInline(){
+  cursor = Math.max(0, visible.indexOf(picked));
+  el('li').classList.remove('hidden');
+  render();
+}
+function closeInline(){ el('li').classList.add('hidden'); }
+document.addEventListener('mousedown', e => {
+  if(!el('cbx').contains(e.target)) closeInline();
+});
+
+/* « Changer » : on revient au champ, prêt à taper */
+function reopen(){
+  el('pickedWrap').classList.add('hidden');
+  el('cbx').classList.remove('hidden');
+  el('qi').value = '';
+  el('qi').focus();
+  openInline();
+}
+
+/* un clic (ou ↵) choisit et ferme */
+function choose(code){
+  picked = code;
+  const a = byCode(code);
+  closeInline();
+
+  el('cbx').classList.add('hidden');
+  el('pickedWrap').classList.remove('hidden');
+  el('next').disabled = false;
+
+  el('pkCode').textContent = a.code;
+  el('pkName').textContent = a.name;
+
+  const ht = el('hdrType');
+  ht.classList.remove('hidden');
+  ht.innerHTML = svg(TYPE_ICON[a.analysis_type_code]) + TYPE_LABEL[a.analysis_type_code];
+  const hc = el('hdrCode');
+  hc.classList.remove('hidden');
+  hc.textContent = a.code;
+  hc.title = a.name;
+}
+</script>
+</body>
+</html>

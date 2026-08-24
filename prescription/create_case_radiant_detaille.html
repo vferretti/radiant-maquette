@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nouveau cas (détaillé) · Radiant</title>
+<style>
+  :root{
+    --primary:#4f5fc3; --primary-fg:#f8fafc;
+    --bg:#ffffff; --fg:#1a1d3a; --muted:#f1f5f9; --muted-fg:#64748b;
+    --border:#e2e8f0; --input:#cbd5e1;
+    --table-header:#f1f5f9; --table-accent:#f8fafc;
+    --ok-bg:#dcfce7; --ok-fg:#166534;
+    --warn-bg:#fef9c3; --warn-fg:#92400e;
+    --orange-bg:#ffedd5; --orange-fg:#c2410c;
+    --err-bg:#fee2e2; --err-fg:#dc2626;
+    --dark-bg:#ede9fe; --dark-fg:#6d28d9;
+    --radius:8px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--fg);background:#f8fafc;font-size:14px;line-height:1.45}
+  a{color:var(--primary);text-decoration:none}
+  .app{max-width:1720px;margin:0 auto;padding:0 24px 64px}
+  .hidden{display:none !important}
+  .muted{color:var(--muted-fg)}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+  /* ---- en-tête de page — reproduction du PageHeader Radiant (apps/case layout/header) ---- */
+  .rd-header{background:var(--bg);border-bottom:1px solid var(--border)}
+  .rd-inner{max-width:1720px;margin:0 auto;padding:0 24px}
+  .rd-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:16px 0}
+  .rd-title-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .rd-title{margin:0;font-size:24px;font-weight:700;line-height:1.2}
+  .rd-badge{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:3px 9px;
+            font-size:12px;font-weight:600;white-space:nowrap}
+  .rd-badge svg{width:13px;height:13px}
+  .rd-badge.secondary{background:var(--muted);color:#334155}
+  .rd-badge.outline{background:transparent;border:1px solid var(--border);color:var(--fg)}
+  .rd-badge.blue{background:#e0f2fe;color:#0369a1}
+  .rd-badge.pill{padding:5px 12px;border-radius:999px}
+  .rd-statuses{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .rd-crumb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted-fg);padding-top:14px}
+  .rd-crumb svg{width:14px;height:14px}
+
+  /* ---- boutons (shadcn : default / outline / ghost) ---- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 15px;
+       border-radius:var(--radius);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;
+       border:1px solid transparent;background:transparent;color:var(--fg);white-space:nowrap}
+  .btn svg{width:16px;height:16px}
+  .btn.primary{background:var(--primary);color:var(--primary-fg)}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.primary:disabled{opacity:.5;cursor:not-allowed;filter:none}
+  .btn.outline{border-color:var(--input);background:var(--bg)}
+  .btn.outline:hover{background:var(--muted)}
+  .btn.ghost:hover{background:var(--muted)}
+  .btn.sm{height:30px;padding:0 11px;font-size:13px}
+
+  /* ---- assistant de création : rail d'étapes (gauche) + contenu (droite),
+         calqué sur le formulaire de prescription de clin (StepsPanel + carte de contenu) ---- */
+  .wizard{display:grid;grid-template-columns:minmax(230px,270px) minmax(0,1fr);gap:28px;
+          align-items:start;margin-top:24px;max-width:1180px}
+  @media(max-width:900px){.wizard{grid-template-columns:1fr}}
+  .steps{position:sticky;top:20px}
+  .steps .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+              color:var(--muted-fg);margin-bottom:6px}
+  .steps .cur{font-size:16px;font-weight:650;margin-bottom:20px;min-height:23px}
+  .steps ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+  .steps li{display:flex;gap:11px;align-items:flex-start;padding-bottom:14px;position:relative}
+  .steps li:not(:last-child)::before{content:'';position:absolute;left:11px;top:24px;bottom:2px;
+                                     width:1px;background:var(--border)}
+  .steps .n{width:23px;height:23px;flex-shrink:0;border-radius:50%;border:1px solid var(--input);
+            display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;
+            color:var(--muted-fg);background:var(--bg);z-index:1}
+  .steps .t{font-size:13px;color:var(--muted-fg);padding-top:2px}
+  .steps li.active .n{background:var(--primary);border-color:var(--primary);color:var(--primary-fg)}
+  .steps li.active .t{color:var(--fg);font-weight:650}
+
+  /* ---- carte ---- */
+  .card{background:var(--bg);border:1px solid var(--border);border-radius:12px;
+        box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card>.hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;
+            justify-content:space-between;gap:12px}
+  .card>.hd h2{margin:0;font-size:18px;font-weight:650}
+  .card>.hd .sub{font-size:12.5px;color:var(--muted-fg);margin-top:2px}
+  .card>.bd{padding:20px}
+  .card>.ft{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:10px}
+
+  /* ---- champs de formulaire ---- */
+  .field{margin-bottom:22px}
+  .field:last-child{margin-bottom:0}
+  .field>label{display:block;font-size:13px;font-weight:650;margin-bottom:7px}
+  .field .req{color:var(--err-fg);margin-left:2px}
+  .field .help{font-size:12.5px;color:var(--muted-fg);margin-top:7px}
+  /* déclencheur de la fenêtre de choix — remplace la liste déroulante plate de clin */
+  .trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+           min-height:40px;padding:9px 12px;border:1px solid var(--input);border-radius:var(--radius);
+           background:var(--bg);font-family:inherit;font-size:14px;color:var(--muted-fg);cursor:pointer;text-align:left}
+  .trigger:hover{border-color:var(--primary)}
+  .trigger svg{width:16px;height:16px;flex-shrink:0;color:var(--muted-fg)}
+  /* état « analyse choisie » : encart récapitulatif */
+  .picked{border:1px solid var(--border);border-radius:var(--radius);background:var(--table-accent);
+          padding:14px 16px}
+  .picked .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .picked .ttl{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+  .picked .nm{font-size:15px;font-weight:650}
+  .code{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;
+        background:var(--dark-bg);color:var(--dark-fg);border-radius:6px;padding:1px 8px;font-size:12.5px}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;border-radius:999px;
+        font-size:11px;font-weight:700;white-space:nowrap;background:var(--muted);color:#475569}
+  .chip svg{width:12px;height:12px}
+  .chip.germ{background:#e0e7ff;color:#3730a3}
+  .chip.som{background:var(--orange-bg);color:var(--orange-fg)}
+  .chip.pre{background:#fce7f3;color:#9d174d}
+  .chip.glob{background:var(--ok-bg);color:var(--ok-fg)}
+  /* champs dérivés du catalogue (lecture seule) */
+  .derived{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+  .derived .cap{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;
+                text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg);margin-bottom:10px}
+  .derived .cap svg{width:13px;height:13px}
+  .derived dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0;font-size:13px;align-items:baseline}
+  .derived dt{color:var(--muted-fg);font-size:10px;font-weight:700;text-transform:uppercase;
+              letter-spacing:.4px;white-space:nowrap}
+  .derived dd{margin:0;min-width:0}
+  .derived .na{color:#94a3b8}
+  /* case à cocher */
+  .check{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;cursor:pointer}
+  .check input{width:16px;height:16px;margin:2px 2px 0 0;accent-color:var(--primary);flex-shrink:0}
+  /* encadré d'information (repris des mentions RQDM de clin) */
+  .note{display:flex;gap:11px;padding:13px 15px;border:1px solid var(--border);border-left:3px solid var(--primary);
+        border-radius:var(--radius);background:var(--table-accent);font-size:12.5px;color:#475569;line-height:1.5}
+  .note svg{width:16px;height:16px;flex-shrink:0;color:var(--primary);margin-top:1px}
+  .note p{margin:0 0 7px}
+  .note p:last-child{margin-bottom:0}
+
+  /* ---- fenêtre modale (reproduction du Dialog Radiant : overlay bg-black/80, size lg) ---- */
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:40}
+  .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:50;
+         width:min(96vw,1020px);max-height:92vh;background:var(--bg);border:1px solid var(--border);
+         border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.24);display:flex;flex-direction:column}
+  .modal>.mh{padding:20px 24px 14px;border-bottom:1px solid var(--border);display:flex;gap:16px;align-items:flex-start}
+  .modal>.mh .ic{width:18px;height:18px;margin-top:3px;flex-shrink:0}
+  .modal>.mh h2{margin:0;font-size:18px;font-weight:650;letter-spacing:-.01em}
+  .modal>.mh .desc{font-size:13px;color:var(--muted-fg);margin-top:3px}
+  .modal>.mh .x{margin-left:auto;background:transparent;border:0;cursor:pointer;color:var(--muted-fg);
+                padding:3px;border-radius:4px;opacity:.7}
+  .modal>.mh .x:hover{opacity:1;background:var(--muted)}
+  .modal>.mh .x svg{width:16px;height:16px;display:block}
+  .modal>.mb{padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0;flex:1}
+  .modal>.mf{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;
+             justify-content:space-between;gap:12px}
+  .modal>.mf .sel{font-size:12.5px;color:var(--muted-fg);min-width:0}
+  .modal>.mf .sel b{color:var(--fg)}
+  .modal>.mf .acts{display:flex;gap:9px;flex-shrink:0}
+
+  /* recherche */
+  .search{position:relative;padding:14px 24px;border-bottom:1px solid var(--border)}
+  .search svg{position:absolute;left:36px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted-fg)}
+  .search input{width:100%;height:38px;padding:0 12px 0 36px;border:1px solid var(--input);
+                border-radius:var(--radius);font-family:inherit;font-size:14px;color:var(--fg);outline:0}
+  .search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,95,195,.14)}
+
+  /* deux volets : familles de conditions (gauche) · analyses (droite) */
+  .panes{display:grid;grid-template-columns:262px minmax(0,1fr);min-height:0;flex:1}
+  @media(max-width:760px){.panes{grid-template-columns:1fr}.pane-l{display:none}}
+  .pane-l{border-right:1px solid var(--border);background:var(--table-accent);overflow-y:auto;padding:12px 10px}
+  .pane-l .gl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+              color:var(--muted-fg);padding:6px 10px 8px}
+  .pane-l button{width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border:0;
+                 background:transparent;border-radius:var(--radius);font-family:inherit;font-size:13px;
+                 color:#334155;cursor:pointer;text-align:left;margin-bottom:2px}
+  .pane-l button:hover{background:var(--muted)}
+  .pane-l button.on{background:var(--bg);color:var(--fg);font-weight:650;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .pane-l button svg{width:15px;height:15px;flex-shrink:0;color:var(--muted-fg)}
+  .pane-l button.on svg{color:var(--primary)}
+  .pane-l button .nb{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted-fg);
+                     background:var(--muted);border-radius:999px;padding:0 7px}
+  .pane-l button.on .nb{background:var(--muted)}
+  .pane-l .sep{height:1px;background:var(--border);margin:8px 10px}
+  .pane-r{overflow-y:auto;padding:6px 24px 18px;max-height:calc(92vh - 250px)}
+  .grp-h{display:flex;align-items:center;gap:9px;padding:16px 0 9px;font-size:11px;font-weight:700;
+         text-transform:uppercase;letter-spacing:.55px;color:var(--muted-fg);
+         position:sticky;top:0;background:var(--bg);z-index:1}
+  .grp-h .rule{flex:1;height:1px;background:var(--border)}
+  .grp-h .cnd{text-transform:none;letter-spacing:0;font-weight:500;font-size:11.5px}
+
+  /* option d'analyse (carte radio) */
+  .opt{display:flex;gap:12px;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;
+       border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);
+       font-family:inherit;cursor:pointer}
+  .opt:hover{border-color:#a5b0e2;background:var(--table-accent)}
+  .opt.on{border-color:var(--primary);background:#f5f6fd;box-shadow:0 0 0 1px var(--primary)}
+  .opt .rad{width:16px;height:16px;flex-shrink:0;margin-top:2px;border:1.5px solid var(--input);
+            border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .opt.on .rad{border-color:var(--primary)}
+  .opt.on .rad::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--primary)}
+  .opt .bod{min-width:0;flex:1}
+  .opt .l1{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .opt .nm{font-size:14px;font-weight:650;color:var(--fg)}
+  .opt .l2{font-size:12.5px;color:var(--muted-fg);margin-top:5px;display:flex;flex-wrap:wrap;gap:3px 14px}
+  .opt .l2 .kv b{color:#475569;font-weight:600}
+  .opt .dsc{font-size:12.5px;color:var(--muted-fg);margin-top:5px}
+  .empty{padding:36px 0;text-align:center;color:var(--muted-fg);font-size:13.5px}
+</style>
+</head>
+<body>
+
+<header class="rd-header">
+  <div class="rd-inner">
+    <div class="rd-crumb">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      <a href="#">Cas</a>
+    </div>
+    <div class="rd-header-row">
+      <div class="rd-title-wrap">
+        <h1 class="rd-title">Nouveau cas</h1>
+        <!-- ces deux badges reprennent exactement ceux de l'en-tête d'un cas existant
+             (type de cas + code d'analyse) : ils se remplissent dès que l'analyse est choisie,
+             ce qui rend visible le fait que le type provient désormais du catalogue -->
+        <span class="rd-badge secondary hidden" id="hdrType"></span>
+        <span class="rd-badge outline hidden" id="hdrCode"></span>
+      </div>
+      <div class="rd-statuses">
+        <span class="rd-badge outline pill" title="Statut">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Brouillon
+        </span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+  <div class="wizard">
+
+    <!-- rail d'étapes — équivalent du StepsPanel de clin-prescription -->
+    <aside class="steps">
+      <div class="lbl">Analyse</div>
+      <div class="cur" id="stepsAnalysis"><span class="muted" style="font-weight:400;font-size:14px">Non sélectionnée</span></div>
+      <ol>
+        <li class="active"><span class="n">1</span><span class="t">Analyse</span></li>
+        <li><span class="n">2</span><span class="t">Cas-index</span></li>
+        <li><span class="n">3</span><span class="t">Signes cliniques</span></li>
+        <li><span class="n">4</span><span class="t">Examens paracliniques</span></li>
+        <li><span class="n">5</span><span class="t">Histoire et hypothèse diagnostique</span></li>
+        <li><span class="n">6</span><span class="t">Parents</span></li>
+        <li><span class="n">7</span><span class="t">Projet</span></li>
+        <li><span class="n">8</span><span class="t">Soumission</span></li>
+      </ol>
+    </aside>
+
+    <!-- contenu de l'étape courante -->
+    <main>
+      <div class="card">
+        <div class="hd">
+          <div>
+            <h2>Analyse</h2>
+            <div class="sub">L'analyse choisie détermine le type de cas, la condition principale et le panel de gènes.</div>
+          </div>
+          <span class="rd-badge secondary">Étape 1 sur 8</span>
+        </div>
+
+        <div class="bd">
+
+          <div class="field">
+            <label for="trigger">Analyse demandée<span class="req">*</span></label>
+
+            <!-- état vide : déclencheur de la fenêtre de choix -->
+            <button class="trigger" id="trigger" type="button" onclick="openModal()">
+              <span>Sélectionner une analyse dans le catalogue…</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+
+            <!-- état choisi : récapitulatif + champs dérivés du catalogue -->
+            <div class="picked hidden" id="picked">
+              <div class="top">
+                <div class="ttl">
+                  <span class="code" id="pkCode"></span>
+                  <span class="nm" id="pkName"></span>
+                  <span id="pkChips"></span>
+                </div>
+                <button class="btn outline sm" type="button" onclick="openModal()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg>
+                  Changer
+                </button>
+              </div>
+              <div class="derived">
+                <div class="cap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  Provient du catalogue d'analyses — non saisissable
+                </div>
+                <dl>
+                  <dt>Type de cas</dt><dd id="pkType"></dd>
+                  <dt>Catégorie</dt><dd id="pkCat"></dd>
+                  <dt>Condition principale</dt><dd id="pkCond"></dd>
+                  <dt>Panel de gènes</dt><dd id="pkPanel"></dd>
+                </dl>
+              </div>
+            </div>
+
+            <div class="help" id="triggerHelp">Le catalogue regroupe les analyses par famille de conditions ;
+              les analyses sans condition spécifique apparaissent en premier.</div>
+          </div>
+
+          <!-- réflexe panel global : uniquement pour les analyses musculaires spécialisées (repris de clin) -->
+          <div class="field hidden" id="reflexField">
+            <label class="check">
+              <input type="checkbox" id="reflex">
+              <span id="reflexLabel"></span>
+            </label>
+          </div>
+
+          <div class="field hidden" id="noteField">
+            <div class="note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <div>
+                <p>Il est recommandé de consulter
+                  <a href="https://www.chusj.org/fr/soins-services/L/Laboratoires/Analyses-genomiques-(SNG)-du-Reseau-quebecois-de-d" target="_blank" rel="noopener">l'algorithme clinique du RQDM</a>
+                  sur l'analyse sélectionnée avant de poursuivre la création du cas.</p>
+                <p>La prescription d'un test moléculaire est réservée à certaines catégories de prescripteurs,
+                  qui varient selon l'analyse demandée. Chaque cas est sujet à l'approbation du laboratoire de
+                  diagnostic moléculaire avant le début du séquençage de l'échantillon.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="ft">
+          <button class="btn ghost" type="button">Annuler</button>
+          <button class="btn primary" type="button" id="next" disabled>
+            Suivant
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- ============================ FENÊTRE DE CHOIX DE L'ANALYSE ============================ -->
+<div class="ov hidden" id="ov" onclick="closeModal()"></div>
+<div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="mh">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.5"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>
+    <div>
+      <h2 id="modalTitle">Choix de l'analyse</h2>
+      <div class="desc">Sélectionner la condition et le panel de gènes à analyser.</div>
+    </div>
+    <button class="x" type="button" onclick="closeModal()" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="mb">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" id="q" placeholder="Rechercher une analyse, un code ou une condition (ex. « musculaire », « DYSM », « MONDO »)…"
+             oninput="render()" autocomplete="off">
+    </div>
+    <div class="panes">
+      <nav class="pane-l" id="paneL"></nav>
+      <div class="pane-r" id="paneR"></div>
+    </div>
+  </div>
+
+  <div class="mf">
+    <div class="sel" id="mSel">Aucune analyse sélectionnée</div>
+    <div class="acts">
+      <button class="btn outline" type="button" onclick="closeModal()">Annuler</button>
+      <button class="btn primary" type="button" id="mOk" disabled onclick="confirmPick()">Choisir cette analyse</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===========================================================================
+   CATALOGUE D'ANALYSES — les 12 analyses actuellement offertes par
+   clin-prescription-ui (AnalysisChoiceModal : 6 analyses de premier niveau
+   + le groupe « Maladies musculaires »).
+
+   Les colonnes `case_type`, `primary_condition` et `condition_code_system`
+   sont ici PORTÉES PAR L'ANALYSE (et non plus par le cas) : c'est le
+   changement de modèle proposé, décrit dans CHANGEMENTS_MODELE.md.
+   Le type est déduit du panel : les 12 analyses de clin-prescription sont
+   toutes germinales (les analyses somatiques du catalogue Radiant — EXTUM,
+   TRATU, SHEMA… — ne sont pas encore prescriptibles dans clin).
+   =========================================================================== */
+
+const GROUPS = [
+  { key:'nonspec', label:'Sans condition spécifique',
+    icon:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+    hint:'Analyse pangénomique, sans hypothèse de condition' },
+  { key:'neurodev', label:'Neurodéveloppement et épilepsie',
+    icon:'<path d="M12 18V5"/><path d="M9.5 8a3.5 3.5 0 1 1 0-3 3 3 0 0 1 5 0 3.5 3.5 0 1 1 0 3"/><path d="M6 12a3 3 0 1 0 0 6h12a3 3 0 1 0 0-6z"/>',
+    hint:'MONDO:0700092 · neurodevelopmental disorder' },
+  { key:'malfo', label:'Malformations et anomalies du développement',
+    icon:'<circle cx="12" cy="12" r="9"/><path d="M9 12h6"/><path d="M12 9v6"/>',
+    hint:'MONDO:0019755 · developmental defect during embryogenesis' },
+  { key:'neuromusc', label:'Maladies neuromusculaires',
+    icon:'<path d="M17.5 3a4.5 4.5 0 0 0-4.5 4.5c0 2 1 3 1 5s-1 3-1 5"/><path d="M6.5 21a4.5 4.5 0 0 1 0-9c2 0 3.5-1 4.5-2"/><path d="M13 12H8"/>',
+    hint:'MONDO:0019056 · neuromuscular disease' },
+  { key:'metab', label:'Maladies métaboliques et mitochondriales',
+    icon:'<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4.5"/><ellipse cx="12" cy="12" rx="10" ry="4.5" transform="rotate(60 12 12)"/>',
+    hint:'MONDO:0044970 · mitochondrial disease' },
+  { key:'immuno', label:'Immunologie et inflammation',
+    icon:'<path d="M20 13c0 5-3.5 7.5-7.7 8.9a2 2 0 0 1-1.3 0C6.8 20.5 3.3 18 3.3 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.9 1.9 0 0 1 2.4 0C14.6 3.8 17.1 5 19 5a1 1 0 0 1 1 1z"/>',
+    hint:'MONDO:0003778 · inborn error of immunity' },
+  { key:'sens', label:'Déficits sensoriels',
+    icon:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+    hint:'Atteintes visuelles et auditives héréditaires' },
+  { key:'onco_pred', label:'Prédisposition au cancer',
+    icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9.5 12.5 12 15l3-4"/>',
+    hint:'MONDO:0015356 · hereditary neoplastic syndrome — tissu germinal' },
+  { key:'onco_tum', label:'Analyses tumorales',
+    icon:'<circle cx="12" cy="11.9" r="2"/><path d="M12 2v4M4.9 7.5 8 9.3M19.1 7.5 16 9.3M12 22v-4M4.9 16.5 8 14.7M19.1 16.5 16 14.7"/>',
+    hint:'MONDO:0004992 · cancer — tissu tumoral' },
+];
+
+const ANALYSES = [
+  /* ===== 1. sans condition spécifique ================================== */
+  { code:'GENOR', name:"Séquençage du génome entier — non spécifique", group:'nonspec',
+    case_type:'germline', category:'postnatal', scope:'trio', orderable:true,
+    condition:null, condition_system:null, panel:null,
+    desc:"Génome entier, sans restriction à un panel de gènes ni à une condition prédéfinie." },
+  { code:'RAPIDE', name:"Exome rapide : diagnostic monogénique et orientation thérapeutique", group:'nonspec',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:null, condition_system:null, panel:null,
+    desc:"Exome en délai court, sans hypothèse de condition — contexte de soins intensifs." },
+
+  /* ===== 2. neurodéveloppement et épilepsie ============================= */
+  { code:'RGDI', name:"Retard global de développement / Déficience intellectuelle", group:'neurodev',
+    case_type:'germline', category:'postnatal', scope:'trio', orderable:true,
+    condition:'MONDO:0700092', condition_name:'neurodevelopmental disorder',
+    condition_system:'mondo', panel:'Panel RGDI',
+    desc:"Analyse en trio du cas-index et de ses deux parents." },
+  { code:'EPIL', name:"Épilepsie sans déficience intellectuelle", group:'neurodev',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0005027', condition_name:'epilepsy',
+    condition_system:'mondo', panel:'Panel EPIL' },
+
+  /* ===== 3. malformations et anomalies du développement ================= */
+  { code:'FEAN', name:"Anomalies fœtales", group:'malfo',
+    case_type:'germline', category:'prenatal', scope:'trio', orderable:true,
+    condition:'MONDO:0019755', condition_name:'developmental defect during embryogenesis',
+    condition_system:'mondo', panel:'Panel FEAN',
+    desc:"Contexte prénatal — le cas-index est un fœtus." },
+  { code:'POLYM', name:"Polymalformation — contexte postnatal", group:'malfo',
+    case_type:'germline', category:'postnatal', scope:'trio', orderable:true,
+    condition:'MONDO:0019755', condition_name:'developmental defect during embryogenesis',
+    condition_system:'mondo', panel:'Panel POLYM' },
+
+  /* ===== 4. maladies neuromusculaires (panel global d'abord) ============ */
+  { code:'MMG', name:"Maladies musculaires globales", group:'neuromusc',
+    case_type:'germline', category:'postnatal', scope:'solo', orderable:true, global_panel:true,
+    condition:'MONDO:0019056', condition_name:'neuromuscular disease',
+    condition_system:'mondo', panel:'Panel MMG (global)',
+    desc:"Panel global couvrant l'ensemble des panels musculaires spécialisés." },
+  { code:'DYSM', name:"Dystrophies musculaires", group:'neuromusc',
+    case_type:'germline', category:'postnatal', scope:'solo', orderable:true, reflex_to:'MMG',
+    condition:'MONDO:0020121', condition_name:'muscular dystrophy',
+    condition_system:'mondo', panel:'Panel DYSM' },
+  { code:'HYPM', name:"Hyperthermie maligne", group:'neuromusc',
+    case_type:'germline', category:'postnatal', scope:'solo', orderable:true, reflex_to:'MMG',
+    condition:'MONDO:0007783', condition_name:'malignant hyperthermia, susceptibility to, 1',
+    condition_system:'mondo', panel:'Panel HYPM', condition_todo:true,
+    desc:"MONDO n'offre pas de terme générique pour l'hyperthermie maligne, seulement les sous-types 1 à 5." },
+  { code:'MYAC', name:"Myasthénies congénitales", group:'neuromusc',
+    case_type:'germline', category:'postnatal', scope:'solo', orderable:true, reflex_to:'MMG',
+    condition:'MONDO:0018940', condition_name:'congenital myasthenic syndrome',
+    condition_system:'mondo', panel:'Panel MYAC' },
+  { code:'MYOC', name:"Myopathies congénitales", group:'neuromusc',
+    case_type:'germline', category:'postnatal', scope:'solo', orderable:true, reflex_to:'MMG',
+    condition:'MONDO:0019952', condition_name:'congenital myopathy',
+    condition_system:'mondo', panel:'Panel MYOC' },
+  { code:'RHAB', name:"Rhabdomyolyse", group:'neuromusc',
+    case_type:'germline', category:'postnatal', scope:'solo', orderable:true, reflex_to:'MMG',
+    condition:'HP:0003201', condition_name:'Rhabdomyolysis',
+    condition_system:'hpo', panel:'Panel RHAB', condition_todo:true,
+    desc:"La rhabdomyolyse est un phénotype, pas une maladie : codée en HPO plutôt qu'en MONDO." },
+  { code:'SLA', name:"Sclérose latérale amyotrophique", group:'neuromusc',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0004976', condition_name:'amyotrophic lateral sclerosis',
+    condition_system:'mondo', panel:'Panel SLA',
+    desc:"Atteinte du motoneurone — rattachée aux maladies neuromusculaires, hors mécanisme de réflexe MMG." },
+
+  /* ===== 5. maladies métaboliques et mitochondriales ==================== */
+  { code:'MITN', name:"Mitochondriopathies nucléaires", group:'metab',
+    case_type:'germline', category:'postnatal', scope:'solo', orderable:true,
+    condition:'MONDO:0044970', condition_name:'mitochondrial disease',
+    condition_system:'mondo', panel:'Panel MITN',
+    desc:"Gènes nucléaires ; l'ADN mitochondrial n'est pas couvert." },
+
+  /* ===== 6. immunologie et inflammation (panel générique d'abord) ======= */
+  { code:'EIDI', name:"Erreurs innées de l'immunité", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:'trio', orderable:true, global_panel:true,
+    condition:'MONDO:0003778', condition_name:'inborn error of immunity',
+    condition_system:'mondo', panel:'Panel EIDI (générique)',
+    desc:"Panel générique de l'immunité. Le réflexe vers ce panel depuis les panels spécialisés reste à valider avec le labo." },
+  { code:'DPSO', name:"Défaut de production de superoxyde", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0018305', condition_name:'chronic granulomatous disease',
+    condition_system:'mondo', panel:'Panel DPSO', condition_todo:true,
+    desc:"Un défaut de la NADPH oxydase correspond à la granulomatose septique chronique — correspondance déduite du libellé." },
+  { code:'SCID', name:"Déficit immunitaire combiné sévère", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0015974', condition_name:'severe combined immunodeficiency',
+    condition_system:'mondo', panel:'Panel SCID' },
+  { code:'EIDC', name:"Erreurs innées du complément", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0003832', condition_name:'complement deficiency',
+    condition_system:'mondo', panel:'Panel EIDC' },
+  { code:'EIII', name:"Erreurs innées de l'immunité intrinsèque", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0003778', condition_name:'inborn error of immunity',
+    condition_system:'mondo', panel:'Panel EIII', condition_todo:true,
+    desc:"MONDO ne distingue pas l'immunité intrinsèque : code du parent, faute de terme dédié." },
+  { code:'HLH', name:"Hémophagocytose lymphohistiocytaire", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0015540', condition_name:'hemophagocytic syndrome',
+    condition_system:'mondo', panel:'Panel HLH' },
+  { code:'HLEB', name:"Hémophagocytose lymphohistiocytaire et infection chronique active au virus Epstein-Barr", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0015540', condition_name:'hemophagocytic syndrome',
+    condition_system:'mondo', panel:'Panel HLEB', condition_todo:true,
+    desc:"Deux entités dans un seul panel ; seule l'hémophagocytose est codée." },
+  { code:'HDIP', name:"Hypogammaglobulinémie et dysrégulation immunitaire primitive", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0015517', condition_name:'common variable immunodeficiency',
+    condition_system:'mondo', panel:'Panel HDIP', condition_todo:true,
+    desc:"MONDO n'a pas de terme pour « hypogammaglobulinémie » seule — déficit immunitaire commun variable retenu par défaut." },
+  { code:'VEOIB', name:"Maladie inflammatoire de l'intestin très précoce", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0005265', condition_name:'inflammatory bowel disease',
+    condition_system:'mondo', panel:'Panel VEOIB',
+    desc:"Avant 6 ans, souvent d'origine génétique ou liée à un déficit immunitaire — d'où le rattachement à l'immunologie." },
+  { code:'MAI', name:"Maladies auto-inflammatoires", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0019751', condition_name:'autoinflammatory syndrome',
+    condition_system:'mondo', panel:'Panel MAI' },
+  { code:'NPC', name:"Neutropénie congénitale", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0018542', condition_name:'severe congenital neutropenia',
+    condition_system:'mondo', panel:'Panel NPC',
+    desc:"Doublon apparent avec NEUTP — même libellé dans le CodeSystem et dans la semence Radiant." },
+  { code:'NEUTP', name:"Neutropénie congénitale", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0018542', condition_name:'severe congenital neutropenia',
+    condition_system:'mondo', panel:'Panel NEUTP',
+    desc:"Doublon apparent avec NPC — à trancher avec le labo." },
+  { code:'SHIGE', name:"Syndrome d'hyper-IgE", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0018037', condition_name:'hyper-IgE syndrome',
+    condition_system:'mondo', panel:'Panel SHIGE' },
+  { code:'MSMD', name:"Prédisposition mendélienne aux infections mycobactériennes (MSMD)", group:'immuno',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0003778', condition_name:'inborn error of immunity',
+    condition_system:'mondo', panel:'Panel MSMD', condition_todo:true,
+    desc:"MONDO ne code le MSMD que par sous-type génique (IFNgammaR1, IL12B, STAT1…) : code du parent retenu." },
+
+  /* ===== 7. déficits sensoriels ========================================= */
+  { code:'RETINO', name:"Rétinopathies", group:'sens',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0005283', condition_name:'retinal disorder',
+    condition_system:'mondo', panel:'Panel RETINO' },
+  { code:'SURD', name:"Surdité", group:'sens',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0021945', condition_name:'hearing disorder',
+    condition_system:'mondo', panel:'Panel SURD' },
+
+  /* ===== 8. prédisposition au cancer — GERMINAL ========================= */
+  { code:'CONCO', name:"Prédisposition aux tumeurs solides de l'adulte", group:'onco_pred',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0015356', condition_name:'hereditary neoplastic syndrome',
+    condition_system:'mondo', panel:'Panel CONCO',
+    desc:"Cancers héréditaires communs (sein, ovaire, côlon, pancréas, endomètre, prostate, gastrique, polyposes)." },
+  { code:'TUHEM', name:"Prédisposition aux hémopathies malignes", group:'onco_pred',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0015356', condition_name:'hereditary neoplastic syndrome',
+    condition_system:'mondo', panel:'Panel TUHEM' },
+  { code:'TUPED', name:"Prédisposition aux cancers pédiatriques", group:'onco_pred',
+    case_type:'germline', category:'postnatal', scope:null,
+    condition:'MONDO:0015356', condition_name:'hereditary neoplastic syndrome',
+    condition_system:'mondo', panel:'Panel TUPED' },
+
+  /* ===== 9. analyses tumorales — SOMATIQUE ============================== */
+  { code:'EXTUM', name:"Analyse tumorale", group:'onco_tum',
+    case_type:'somatic', category:'postnatal', scope:null,
+    condition:'MONDO:0004992', condition_name:'cancer',
+    condition_system:'mondo', panel:null,
+    desc:"Exome tumoral — séquençage du tissu tumoral." },
+  { code:'TRATU', name:"Transcriptome tumoral", group:'onco_tum',
+    case_type:'somatic', category:'postnatal', scope:null,
+    condition:'MONDO:0004992', condition_name:'cancer',
+    condition_system:'mondo', panel:null,
+    desc:"ARN tumoral — recherche de fusions et de profils d'expression." },
+  { code:'SHEMA', name:"Leucémie (somatique)", group:'onco_tum',
+    case_type:'somatic', category:'postnatal', scope:null,
+    condition:'MONDO:0005059', condition_name:'leukemia',
+    condition_system:'mondo', panel:'Panel SHEMA' },
+  { code:'STMO', name:"Sarcome des tissus mous et osseux", group:'onco_tum',
+    case_type:'somatic', category:'postnatal', scope:null,
+    condition:'MONDO:0005089', condition_name:'sarcoma',
+    condition_system:'mondo', panel:'Panel STMO', type_todo:true,
+    desc:"Le libellé ne dit pas s'il s'agit d'un profil tumoral ou d'une prédisposition — classé somatique par défaut, à valider." },
+];
+
+const TYPE_LABEL = { germline:'Germinal', somatic:'Somatique' };
+const CAT_LABEL  = { prenatal:'Prénatal', postnatal:'Postnatal' };
+const SCOPE_LABEL = { trio:'Trio', solo:'Solo' };
+const SYS_LABEL  = { mondo:'MONDO', hpo:'HPO' };
+
+let activeGroup = 'all';   // volet de gauche
+let draft = null;          // analyse sélectionnée dans la fenêtre (pas encore confirmée)
+let picked = null;         // analyse confirmée dans le formulaire
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const svg = inner => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+const byCode = c => ANALYSES.find(a => a.code === c);
+const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/\u0153/g,'oe').replace(/\u00e6/g,'ae').toLowerCase();  /* « fœtal » se tape « foetal » */
+
+/* --- filtre de recherche : code, nom, condition, famille ---------------- */
+function matches(a, q){
+  if(!q) return true;
+  const g = GROUPS.find(g => g.key === a.group);
+  return norm([a.code, a.name, a.desc, a.condition, a.condition_name, g && g.label]
+    .filter(Boolean).join(' ')).includes(q);
+}
+
+function chips(a){
+  let h = `<span class="chip ${a.case_type === 'somatic' ? 'som' : 'germ'}"
+             ${a.type_todo ? 'title="Type déduit du libellé — à valider"' : ''}>${TYPE_LABEL[a.case_type]}${a.type_todo ? ' ?' : ''}</span>`;
+  if(a.category === 'prenatal') h += `<span class="chip pre">Prénatal</span>`;
+  /* la portée trio/solo n'est documentée que pour les 12 analyses prescriptibles dans clin */
+  if(a.scope) h += `<span class="chip">${SCOPE_LABEL[a.scope]}</span>`;
+  if(a.global_panel) h += `<span class="chip glob">Panel global</span>`;
+  return h;
+}
+
+function render(){
+  const q = norm(document.getElementById('q').value.trim());
+  const hits = ANALYSES.filter(a => matches(a, q));
+
+  /* volet gauche : familles de conditions, « sans condition spécifique » en tête */
+  let l = `<div class="gl">Familles de conditions</div>`;
+  l += `<button class="${activeGroup === 'all' ? 'on' : ''}" onclick="setGroup('all')">
+          ${svg('<path d="M3 6h18M3 12h18M3 18h18"/>')}Toutes les analyses
+          <span class="nb">${hits.length}</span></button><div class="sep"></div>`;
+  GROUPS.forEach(g => {
+    const n = hits.filter(a => a.group === g.key).length;
+    l += `<button class="${activeGroup === g.key ? 'on' : ''}" onclick="setGroup('${g.key}')"
+            ${n ? '' : 'style="opacity:.45"'} title="${esc(g.hint)}">
+            ${svg(g.icon)}<span>${esc(g.label)}</span><span class="nb">${n}</span></button>`;
+  });
+  document.getElementById('paneL').innerHTML = l;
+
+  /* volet droit : analyses regroupées, dans l'ordre logique de GROUPS */
+  let r = '';
+  GROUPS.forEach(g => {
+    if(activeGroup !== 'all' && activeGroup !== g.key) return;
+    const items = hits.filter(a => a.group === g.key);
+    if(!items.length) return;
+    r += `<div class="grp-h">${esc(g.label)}<span class="cnd">${esc(g.hint)}</span><span class="rule"></span></div>`;
+    items.forEach(a => {
+      const on = draft === a.code;
+      const cond = a.condition
+        ? `<span class="kv"><b>${esc(a.condition_name)}</b> · ${esc(a.condition)}${a.condition_todo ? ' <span style="color:var(--orange-fg);font-weight:700">à valider</span>' : ''}</span>`
+        : `<span class="kv"><b>Aucune condition</b> — non spécifique</span>`;
+      r += `<button class="opt ${on ? 'on' : ''}" type="button" onclick="setDraft('${a.code}')"
+              role="radio" aria-checked="${on}">
+              <span class="rad"></span>
+              <span class="bod">
+                <span class="l1"><span class="code">${a.code}</span><span class="nm">${esc(a.name)}</span>${chips(a)}</span>
+                <span class="l2">${cond}${a.panel ? `<span class="kv">${esc(a.panel)}</span>` : ''}</span>
+                ${a.desc ? `<span class="dsc">${esc(a.desc)}</span>` : ''}
+              </span>
+            </button>`;
+    });
+  });
+  document.getElementById('paneR').innerHTML = r ||
+    `<div class="empty">Aucune analyse ne correspond à « ${esc(document.getElementById('q').value)} ».</div>`;
+
+  /* pied de la fenêtre */
+  const d = draft && byCode(draft);
+  document.getElementById('mSel').innerHTML = d
+    ? `Sélection : <b>${esc(d.name)}</b> (${d.code}) — type <b>${TYPE_LABEL[d.case_type]}</b>`
+    : 'Aucune analyse sélectionnée';
+  document.getElementById('mOk').disabled = !d;
+}
+
+function setGroup(k){ activeGroup = k; render(); }
+function setDraft(c){ draft = c; render(); }
+
+function openModal(){
+  draft = picked;
+  activeGroup = 'all';
+  document.getElementById('q').value = '';
+  document.getElementById('ov').classList.remove('hidden');
+  document.getElementById('modal').classList.remove('hidden');
+  render();
+  document.getElementById('q').focus();
+}
+function closeModal(){
+  document.getElementById('ov').classList.add('hidden');
+  document.getElementById('modal').classList.add('hidden');
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+/* --- confirmation : le formulaire et l'en-tête reprennent les valeurs
+       désormais portées par le catalogue -------------------------------- */
+function confirmPick(){
+  picked = draft;
+  const a = byCode(picked);
+  closeModal();
+
+  document.getElementById('trigger').classList.add('hidden');
+  document.getElementById('triggerHelp').classList.add('hidden');
+  document.getElementById('picked').classList.remove('hidden');
+  document.getElementById('noteField').classList.remove('hidden');
+  document.getElementById('next').disabled = false;
+
+  document.getElementById('pkCode').textContent = a.code;
+  document.getElementById('pkName').textContent = a.name;
+  document.getElementById('pkChips').innerHTML = chips(a);
+  document.getElementById('pkType').innerHTML =
+    `${TYPE_LABEL[a.case_type]} <span class="muted mono" style="font-size:12px">(${a.case_type})</span>`;
+  document.getElementById('pkCat').innerHTML = a.category
+    ? CAT_LABEL[a.category] : `<span class="na">— non applicable</span>`;
+  document.getElementById('pkCond').innerHTML = a.condition
+    ? `${esc(a.condition_name)} <span class="muted mono" style="font-size:12px">${esc(a.condition)}</span>
+       <span class="chip" style="margin-left:4px">${SYS_LABEL[a.condition_system]}</span>`
+    : `<span class="na">Aucune — analyse non spécifique</span>`;
+  document.getElementById('pkPanel').innerHTML = a.panel
+    ? esc(a.panel) : `<span class="na">— aucun panel (analyse pangénomique)</span>`;
+
+  /* réflexe : porté par l'analyse (`reflex_to`) et non déduit du code comme dans clin */
+  const target = a.reflex_to && byCode(a.reflex_to);
+  document.getElementById('reflexField').classList.toggle('hidden', !target);
+  if(target){
+    document.getElementById('reflexLabel').textContent =
+      `Analyser en réflexe le panel global « ${target.name} » (${target.code}) si aucun diagnostic `
+      + `n'est identifié depuis le panel spécialisé.`;
+  } else {
+    document.getElementById('reflex').checked = false;
+  }
+
+  /* rail d'étapes + en-tête de page */
+  document.getElementById('stepsAnalysis').textContent = a.name;
+  const ht = document.getElementById('hdrType');
+  ht.classList.remove('hidden');
+  ht.innerHTML = (a.case_type === 'somatic'
+      ? svg('<path d="M12 2v4M4.9 7.5 8 9.3M19.1 7.5 16 9.3M12 22v-4M4.9 16.5 8 14.7M19.1 16.5 16 14.7"/><circle cx="12" cy="12" r="3"/>')
+      : svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'))
+    + (a.case_type === 'somatic' ? 'Somatique'
+       : (a.scope === 'trio' ? 'Germinal familial' : 'Germinal'));
+  const hc = document.getElementById('hdrCode');
+  hc.classList.remove('hidden');
+  hc.textContent = a.code;
+  hc.title = a.name;
+}
+</script>
+</body>
+</html>

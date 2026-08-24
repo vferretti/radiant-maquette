@@ -8,6 +8,7 @@ Chaque section vit dans son propre sous-répertoire, avec son propre `CLAUDE.md`
 
 - **`qc/`** — QC : couverture des gènes + qualité de séquençage (niveau échantillon). Voir `qc/CLAUDE.md`.
 - **`dashboard/`** — Aperçu : vue d'ensemble du cas (onglet « Aperçu », premier onglet, à gauche de « Détails »). Voir `dashboard/CLAUDE.md`.
+- **`prescription/`** — Création de cas : parcours de saisie d'un nouveau cas, inspiré du formulaire de prescription de **clin-prescription-ui** (`~/src/clin-prescription-ui`). Liste des cas → bouton « Créer un cas » → formulaire. Catalogue d'analyses dans `prescription/analysis_catalog_qlin.csv`. Voir `prescription/CLAUDE.md` — et `prescription/CHANGEMENTS_MODELE.md` pour le registre des changements de modèle proposés.
 - *(à venir : autres sections — ex. `variants/`, `files/`… — chacune avec son `CLAUDE.md`.)*
 
 Claude charge automatiquement ce `CLAUDE.md` racine **plus** celui du sous-répertoire où l'on travaille : garder ici ce qui est **transversal**, mettre le **spécifique** dans le sous-répertoire de la section.
