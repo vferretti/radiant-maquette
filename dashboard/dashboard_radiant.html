@@ -64,6 +64,23 @@
   .muted{color:var(--muted-fg)}
   .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
   .trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ---- carte « Cas » : identité + pédigrée ---- */
+  .cas-body{display:flex;flex-direction:column;gap:14px;padding-top:12px}
+  .cas-info{flex:1;min-width:0;display:grid;grid-template-columns:auto 1fr;gap:8px 12px;margin:0;
+            font-size:13px;align-items:baseline}
+  .cas-info dt{color:var(--muted-fg);font-size:10px;font-weight:700;text-transform:uppercase;
+               letter-spacing:.4px;white-space:nowrap}
+  .cas-info dd{margin:0;color:var(--fg);min-width:0}
+  .cas-info .dm{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
+  .cas-info .an{display:inline-block;font-weight:700;background:var(--dark-bg);color:var(--dark-fg);
+                border-radius:6px;padding:1px 8px;margin-right:6px}
+  .cas-info .an-lbl{color:var(--muted-fg);font-size:12px}
+  .cas-ped{width:100%;max-width:210px;margin:0 auto;border-top:1px solid var(--border);padding-top:12px}
+  .cas-ped svg{width:100%;height:auto;display:block;color:var(--fg)}
+  .cas-ped .ped-leg{display:flex;justify-content:center;gap:14px;margin-top:2px;font-size:10px;color:var(--muted-fg)}
+  .cas-ped .ped-leg span{display:inline-flex;align-items:center;gap:5px}
+  .cas-ped .sw{width:9px;height:9px;border:1.5px solid var(--fg);border-radius:2px;display:inline-block}
+  .cas-ped .sw.fill{background:var(--fg)}
   /* ---- en-têtes de groupe (distinguer annotations vs actions utilisateur) ---- */
   .grp{display:flex;align-items:center;gap:9px;margin:28px 0 12px;font-size:12px;font-weight:700;
        text-transform:uppercase;letter-spacing:.6px;color:var(--muted-fg)}
@@ -95,8 +112,8 @@
   .prio-row::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:var(--border)}
   .prio-row.c3::before{background:var(--ok-fg)}
   .prio-row.c2::before{background:var(--primary)}
-  .prio-var{display:flex;align-items:center;gap:8px;min-width:0}
-  .prio-var .aa{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--muted-fg);font-size:12px}
+  .prio-var{display:flex;align-items:center;flex-wrap:wrap;gap:2px 8px;min-width:0}
+  .prio-var .aa{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--muted-fg);font-size:12px;white-space:nowrap}
   .cons{font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;white-space:nowrap}
   .cons.c3{background:var(--ok-bg);color:var(--ok-fg)}
   .cons.c2{background:#e0e7ff;color:#3730a3}
@@ -112,44 +129,54 @@
   .verdict.fail{background:var(--err-bg);color:var(--err-fg)}
   .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
   .dot.ok{background:var(--ok-fg)} .dot.warn{background:var(--orange-fg)} .dot.fail{background:var(--err-fg)}
-  .qc-summary{display:flex;align-items:center;gap:16px;padding:8px 0}
+  .qc-summary{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:8px 0}
   .qc-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .qc-icon svg{width:24px;height:24px}
   .qc-icon.ok{background:var(--ok-bg);color:var(--ok-fg)}
   .qc-icon.warn{background:var(--orange-bg);color:var(--orange-fg)}
   .qc-icon.fail{background:var(--err-bg);color:var(--err-fg)}
-  .qc-summary .txt{flex:1;min-width:0}
+  .qc-summary .txt{flex:1 1 140px;min-width:0}
   .qc-summary .qc-line{font-size:14px;font-weight:600}
   .qc-summary .qc-desc{font-size:12.5px;color:var(--muted-fg);margin-top:2px}
-  .qc-link{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--primary)}
+  .qc-link{white-space:nowrap;flex-basis:100%;margin-left:60px;display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--primary)}
   .qc-link:hover{text-decoration:underline;text-underline-offset:2px}
   .qc-link svg{width:15px;height:15px}
-  @media(max-width:760px){.qc-summary{flex-wrap:wrap}.qc-link{margin-left:60px}}
-  /* ---- mise en page deux colonnes : Activités (gauche) + annotations/QC (droite) ---- */
-  .layout{display:grid;grid-template-columns:minmax(360px,410px) 1fr;gap:22px;align-items:start;margin-top:4px}
-  @media(max-width:1080px){.layout{grid-template-columns:1fr}}
-  .col-left,.col-right{min-width:0}
-  .col-left>.grp:first-child,.col-right>.grp:first-child{margin-top:10px}
+  /* ---- mise en page : rangée 1 = colonne gauche (Cas + Contrôle qualité) + colonne droite (Activités) ;
+         rangée 2 = Annotations (pleine largeur) ---- */
+  .layout{margin-top:4px}
+  .row1{display:grid;grid-template-columns:minmax(340px,380px) minmax(0,1fr);gap:22px;align-items:start}
+  @media(max-width:1200px){.row1{grid-template-columns:1fr}}
+  .row1>.col-a,.row1>.cell{min-width:0}
+  .row1>.col-a>.cell:first-child>.grp:first-child,.row1>.cell>.grp:first-child{margin-top:10px}
   .stack{display:flex;flex-direction:column;gap:16px}
   .cnt{color:var(--fg);background:var(--muted);border-radius:999px;padding:0 8px;font-size:12px;font-weight:600}
   .empty{color:var(--muted-fg);font-size:13px;padding:6px 0}
   /* ---- Activités : variants en colonnes alignées ---- */
-  .av-head,.av-row{display:grid;grid-template-columns:1fr 84px 30px 20px;align-items:center;gap:8px}
+  .av-head,.av-row{display:grid;grid-template-columns:1fr 56px 42px 42px;align-items:center;gap:8px}
   .av-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted-fg);
            padding-bottom:7px;border-bottom:1px solid var(--border)}
   .av-head .c{text-align:center}
-  .av-head svg{width:14px;height:14px;vertical-align:middle}
+  .av-head svg{width:15px;height:15px;vertical-align:middle;color:var(--muted-fg)}
+  .av-head.sub{margin-top:16px}
   .av-row{padding:8px 0;border-bottom:1px solid var(--border)}
   .av-row:last-child{border-bottom:0}
-  .av-cell{display:flex;justify-content:center;color:var(--muted-fg)}
+  .av-cell{display:flex;justify-content:center;align-items:center;gap:6px;color:var(--muted-fg)}
   .cnum{font-weight:700;color:var(--fg);font-size:13px}
   .dash{color:#cbd5e1}
   .cls{display:inline-block;padding:1px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
   .cls.path{background:var(--err-bg);color:var(--err-fg)}
   .cls.likely{background:var(--orange-bg);color:var(--orange-fg)}
   .cls.vus{background:var(--muted);color:#475569}
-  .flag{color:#ef4444;display:inline-flex}
-  .flag svg{width:15px;height:15px}
+  /* icônes reprises du tableau de variants Radiant (lucide) : interprétation · commentaires · flag */
+  .vic{display:inline-flex;position:relative;color:var(--muted-fg)}
+  .vic svg{width:16px;height:16px;fill:none}
+  .vic.off{opacity:.4}                     /* text-muted-foreground/40 */
+  .vic.on{color:var(--primary)}            /* text-primary */
+  .vic.on svg{fill:rgba(79,95,195,.20)}    /* fill-primary/20 */
+  .vic.flag-on{color:#ef4444}              /* text-indicator-red */
+  .vic.flag-on svg{fill:#ef4444}           /* fill-indicator-red */
+  .vic .dot{position:absolute;top:-1px;right:-2px;width:6px;height:6px;border-radius:50%;
+            background:var(--primary);box-shadow:0 0 0 1.5px var(--bg)}
   /* ---- Activités : commentaire libre sur le cas ---- */
   .note{background:var(--muted);border-radius:8px;padding:10px 12px;margin-bottom:12px}
   .note-body{font-size:13px;color:#334155;white-space:pre-wrap}
@@ -210,26 +237,104 @@
 
   <div class="layout">
 
-    <!-- ============ COLONNE GAUCHE : ACTIVITÉS (actions de l'utilisateur) ============ -->
-    <div class="col-left">
-      <div class="grp">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-        Activités
-        <span class="rule"></span>
+    <!-- ============ RANGÉE 1 : (gauche) CAS + CONTRÔLE QUALITÉ · (droite) ACTIVITÉS ============ -->
+    <div class="row1">
+
+      <!-- Colonne gauche : Cas puis Contrôle qualité empilés -->
+      <div class="col-a">
+
+      <!-- Cas : identité du cas-index + pédigrée du trio -->
+      <div class="cell">
+        <div class="grp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Cas
+          <span class="rule"></span>
+        </div>
+        <div class="card" data-cy="case-summary-card">
+          <div class="bd cas-body">
+          <dl class="cas-info">
+            <dt>Patient</dt><dd>Léa Gagnon</dd>
+            <dt>Dossier</dt><dd class="dm">594383-CHUSJ</dd>
+            <dt>Sexe</dt><dd>Féminin</dd>
+            <dt>Naissance</dt><dd class="dm">2019-03-14</dd>
+            <dt>Échantillon</dt><dd><span class="dm">DM240187</span> <span class="an-lbl">· cas-index</span></dd>
+            <dt>Analyse</dt><dd><span class="an" title="Retard global du développement intellectuel">RGDI</span><span class="an-lbl">Retard global du développement intellectuel</span></dd>
+          </dl>
+          <div class="cas-ped">
+            <svg viewBox="0 0 200 116" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+              <!-- père : carré (masculin) atteint -->
+              <rect x="39" y="15" width="22" height="22" fill="currentColor"/>
+              <!-- mère : cercle (féminin) non atteint -->
+              <circle cx="150" cy="26" r="11" fill="#fff"/>
+              <!-- union + ligne de descendance -->
+              <line x1="61" y1="26" x2="139" y2="26"/>
+              <line x1="100" y1="26" x2="100" y2="60"/>
+              <!-- cas-index (fille) : cercle atteint -->
+              <circle cx="100" cy="71" r="11" fill="currentColor"/>
+              <!-- flèche « cas-index » (proband) -->
+              <line x1="75" y1="95" x2="89" y2="81" stroke-width="1.5"/>
+              <polyline points="82,81 89,81 89,88" stroke-width="1.5"/>
+              <!-- étiquettes -->
+              <g fill="currentColor" stroke="none" font-size="9" font-weight="600" text-anchor="middle" opacity=".7">
+                <text x="50" y="50">Père</text>
+                <text x="150" y="50">Mère</text>
+                <text x="100" y="104">Cas-index</text>
+              </g>
+            </svg>
+            <div class="ped-leg">
+              <span><span class="sw fill"></span>Atteint</span>
+              <span><span class="sw"></span>Non atteint</span>
+            </div>
+          </div>
+        </div>
+        </div>
       </div>
-      <div class="stack">
+
+      <!-- Contrôle qualité (sous « Cas ») -->
+      <div class="cell">
+        <div class="grp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-6 3 4 4-7"/></svg>
+          Contrôle qualité
+          <span class="rule"></span>
+        </div>
+        <div class="card" data-cy="summary-qc-card">
+          <div class="hd row">
+            Qualité de séquençage
+            <span class="verdict warn" id="qcVerdict"></span>
+          </div>
+          <div class="bd"><div class="qc-summary" id="qcSummary"></div></div>
+        </div>
+      </div>
+
+      </div><!-- /col-a -->
+
+      <!-- Activités : actions de l'utilisateur -->
+      <div class="cell">
+        <div class="grp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          Activités
+          <span class="rule"></span>
+        </div>
+        <div class="stack">
 
         <!-- Variants : interprétation · commentaires · flags alignés en colonnes -->
         <div class="card" data-cy="activity-variants-card">
           <div class="hd row">Variants <span class="cnt" id="varCnt"></span></div>
           <div class="bd">
             <div class="av-head">
-              <span>Variant</span>
-              <span class="c">Interprétation</span>
+              <span>SNV</span>
+              <span class="c" title="Interprétation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></span>
               <span class="c" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
               <span class="c" title="Flag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg></span>
             </div>
             <div id="variants"></div>
+            <div class="av-head sub">
+              <span>CNV</span>
+              <span class="c" title="Interprétation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></span>
+              <span class="c" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+              <span class="c" title="Flag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg></span>
+            </div>
+            <div id="cnvs"></div>
           </div>
         </div>
 
@@ -246,11 +351,12 @@
         </div>
 
       </div>
+      </div>
+
     </div>
 
-    <!-- ============ COLONNE DROITE : ANNOTATIONS + QC ============ -->
-    <div class="col-right">
-
+    <!-- ============ RANGÉE 2 : ANNOTATIONS ============ -->
+    <div class="row2">
       <div class="grp">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2M14 2v2M8 20a4 4 0 0 1 8 0M8 4a4 4 0 0 0 8 0M6 8h12M6 16h12"/></svg>
         Annotations
@@ -273,20 +379,6 @@
           </div>
         </div>
       </div>
-
-      <div class="grp">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-6 3 4 4-7"/></svg>
-        Contrôle qualité
-        <span class="rule"></span>
-      </div>
-      <div class="card" data-cy="summary-qc-card">
-        <div class="hd row">
-          Qualité de séquençage
-          <span class="verdict warn" id="qcVerdict"></span>
-        </div>
-        <div class="bd"><div class="qc-summary" id="qcSummary"></div></div>
-      </div>
-
     </div>
 
   </div>
@@ -325,6 +417,10 @@ const VARIANTS = [
   {gene:'MSH2',  aa:'A636P',  classification:null, comments:1, flagged:true},
   {gene:'BRCA2', aa:'N372H',  classification:null, comments:3, flagged:false},
 ];
+// CNV — même carte, format « Type:chr:start-end » (un seul exemple)
+const CNVS = [
+  {type:'Gain', coords:'chr1:1200000-2400000', classification:'Likely pathogenic', comments:1, flagged:true},
+];
 // Rapports — un ou aucun (mettre REPORTS = [] pour tester l'état « aucun rapport »)
 const REPORTS = [
   {name:'Rapport clinique - Cas-index.html', size:'124 KB', date:'2026-04-15'},
@@ -339,7 +435,9 @@ const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'
 const ST_LABEL = {ok:'Conforme', warn:'Attention', fail:'Échec'};
 const CLS_MAP = {'Pathogenic':'path','Likely pathogenic':'likely','VUS':'vus'};
 const CLS_SHORT = {'Pathogenic':'Pathogène','Likely pathogenic':'Prob. path.','VUS':'VUS'};
+const CLS_ABBR = {'Pathogenic':'P','Likely pathogenic':'LP','VUS':'VUS'};
 
+const IC_INTERP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>';
 const IC_MSG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
 const IC_FLAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>';
 const IC_FILE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
@@ -412,16 +510,25 @@ document.getElementById('qcSummary').innerHTML = `
   </a>`;
 
 // ---- Activités : variants (interprétation · commentaires · flags, alignés en colonnes) ----
-document.getElementById('varCnt').textContent = VARIANTS.length;
-document.getElementById('variants').innerHTML = VARIANTS.map(v => `
+// Une rangée = nom (SNV : gène+AA / CNV : type+coords) + verdict abrégé + icônes Radiant
+const variantRow = (nameHtml, v) => `
   <div class="av-row">
-    <span class="prio-var"><span class="gene">${esc(v.gene)}</span><span class="aa">${esc(v.aa)}</span></span>
+    <span class="prio-var">${nameHtml}</span>
     <span class="av-cell">${v.classification
-        ? `<span class="cls ${CLS_MAP[v.classification]}" title="${esc(v.classification)}">${esc(CLS_SHORT[v.classification])}</span>`
-        : '<span class="dash">—</span>'}</span>
-    <span class="av-cell">${v.comments>0 ? `<span class="cnum">${v.comments}</span>` : '<span class="dash">—</span>'}</span>
-    <span class="av-cell">${v.flagged ? `<span class="flag" title="Marqué d’un drapeau">${IC_FLAG}</span>` : ''}</span>
-  </div>`).join('');
+        ? `<span class="cls ${CLS_MAP[v.classification]}" title="${esc(CLS_SHORT[v.classification])}">${esc(CLS_ABBR[v.classification])}</span>`
+        : `<span class="dash">—</span>`}</span>
+    <span class="av-cell">${v.comments>0
+        ? `<span class="vic on" title="${v.comments} commentaire${v.comments>1?'s':''}">${IC_MSG}<span class="dot"></span></span>`
+        : `<span class="vic off" title="Aucun commentaire">${IC_MSG}</span>`}</span>
+    <span class="av-cell">${v.flagged
+        ? `<span class="vic flag-on" title="Marqué d’un drapeau">${IC_FLAG}</span>`
+        : `<span class="vic off" title="Non marqué">${IC_FLAG}</span>`}</span>
+  </div>`;
+document.getElementById('varCnt').textContent = VARIANTS.length + CNVS.length;
+document.getElementById('variants').innerHTML = VARIANTS.map(v =>
+  variantRow(`<span class="gene">${esc(v.gene)}</span><span class="aa">${esc(v.aa)}</span>`, v)).join('');
+document.getElementById('cnvs').innerHTML = CNVS.map(v =>
+  variantRow(`<span class="gene">${esc(v.type)}</span><span class="aa">${esc(v.coords)}</span>`, v)).join('');
 
 // ---- Activités : rapports (un ou aucun) ----
 document.getElementById('repCnt').textContent = REPORTS.length;
