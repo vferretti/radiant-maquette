@@ -93,7 +93,7 @@
   .tfoot{padding:9px 14px;font-size:12.5px;color:var(--muted-fg);border-top:1px solid var(--border)}
 
   /* ---- formulaire de création ---- */
-  .form-wrap{max-width:640px}
+  .form-wrap{max-width:735px}
   label.lbl{display:block;font-size:13px;font-weight:650;margin-bottom:6px}
   .req{color:var(--err-fg)}
   .card>.hd{padding:14px 18px;border-bottom:1px solid var(--border)}
@@ -116,16 +116,50 @@
           padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius);
           background:var(--table-accent)}
   .picked .nm{font-size:14px;font-weight:650}
-  .picked .chg{margin-left:auto}
+  .picked .chg{margin-left:auto;align-self:center;color:var(--muted-fg)}
+  .picked .chg:hover{color:var(--fg);text-decoration:none}
+
+  /* ---- deux options de UI, empilées pour arbitrage ---- */
+  .sec-title{font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+             color:var(--muted-fg);margin:0 0 8px 2px}
+  .form-wrap+.sec-title{margin-top:30px}
+  .lblrow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .lblrow .lbl{margin-bottom:0}
+
+  /* ---- fenêtre modale : répertoire des analyses (option 1) ---- */
+  .overlay{position:fixed;inset:0;z-index:50;background:rgba(15,23,42,.45);
+           display:flex;align-items:flex-start;justify-content:center;padding:40px 20px}
+  .modal{background:var(--bg);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3);
+         width:min(880px,100%);max-height:calc(100vh - 80px);display:flex;flex-direction:column}
+  .modal>.hd{display:flex;align-items:center;justify-content:space-between;gap:10px;
+             padding:14px 18px;border-bottom:1px solid var(--border)}
+  .modal>.hd h2{margin:0;font-size:16px;font-weight:650}
+  .modal>.bd{padding:14px 18px;overflow-y:auto}
+  .modal>.ft{padding:12px 18px;border-top:1px solid var(--border);
+             display:flex;justify-content:flex-end;gap:10px}
+  .modal .x{display:inline-flex;border:0;background:transparent;cursor:pointer;
+            color:var(--muted-fg);padding:4px}
+  .modal .x:hover{color:var(--fg)}
+  .modal .x svg{width:16px;height:16px}
+  .note{font-size:13px;color:#475569;background:var(--table-accent);border:1px solid var(--border);
+        border-radius:var(--radius);padding:10px 12px;margin-bottom:12px}
+  .note p{margin:0}
+  .note p+p{margin-top:8px}
+  .mrow{display:flex;align-items:flex-start;gap:10px;padding:7px 8px;border-radius:6px;cursor:pointer}
+  .mrow:hover{background:var(--muted)}
+  .mrow.sel{background:var(--table-accent);box-shadow:inset 0 0 0 1px var(--primary)}
+  .mrow input{margin:2px 0 0;accent-color:var(--primary);flex-shrink:0}
+  .mrow .cw{flex:0 0 56px}
+  .mrow .nm{font-size:13.5px}
 
   /* ---- liste déroulante : la seule surface de choix ---- */
   .opt{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:6px 8px;
        border:0;border-radius:6px;background:transparent;font-family:inherit;cursor:pointer}
   .opt .cw{flex:0 0 56px}
   .opt .nm{font-size:13.5px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .opt .tg{margin-left:auto;flex-shrink:0;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px}
-  .opt .tg.germline{background:#e0e7ff;color:#3730a3}
-  .opt .tg.somatic{background:#ffedd5;color:#c2410c}
+  .opt .tg,.mrow .tg{margin-left:auto;flex-shrink:0;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px}
+  .tg.germline{background:#e0e7ff;color:#3730a3}
+  .tg.somatic{background:#ffedd5;color:#c2410c}
   .opt:hover,.opt.cur{background:var(--muted)}
   .opt.cur{box-shadow:inset 0 0 0 1px var(--primary)}
   .opt.sel .nm{font-weight:650}
@@ -188,39 +222,100 @@
   </div></header>
 
   <main>
+    <!-- ==== OPTION 1 : liste fermée par défaut + modale « répertoire » ==== -->
+    <div class="sec-title">OPTION 1 — sans la liste complète affichée</div>
     <div class="card form-wrap">
       <div class="hd"><h2>Analyse</h2></div>
       <div class="bd">
-        <label class="lbl" for="qi">Analyse demandée <span class="req">*</span></label>
-
-        <!-- le champ EST la recherche : au focus, la liste complète tombe en dessous -->
-        <div class="cbx" id="cbx">
-          <div class="box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="search" id="qi" autocomplete="off" placeholder="Rechercher une analyse…"
-                   oninput="onQuery()" onkeydown="onKeys(event)" onfocus="openInline()">
-          </div>
-          <div class="drop hidden" id="li"></div>
+        <div class="lblrow">
+          <label class="lbl" for="qi1">Analyse demandée <span class="req">*</span></label>
+          <button class="btn link" type="button" onclick="openModal()">Explorer le répertoire</button>
         </div>
 
-        <div class="hidden" id="pickedWrap">
+        <!-- la liste ne s'ouvre qu'à la frappe -->
+        <div class="cbx" id="cbx1">
+          <div class="box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="qi1" autocomplete="off" placeholder="Rechercher une analyse…"
+                   oninput="onQuery(1)" onkeydown="onKeys(1,event)" onfocus="openInline(1)">
+          </div>
+          <div class="drop hidden" id="li1"></div>
+        </div>
+
+        <div class="hidden" id="pickedWrap1">
           <div class="picked">
-            <span class="code" id="pkCode"></span>
-            <span class="nm" id="pkName"></span>
-            <button class="btn link chg" type="button" onclick="reopen()">Changer</button>
+            <span class="code" id="pkCode1"></span>
+            <span class="nm" id="pkName1"></span>
+            <button class="btn link chg" type="button" onclick="reopen(1)" title="Changer" aria-label="Changer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
           </div>
         </div>
 
       </div>
       <div class="ft">
         <button class="btn ghost" type="button" onclick="closeForm()">Annuler</button>
-        <button class="btn primary" type="button" id="next" disabled>
+        <button class="btn primary" type="button" id="next1" disabled>
+          Suivant
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ======== OPTION 2 : la liste complète tombe au focus ======== -->
+    <div class="sec-title">OPTION 2 — même chose mais avec la liste complète affichée par défaut</div>
+    <div class="card form-wrap">
+      <div class="hd"><h2>Analyse</h2></div>
+      <div class="bd">
+        <label class="lbl" for="qi2">Analyse demandée <span class="req">*</span></label>
+
+        <!-- le champ EST la recherche : au focus, la liste complète tombe en dessous -->
+        <div class="cbx" id="cbx2">
+          <div class="box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="qi2" autocomplete="off" placeholder="Rechercher une analyse…"
+                   oninput="onQuery(2)" onkeydown="onKeys(2,event)" onfocus="openInline(2)">
+          </div>
+          <div class="drop hidden" id="li2"></div>
+        </div>
+
+        <div class="hidden" id="pickedWrap2">
+          <div class="picked">
+            <span class="code" id="pkCode2"></span>
+            <span class="nm" id="pkName2"></span>
+            <button class="btn link chg" type="button" onclick="reopen(2)" title="Changer" aria-label="Changer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          </div>
+        </div>
+
+      </div>
+      <div class="ft">
+        <button class="btn ghost" type="button" onclick="closeForm()">Annuler</button>
+        <button class="btn primary" type="button" id="next2" disabled>
           Suivant
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
       </div>
     </div>
   </main>
+</div>
+
+<!-- ========= MODALE : répertoire des analyses (option 1) ========= -->
+<div class="overlay hidden" id="dirModal" onmousedown="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="hd">
+      <h2>Répertoire des analyses</h2>
+      <button class="x" type="button" onclick="closeModal()" title="Fermer" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+    <div class="bd">
+      <div class="note">
+        <p>Il est recommandé de consulter l'algorithme clinique du RQDM sur l'analyse sélectionnée avant de procéder au formulaire de prescription.</p>
+        <p>La prescription d’un test moléculaire est réservée à certaines catégories de prescripteurs, qui varient selon l’analyse demandée. Chaque prescription est sujette à l’approbation du laboratoire de diagnostic moléculaire avant le début du séquençage de l’échantillon.</p>
+      </div>
+      <div id="mrows"></div>
+    </div>
+    <div class="ft">
+      <button class="btn ghost" type="button" onclick="closeModal()">Annuler</button>
+      <button class="btn primary" type="button" id="mok" disabled onclick="confirmModal()">Sélectionner</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -327,7 +422,8 @@ function openForm(){
   document.getElementById('viewList').classList.add('hidden');
   document.getElementById('viewForm').classList.remove('hidden');
   window.scrollTo(0,0);
-  if(!picked) el('qi').focus();   /* on arrive, on tape */
+  if(!INST[1].picked) el('qi1').focus();   /* on arrive, on tape */
+  if(!INST[2].picked) openInline(2);       /* option 2 : la liste est déjà ouverte */
 }
 function closeForm(){
   document.getElementById('viewForm').classList.add('hidden');
@@ -338,86 +434,107 @@ function closeForm(){
    La recherche porte sur le CODE et le NOM de l'analyse. Le code du
    ministère (MSSS) n'est pas indexé à part : il est déjà dans le nom, en
    préfixe. L'application reste ainsi générique — pas de notion propre au
-   Québec dans le champ de recherche. ------------------------------------ */
-let picked = null, cursor = 0, visible = [];
+   Québec dans le champ de recherche.
+
+   Deux options de UI, chacune son instance :
+   1 — la liste ne s'ouvre qu'à la frappe ; le répertoire complet vit dans
+       une fenêtre modale (« Explorer le répertoire ») ;
+   2 — la liste complète tombe au focus (chemin nominal sans clic). ------ */
+const INST = {
+  1:{picked:null, cursor:0, visible:[], listOnFocus:false},
+  2:{picked:null, cursor:0, visible:[], listOnFocus:true },
+};
 
 const el = id => document.getElementById(id);
 
 function matches(a, q){ return !q || norm(a.code + ' ' + a.name).includes(q); }
+function isOpen(n){ return !el('li'+n).classList.contains('hidden'); }
 
-function render(){
-  const q = norm(el('qi').value.trim());
-  visible = [];
+function render(n){
+  const s = INST[n];
+  const q = norm(el('qi'+n).value.trim());
+  s.visible = [];
   const rows = ANALYSES.filter(a => matches(a, q)).map(a => {
-    const i = visible.length; visible.push(a.code);
+    const i = s.visible.length; s.visible.push(a.code);
     /* mousedown, pas click : il doit passer avant le blur du champ */
-    return `<button class="opt ${i===cursor?'cur':''} ${picked===a.code?'sel':''}" type="button"
-              data-i="${i}" onmousedown="event.preventDefault();choose('${a.code}')"
-              onmousemove="moveTo(${i})">
+    return `<button class="opt ${i===s.cursor?'cur':''} ${s.picked===a.code?'sel':''}" type="button"
+              data-i="${i}" onmousedown="event.preventDefault();choose(${n},'${a.code}')"
+              onmousemove="moveTo(${n},${i})">
               <span class="cw"><span class="code">${a.code}</span></span>
               <span class="nm">${esc(a.name)}</span>
               <span class="tg ${a.analysis_type_code}">${TYPE_LABEL[a.analysis_type_code]}</span>
             </button>`;
   }).join('');
-  el('li').innerHTML = rows || `<div class="empty">Aucun résultat.</div>`;
-  if(cursor >= visible.length) cursor = Math.max(0, visible.length - 1);
+  el('li'+n).innerHTML = rows || `<div class="empty">Aucun résultat.</div>`;
+  if(s.cursor >= s.visible.length) s.cursor = Math.max(0, s.visible.length - 1);
 }
-function onQuery(){ cursor = 0; render(); scrollCursor(); }
-function moveTo(i){ if(i!==cursor){ cursor = i; paintCursor(); } }
-function paintCursor(){
-  el('li').querySelectorAll('.opt').forEach(o => o.classList.toggle('cur', +o.dataset.i === cursor));
+function onQuery(n){
+  const s = INST[n];
+  s.cursor = 0;
+  /* option 2 : la liste ne s'ouvre qu'à la frappe, et se referme champ vidé */
+  if(!s.listOnFocus && !el('qi'+n).value.trim()){ closeInline(n); return; }
+  el('li'+n).classList.remove('hidden');
+  render(n); scrollCursor(n);
 }
-function scrollCursor(){
-  const o = el('li').querySelector(`.opt[data-i="${cursor}"]`);
+function moveTo(n, i){ const s = INST[n]; if(i!==s.cursor){ s.cursor = i; paintCursor(n); } }
+function paintCursor(n){
+  el('li'+n).querySelectorAll('.opt').forEach(o => o.classList.toggle('cur', +o.dataset.i === INST[n].cursor));
+}
+function scrollCursor(n){
+  const o = el('li'+n).querySelector(`.opt[data-i="${INST[n].cursor}"]`);
   if(o) o.scrollIntoView({block:'nearest'});
 }
-function onKeys(e){
+function onKeys(n, e){
+  const s = INST[n];
   if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
     e.preventDefault();
-    openInline();
-    if(!visible.length) return;
-    cursor = (cursor + (e.key === 'ArrowDown' ? 1 : -1) + visible.length) % visible.length;
-    paintCursor(); scrollCursor();
+    openInline(n);
+    if(!isOpen(n) || !s.visible.length) return;
+    s.cursor = (s.cursor + (e.key === 'ArrowDown' ? 1 : -1) + s.visible.length) % s.visible.length;
+    paintCursor(n); scrollCursor(n);
   } else if(e.key === 'Enter'){
     e.preventDefault();
-    if(visible[cursor]) choose(visible[cursor]);
+    if(isOpen(n) && s.visible[s.cursor]) choose(n, s.visible[s.cursor]);
   } else if(e.key === 'Escape'){
-    closeInline();
+    closeInline(n);
   }
 }
 
-/* au focus, les analyses tombent sous le champ ; un clic ailleurs referme */
-function openInline(){
-  cursor = Math.max(0, visible.indexOf(picked));
-  el('li').classList.remove('hidden');
-  render();
+/* option 1 : au focus, les analyses tombent sous le champ ;
+   option 2 : rien tant qu'on n'a pas tapé. Un clic ailleurs referme. */
+function openInline(n){
+  const s = INST[n];
+  if(!s.listOnFocus && !el('qi'+n).value.trim()) return;
+  s.cursor = Math.max(0, s.visible.indexOf(s.picked));
+  el('li'+n).classList.remove('hidden');
+  render(n);
 }
-function closeInline(){ el('li').classList.add('hidden'); }
+function closeInline(n){ el('li'+n).classList.add('hidden'); }
 document.addEventListener('mousedown', e => {
-  if(!el('cbx').contains(e.target)) closeInline();
+  for(const n of [1,2]) if(!el('cbx'+n).contains(e.target)) closeInline(n);
 });
 
-/* « Changer » : on revient au champ, prêt à taper */
-function reopen(){
-  el('pickedWrap').classList.add('hidden');
-  el('cbx').classList.remove('hidden');
-  el('qi').value = '';
-  el('qi').focus();
-  openInline();
+/* le « ✕ » (changer) : on revient au champ, prêt à taper */
+function reopen(n){
+  el('pickedWrap'+n).classList.add('hidden');
+  el('cbx'+n).classList.remove('hidden');
+  el('qi'+n).value = '';
+  el('qi'+n).focus();
+  openInline(n);
 }
 
 /* un clic (ou ↵) choisit et ferme */
-function choose(code){
-  picked = code;
+function choose(n, code){
   const a = byCode(code);
-  closeInline();
+  INST[n].picked = code;
+  closeInline(n);
 
-  el('cbx').classList.add('hidden');
-  el('pickedWrap').classList.remove('hidden');
-  el('next').disabled = false;
+  el('cbx'+n).classList.add('hidden');
+  el('pickedWrap'+n).classList.remove('hidden');
+  el('next'+n).disabled = false;
 
-  el('pkCode').textContent = a.code;
-  el('pkName').textContent = a.name;
+  el('pkCode'+n).textContent = a.code;
+  el('pkName'+n).textContent = a.name;
 
   const ht = el('hdrType');
   ht.classList.remove('hidden');
@@ -427,6 +544,32 @@ function choose(code){
   hc.textContent = a.code;
   hc.title = a.name;
 }
+
+/* --- fenêtre modale : le répertoire des analyses (option 1) ------------ */
+let modalSel = null;
+function openModal(){
+  modalSel = INST[1].picked;
+  renderModal();
+  el('dirModal').classList.remove('hidden');
+}
+function closeModal(){ el('dirModal').classList.add('hidden'); }
+function renderModal(){
+  el('mrows').innerHTML = ANALYSES.map(a => `
+    <label class="mrow ${modalSel===a.code?'sel':''}">
+      <input type="checkbox" ${modalSel===a.code?'checked':''}
+             onchange="modalCheck('${a.code}', this.checked)">
+      <span class="cw"><span class="code">${a.code}</span></span>
+      <span class="nm">${esc(a.name)}</span>
+      <span class="tg ${a.analysis_type_code}">${TYPE_LABEL[a.analysis_type_code]}</span>
+    </label>`).join('');
+  el('mok').disabled = !modalSel;
+}
+/* une seule case cochée à la fois */
+function modalCheck(code, checked){ modalSel = checked ? code : null; renderModal(); }
+function confirmModal(){ if(modalSel) choose(1, modalSel); closeModal(); }
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && !el('dirModal').classList.contains('hidden')) closeModal();
+});
 </script>
 </body>
 </html>

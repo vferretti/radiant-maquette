@@ -73,6 +73,19 @@ Reprise de `frontend/apps/case/src/exploration/case-exploration.tsx` :
 Le bouton bascule la vue (même page, la liste est masquée). Le fil d'Ariane **« ‹ Cas »**
 ramène à la liste. **Pas de rail d'étapes** : le formulaire n'a qu'un champ.
 
+**Deux options de UI empilées, pour arbitrage.** La carte « Analyse » apparaît en double :
+
+- **Option 1** (en haut) — la liste ne s'ouvre **qu'à la frappe** (champ vidé, elle se
+  referme), et un bouton lien **« Explorer le répertoire »** (au-dessus du champ, à droite)
+  ouvre une **fenêtre modale** : la remarque RQDM de clin (algorithme clinique, prescripteurs
+  autorisés, approbation du labo), puis la liste complète avec une **case à cocher** par
+  analyse (une seule cochée à la fois), boutons Annuler / Sélectionner.
+- **Option 2** (en dessous) — la liste complète tombe au focus : le comportement décrit
+  ci-dessous. Elle est en dernier pour que sa liste déroulante ne recouvre pas l'autre carte.
+
+Le JS est instancié (`INST[1]` / `INST[2]`) : les fonctions du combobox prennent le n°
+d'option en premier argument — `choose(1,'DYSM')`, `openInline(2)`…
+
 **Le champ *est* la recherche, et c'est la seule surface de choix.** On arrive, le curseur est
 déjà dedans (`openForm()` donne le focus), on tape, `↵`. Au focus sans rien taper, les 37
 analyses tombent en dessous — parcourir et chercher sont le même geste. Le postulat est que
@@ -100,11 +113,11 @@ Analyse demandée *
 inexplicables) ni de traitement particulier du code MSSS — voir la ligne de conduite sur la
 généricité.
 
-Une fois choisie, l'analyse tient en **une ligne**, et « Changer » revient au champ, vidé et
-focalisé :
+Une fois choisie, l'analyse tient en **une ligne**, et le « ✕ » à droite revient au champ,
+vidé et focalisé :
 
 ```
-[DYSM]  55330 - Dystrophies musculaires                          Changer
+[DYSM]  55330 - Dystrophies musculaires                                ✕
 ```
 
 **Rien d'autre n'est affiché.** Ni la condition principale, ni le type : ce dernier apparaît
@@ -222,4 +235,4 @@ google-chrome --headless=new --disable-gpu --window-size=1400,620 \
 ```
 
 Pour photographier un état interactif, injecter un appel avant `</body>` sur une copie
-temporaire — `openForm()`, `openModal()`, `choose('DYSM')`.
+temporaire — `openForm()`, `openModal()`, `choose(1,'DYSM')`.
