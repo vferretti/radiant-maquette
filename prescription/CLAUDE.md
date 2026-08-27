@@ -45,7 +45,7 @@ qu'à ne pas préfixer ses noms — rien à changer dans l'application.
 | 0 | **Liste des cas** + bouton « Créer un cas » | ✅ fait |
 | 1 | **Analyse** (choix dans le catalogue) | ✅ fait |
 | 2 | Cas-index | à venir |
-| 3 | Signes cliniques | à venir |
+| 3 | **Signes cliniques** | ✅ maquette autonome dans `hpo/` |
 | 4 | Examens paracliniques | à venir |
 | 5 | Histoire et hypothèse diagnostique | à venir |
 | 6 | Parents · 7 Projet · 8 Soumission | à venir |
