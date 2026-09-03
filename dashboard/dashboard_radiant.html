@@ -43,18 +43,6 @@
        cursor:default;display:flex;align-items:center;gap:7px}
   .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:650}
   .tab .ic{width:15px;height:15px;opacity:.85}
-  /* ---- boîte de question façon assistant (texte libre) ---- */
-  .ask-wrap{display:flex;justify-content:center;margin:26px 0 8px}
-  .ask{display:flex;align-items:center;gap:10px;width:100%;max-width:760px;background:var(--bg);
-       border:1px solid var(--border);border-radius:999px;padding:8px 8px 8px 16px;
-       box-shadow:0 2px 12px rgba(79,95,195,.10)}
-  .ask:focus-within{border-color:var(--primary);box-shadow:0 4px 16px rgba(79,95,195,.20)}
-  .ask .spark{width:18px;height:18px;color:var(--primary);flex-shrink:0}
-  .ask input{flex:1;border:0;outline:0;font-size:14px;font-family:inherit;color:var(--fg);background:transparent}
-  .ask .send{width:34px;height:34px;border-radius:50%;border:0;background:var(--primary);color:#fff;
-             display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-  .ask .send:hover{filter:brightness(1.1)}
-  .ask .send svg{width:17px;height:17px}
   /* card */
   .card{background:var(--bg);border:1px solid var(--border);border-radius:12px;
         box-shadow:0 1px 2px rgba(0,0,0,.04)}
@@ -81,68 +69,87 @@
   .cas-ped .ped-leg span{display:inline-flex;align-items:center;gap:5px}
   .cas-ped .sw{width:9px;height:9px;border:1.5px solid var(--fg);border-radius:2px;display:inline-block}
   .cas-ped .sw.fill{background:var(--fg)}
-  /* ---- en-têtes de groupe (distinguer annotations vs actions utilisateur) ---- */
+  /* ---- en-têtes de groupe ---- */
   .grp{display:flex;align-items:center;gap:9px;margin:28px 0 12px;font-size:12px;font-weight:700;
        text-transform:uppercase;letter-spacing:.6px;color:var(--muted-fg)}
   .grp svg{width:16px;height:16px;opacity:.75}
   .grp .rule{flex:1;height:1px;background:var(--border)}
   /* grilles */
-  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-items:start}
   @media(max-width:980px){.grid2{grid-template-columns:1fr}}
-  /* ligne / badges génériques */
+  /* badges génériques */
   .b{display:inline-block;padding:1px 9px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
   .b.p{background:var(--err-bg);color:var(--err-fg)}
   .b.outline{background:transparent;border:1px solid var(--border);color:var(--fg);font-weight:600}
-  .badges{display:flex;gap:8px;align-items:center}
   .who{display:flex;flex-direction:column;min-width:0}
   .hd-sub{font-weight:500;font-size:12px;color:var(--muted-fg);margin-left:2px}
-  /* ClinVar : liste plate (une ligne par variant) */
-  .cv-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;
-          border-bottom:1px solid var(--border)}
-  .cv-row:last-child{border-bottom:0}
   .gene{font-weight:600}
-  .cv-row .aa{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--muted-fg);font-size:12px;margin-left:7px}
-  /* Priorisation : matrice variant × algorithme */
-  .prio-head,.prio-row{display:grid;grid-template-columns:1fr 62px 62px 62px;align-items:center;gap:8px}
-  .prio-head{padding:0 0 7px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;
+  /* ---- Priorisation algorithmique : matrice variant × méthode (Exomiser · Radiant) ---- */
+  .pm-head,.pm-row{display:grid;grid-template-columns:1fr 78px 78px;align-items:start;gap:8px}
+  .pm-head{padding:0 0 7px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;
+           text-transform:uppercase;letter-spacing:.4px;color:var(--muted-fg)}
+  .pm-head .ac{text-align:center}
+  .pm-row{padding:8px 0 8px 12px;border-bottom:1px solid var(--border);position:relative}
+  .pm-row:last-child{border-bottom:0}
+  .pm-row::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:transparent}
+  .pm-row.accord::before{background:var(--primary)}
+  .pm-cell{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .pm-cell .sc{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--muted-fg)}
+  .pm-crits{display:flex;flex-wrap:wrap;gap:4px 5px;margin-top:5px}
+  .crit{display:inline-flex;align-items:center;font-size:11px;font-weight:600;border-radius:6px;
+        padding:1px 7px;background:var(--muted);color:#475569;white-space:nowrap}
+  .crit .v{font-weight:500;color:var(--muted-fg);margin-left:5px;
+           font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px}
+  .crit.neg{background:var(--err-bg);color:var(--err-fg)}
+  .crit.neg .v{color:var(--err-fg);opacity:.8}
+  /* ---- rangs et colonnes partagés (carte IA : 2 colonnes) ---- */
+  .prio-head,.prio-row{display:grid;grid-template-columns:1fr 62px;align-items:center;gap:8px}
+  .prio-head{padding:0 0 7px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;
              text-transform:uppercase;letter-spacing:.4px;color:var(--muted-fg)}
   .prio-head .ac{text-align:center}
-  .prio-row{padding:8px 0 8px 12px;border-bottom:1px solid var(--border);position:relative}
+  .prio-row{padding:8px 0;border-bottom:1px solid var(--border)}
   .prio-row:last-child{border-bottom:0}
-  .prio-row::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:var(--border)}
-  .prio-row.c3::before{background:var(--ok-fg)}
-  .prio-row.c2::before{background:var(--primary)}
   .prio-var{display:flex;align-items:center;flex-wrap:wrap;gap:2px 8px;min-width:0}
   .prio-var .aa{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--muted-fg);font-size:12px;white-space:nowrap}
-  .cons{font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;white-space:nowrap}
-  .cons.c3{background:var(--ok-bg);color:var(--ok-fg)}
-  .cons.c2{background:#e0e7ff;color:#3730a3}
   .rk{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:22px;border-radius:6px;
       font-size:12px;font-weight:700;margin:0 auto}
   .rk.on{background:#eef1fb;color:var(--primary)}
   .rk.off{color:#cbd5e1;font-weight:400}
   .prio-cap{font-size:11.5px;color:var(--muted-fg);margin:12px 0 2px;line-height:1.4}
-  /* ---- QC : résumé des statuts ---- */
-  .verdict{font-size:12px;font-weight:700;padding:3px 11px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
-  .verdict.ok{background:var(--ok-bg);color:var(--ok-fg)}
-  .verdict.warn{background:var(--orange-bg);color:var(--orange-fg)}
-  .verdict.fail{background:var(--err-bg);color:var(--err-fg)}
-  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-  .dot.ok{background:var(--ok-fg)} .dot.warn{background:var(--orange-fg)} .dot.fail{background:var(--err-fg)}
-  .qc-summary{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:8px 0}
-  .qc-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .qc-icon svg{width:24px;height:24px}
-  .qc-icon.ok{background:var(--ok-bg);color:var(--ok-fg)}
-  .qc-icon.warn{background:var(--orange-bg);color:var(--orange-fg)}
-  .qc-icon.fail{background:var(--err-bg);color:var(--err-fg)}
-  .qc-summary .txt{flex:1 1 140px;min-width:0}
-  .qc-summary .qc-line{font-size:14px;font-weight:600}
-  .qc-summary .qc-desc{font-size:12.5px;color:var(--muted-fg);margin-top:2px}
-  .qc-link{white-space:nowrap;flex-basis:100%;margin-left:60px;display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--primary)}
-  .qc-link:hover{text-decoration:underline;text-underline-offset:2px}
-  .qc-link svg{width:15px;height:15px}
-  /* ---- mise en page : rangée 1 = colonne gauche (Cas + Contrôle qualité) + colonne droite (Activités) ;
-         rangée 2 = Annotations (pleine largeur) ---- */
+  /* ---- carte IA : synthèse des variants prioritaires ---- */
+  .ai-hd-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+        padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .chip svg{width:12px;height:12px}
+  .chip.ai{background:var(--dark-bg);color:var(--dark-fg)}
+  .chip.stale{background:var(--orange-bg);color:var(--orange-fg)}
+  .ai-note{display:flex;align-items:flex-start;gap:9px;background:var(--orange-bg);color:var(--orange-fg);
+           border-radius:8px;padding:8px 11px;font-size:12.5px;font-weight:600;margin:12px 0 4px}
+  .ai-note svg{width:15px;height:15px;flex-shrink:0;margin-top:1px}
+  .ai-syn{font-size:13.5px;color:#334155;margin:12px 0 14px;line-height:1.55}
+  .ai-row{display:grid;grid-template-columns:1fr 62px;align-items:start;gap:8px;
+          padding:9px 0;border-bottom:1px solid var(--border)}
+  .ai-row:last-of-type{border-bottom:0}
+  .ai-why{font-size:12px;color:var(--muted-fg);margin-top:2px;line-height:1.45}
+  .ai-div{border-top:1px solid var(--border);margin-top:6px;padding-top:10px;display:flex;
+          flex-direction:column;gap:7px}
+  .ai-div-row{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:#334155;line-height:1.45}
+  .ai-div-row svg{width:15px;height:15px;flex-shrink:0;margin-top:2px}
+  .ai-div-row.down svg{color:var(--muted-fg)}
+  .ai-div-row.up svg{color:var(--ok-fg)}
+  .ai-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+           border-top:1px solid var(--border);margin-top:12px;padding-top:10px;
+           font-size:11.5px;color:var(--muted-fg)}
+  .ai-link{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;color:var(--primary)}
+  .ai-link:hover{text-decoration:underline;text-underline-offset:2px}
+  .ai-link svg{width:14px;height:14px}
+  .skel{height:11px;border-radius:6px;background:linear-gradient(90deg,#eef2f7,#e2e8f0,#eef2f7);
+        background-size:200% 100%;animation:sh 1.4s linear infinite;margin:9px 0}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .ai-wait{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-fg);margin:12px 0 2px}
+  .ai-wait svg{width:14px;height:14px;animation:spin 1.1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* ---- mise en page : rangée 1 = Cas + Activités ; rangée 2 = Priorisation (2 cartes) ---- */
   .layout{margin-top:4px}
   .row1{display:grid;grid-template-columns:minmax(340px,380px) minmax(0,1fr);gap:22px;align-items:start}
   @media(max-width:1200px){.row1{grid-template-columns:1fr}}
@@ -161,7 +168,6 @@
   .av-row{padding:8px 0;border-bottom:1px solid var(--border)}
   .av-row:last-child{border-bottom:0}
   .av-cell{display:flex;justify-content:center;align-items:center;gap:6px;color:var(--muted-fg)}
-  .cnum{font-weight:700;color:var(--fg);font-size:13px}
   .dash{color:#cbd5e1}
   .cls{display:inline-block;padding:1px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
   .cls.path{background:var(--err-bg);color:var(--err-fg)}
@@ -187,16 +193,10 @@
   .note-actions{display:flex;justify-content:flex-end;margin-top:8px}
   .btn-add{border:0;background:var(--primary);color:#fff;border-radius:6px;padding:7px 14px;font-weight:600;cursor:pointer;font-size:13px}
   .btn-add:hover{filter:brightness(1.08)}
-  /* rapports (compacts) */
-  .rep{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
-  .rep:last-child{border-bottom:0}
-  .rep-left{display:flex;align-items:center;gap:10px;min-width:0}
-  .rep-left svg{width:18px;height:18px;color:var(--muted-fg);flex-shrink:0}
-  .rep-name{font-weight:500;font-size:13px}
-  .rep-meta{color:var(--muted-fg);font-size:11px}
   .icon-btn{width:30px;height:30px;border:1px solid var(--border);background:var(--bg);border-radius:6px;
             cursor:pointer;color:var(--fg);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
   .icon-btn:hover{background:var(--muted)}
+  .icon-btn:disabled{opacity:.5;cursor:default}
   .icon-btn svg{width:15px;height:15px}
 </style>
 </head>
@@ -226,21 +226,12 @@
 
 <div class="app">
 
-  <!-- boîte de texte libre façon assistant, centrée en haut -->
-  <div class="ask-wrap">
-    <form class="ask" onsubmit="return false">
-      <svg class="spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/></svg>
-      <input type="text" placeholder="Posez une question sur ce cas — variants, couverture, historique…">
-      <button class="send" type="submit" title="Envoyer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></button>
-    </form>
-  </div>
-
   <div class="layout">
 
-    <!-- ============ RANGÉE 1 : (gauche) CAS + CONTRÔLE QUALITÉ · (droite) ACTIVITÉS ============ -->
+    <!-- ============ RANGÉE 1 : (gauche) CAS · (droite) ACTIVITÉS ============ -->
     <div class="row1">
 
-      <!-- Colonne gauche : Cas puis Contrôle qualité empilés -->
+      <!-- Colonne gauche : Cas -->
       <div class="col-a">
 
       <!-- Cas : identité du cas-index + pédigrée du trio -->
@@ -290,22 +281,6 @@
         </div>
       </div>
 
-      <!-- Contrôle qualité (sous « Cas ») -->
-      <div class="cell">
-        <div class="grp">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-6 3 4 4-7"/></svg>
-          Contrôle qualité
-          <span class="rule"></span>
-        </div>
-        <div class="card" data-cy="summary-qc-card">
-          <div class="hd row">
-            Qualité de séquençage
-            <span class="verdict warn" id="qcVerdict"></span>
-          </div>
-          <div class="bd"><div class="qc-summary" id="qcSummary"></div></div>
-        </div>
-      </div>
-
       </div><!-- /col-a -->
 
       <!-- Activités : actions de l'utilisateur -->
@@ -338,12 +313,6 @@
           </div>
         </div>
 
-        <!-- Rapports : un ou aucun -->
-        <div class="card" data-cy="activity-reports-card">
-          <div class="hd row">Rapports <span class="cnt" id="repCnt"></span></div>
-          <div class="bd" id="reports"></div>
-        </div>
-
         <!-- Commentaire libre sur le cas : afficher / ajouter -->
         <div class="card" data-cy="activity-note-card">
           <div class="hd">Commentaire sur le cas</div>
@@ -355,29 +324,46 @@
 
     </div>
 
-    <!-- ============ RANGÉE 2 : ANNOTATIONS ============ -->
+    <!-- ============ RANGÉE 2 : PRIORISATION (algorithme · assistant) ============ -->
     <div class="row2">
       <div class="grp">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2M14 2v2M8 20a4 4 0 0 1 8 0M8 4a4 4 0 0 0 8 0M6 8h12M6 16h12"/></svg>
-        Annotations
+        Priorisation des variants
         <span class="rule"></span>
       </div>
       <div class="grid2">
-        <div class="card" data-cy="summary-clinvar-card">
-          <div class="hd">Gènes avec variants ClinVar pathogéniques / probablement pathogéniques</div>
-          <div class="bd" id="clinvar"></div>
-        </div>
+
+        <!-- Priorisation algorithmique : Exomiser seul -->
         <div class="card" data-cy="summary-prioritization-card">
-          <div class="hd">Priorisation des variants <span class="hd-sub">Exomiser · Phenovar · Franklin</span></div>
+          <div class="hd">Priorisation algorithmique <span class="hd-sub">Exomiser · Radiant</span></div>
           <div class="bd">
-            <div class="prio-head">
+            <div class="pm-head">
               <span>Variant</span>
-              <span class="ac">Exomiser</span><span class="ac">Phenovar</span><span class="ac">Franklin</span>
+              <span class="ac">Exomiser</span>
+              <span class="ac">Radiant</span>
             </div>
             <div id="prio"></div>
-            <p class="prio-cap"><b>#n</b> = rang dans le top 5 de l'algorithme. Les variants priorisés par plusieurs algorithmes (barre colorée à gauche) remontent en tête.</p>
+            <p class="prio-cap"><b>#n</b> = rang dans le top 5 de chaque méthode ; <b>—</b> = non retenu. Sous le rang Exomiser, son <b>score de variant</b> (`exomiser_variant_score`, 0 à 1).
+              <b>Radiant</b> combine la rareté (gnomAD <b>et</b> cohorte interne), la cohérence génotype-phénotype
+              (panel HPO, hérédité OMIM, de novo, paire composite, second hit CNV), la preuve établie (ClinVar,
+              critères ACMG d'Exomiser, interprétations déjà enregistrées) et les scores in-silico en départage.
+              Barre colorée à gauche = variant retenu par les deux méthodes.</p>
           </div>
         </div>
+
+        <!-- Synthèse de l'assistant : générée à l'ouverture de l'onglet, conservée, régénérable -->
+        <div class="card" data-cy="summary-ai-card">
+          <div class="hd row">
+            <span>Variants prioritaires <span class="hd-sub">synthèse de l'assistant</span></span>
+            <span class="ai-hd-right">
+              <span class="chip ai" title="Contenu généré par l'assistant, non validé"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>IA · non validé</span>
+              <span id="aiStale"></span>
+              <button class="icon-btn" type="button" id="aiRefresh" title="Régénérer la synthèse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg></button>
+            </span>
+          </div>
+          <div class="bd" id="aiCard"></div>
+        </div>
+
       </div>
     </div>
 
@@ -385,30 +371,58 @@
 
 <script>
 // ============ Données de démonstration ============
-// Annotations (automatiques) — variants affichés en changement d'acide aminé (pas de coordonnées)
-const CLINVAR = [
-  {symbol:'BRCA1', pathogenic:2, likelyPathogenic:1, variants:[
-    {aa:'R1699W', classification:'P'}, {aa:'E1449K', classification:'P'}, {aa:'K1183R', classification:'LP'}]},
-  {symbol:'TP53', pathogenic:1, likelyPathogenic:0, variants:[{aa:'R175H', classification:'P'}]},
-  {symbol:'MLH1', pathogenic:0, likelyPathogenic:1, variants:[{aa:'V384D', classification:'LP'}]},
+// Priorisation algorithmique — deux méthodes en colonnes (Phenovar et Franklin ne sont pas disponibles).
+// `exo` = rang Exomiser ; `rad` = rang de la priorisation Radiant (requête combinée en quatre couches) ;
+// `why` = la couche qui a fait remonter (ou écarté) le variant.
+const PRIO = [
+  {gene:'SCN1A',   aa:'R1648H',        exo:1,    exoScore:'0,94', rad:1,
+   crits:[{c:'de_novo'},{c:'abs_gnomad'},{c:'abs_cohorte'},{c:'panel_hpo'},{c:'impact',v:'HIGH'}]},
+  {gene:'TRAPPC9', aa:'R472* / P853L', exo:null, rad:2,
+   crits:[{c:'comp_het'},{c:'trans_parents'},{c:'moi_ar'},{c:'abs_gnomad'}]},
+  {gene:'STXBP1',  aa:'R406H',         exo:3,    exoScore:'0,88', rad:3,
+   crits:[{c:'panel_hpo'},{c:'herite_mere'},{c:'deja_classe',v:'2 cas'},{c:'clinvar',v:'LP'}]},
+  {gene:'KCNQ2',   aa:'R213W',         exo:2,    exoScore:'0,91', rad:4,
+   crits:[{c:'panel_hpo'},{c:'impact',v:'HIGH'},{c:'gnomad',v:'4,1e-5'}]},
+  {gene:'GRIN2B',  aa:'N615K',         exo:4,    exoScore:'0,79', rad:5,
+   crits:[{c:'panel_hpo'},{c:'gnomad',v:'2,3e-5'},{c:'cadd',v:'27'},{c:'revel',v:'0,81'}]},
+  {gene:'CDKL5',   aa:'R59X',          exo:5,    exoScore:'0,72', rad:null,
+   crits:[{c:'ecarte_qualite',v:'ratio 0,18 · 12×',neg:true}]},
 ];
-// Priorisation : top 5 de chaque algorithme (ordre = rang). Union montrée dans une seule carte.
-const ALGOS = ['Exomiser','Phenovar','Franklin'];
-const PRIO = {
-  Exomiser: ['SCN1A R1648H','KCNQ2 R213W','STXBP1 R406H','GRIN2B N615K','CDKL5 R59X'],
-  Phenovar: ['SCN1A R1648H','STXBP1 R406H','SCN2A R1882Q','KCNQ2 R213W','MECP2 T158M'],
-  Franklin: ['SCN1A R1648H','KCNQ2 R213W','GRIN2B N615K','PCDH19 N340S','STXBP1 R406H'],
+
+// Libellés des critères. Aucun n'est rédigé par le modèle : chacun correspond à un drapeau ou une
+// valeur renvoyés par la requête de priorisation. Dans le portail, ces libellés viendront de l'i18n
+// (FR/EN) — d'où le passage par des codes plutôt que par des phrases.
+const CRIT_LABEL = {
+  de_novo:'De novo (trio)', abs_gnomad:'Absent de gnomAD', abs_cohorte:'Absent de la cohorte interne',
+  panel_hpo:'Panel HPO du cas', impact:'Impact', gnomad:'gnomAD', comp_het:'Paire composite',
+  trans_parents:'Un allèle de chaque parent', moi_ar:'Hérédité AR', herite_mere:'Hérité de la mère',
+  deja_classe:'Déjà classé pathogénique', clinvar:'ClinVar', cadd:'CADD', revel:'REVEL',
+  ecarte_qualite:'Écarté — appel douteux',
 };
-// QC — résumé des statuts (repris des indicateurs de la maquette QC ; verdict global = pire statut)
-const QC_INDICATORS = [
-  {label:'Sexe / ploïdie', status:'ok'},
-  {label:'Contamination', status:'ok'},
-  {label:'Couv. moyenne', status:'ok'},
-  {label:'Région ≥15x', status:'ok'},
-  {label:'Uniformité', status:'warn'},
-  {label:'CNV passants', status:'ok'},
-  {label:'Pédigrée / parenté', status:'ok'},
-];
+
+// Synthèse de l'assistant. AI_STATE : 'ready' · 'stale' (données modifiées depuis la génération) ·
+// 'loading' (première ouverture de l'onglet) · 'error' (génération indisponible).
+const AI_STATE = 'ready';
+const AI = {
+  generated:'2026-09-03 09:12', model:'claude-opus-4-8',
+  synthese:"Trois candidats se dégagent, tous compatibles avec un retard global du développement. "
+    + "SCN1A R1648H est de novo, confirmé par le trio et absent de gnomAD. TRAPPC9 porte deux variants rares "
+    + "en trans, un hérité de chaque parent — configuration récessive qu'aucun variant pris isolément ne signale. "
+    + "Deux des trois candidats figurent au top 5 Exomiser.",
+  candidats:[
+    {gene:'SCN1A', aa:'R1648H', exo:1,
+     why:"De novo confirmé par le trio · absent de gnomAD et de la cohorte interne · gène du panel HPO"},
+    {gene:'TRAPPC9', aa:'R472* / P853L', exo:null,
+     why:"Paire hétérozygote composite — un allèle de chaque parent · gène récessif compatible avec le phénotype"},
+    {gene:'STXBP1', aa:'R406H', exo:3,
+     why:"Hérité de la mère · gène du panel HPO · déjà classé pathogénique dans 2 autres cas"},
+  ],
+  divergences:[
+    {sens:'down', txt:"CDKL5 R59X — classé #5 par Exomiser, écarté ici : appel douteux (ratio allélique 0,18 · profondeur 12×)."},
+    {sens:'up',   txt:"TRAPPC9 — hors classement Exomiser : la configuration composite ne se voit qu'au niveau du gène."},
+  ],
+};
+
 // Actions de l'utilisateur — variants (interprétés + commentés + flaggés fusionnés)
 const VARIANTS = [
   {gene:'BRCA1', aa:'R1699W', classification:'Pathogenic', comments:2, flagged:true},
@@ -421,10 +435,6 @@ const VARIANTS = [
 const CNVS = [
   {type:'Gain', coords:'chr1:1200000-2400000', classification:'Likely pathogenic', comments:1, flagged:true},
 ];
-// Rapports — un ou aucun (mettre REPORTS = [] pour tester l'état « aucun rapport »)
-const REPORTS = [
-  {name:'Rapport clinique - Cas-index.html', size:'124 KB', date:'2026-04-15'},
-];
 // Commentaire libre sur le cas (mettre CASE_NOTE = null pour tester l'état vide)
 const CASE_NOTE = {
   text:"Trio complet séquencé. BRCA1 R1699W retenu comme cause probable ; confirmation Sanger à prévoir et implications familiales à discuter en réunion.",
@@ -432,82 +442,74 @@ const CASE_NOTE = {
 };
 
 const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const ST_LABEL = {ok:'Conforme', warn:'Attention', fail:'Échec'};
 const CLS_MAP = {'Pathogenic':'path','Likely pathogenic':'likely','VUS':'vus'};
 const CLS_SHORT = {'Pathogenic':'Pathogène','Likely pathogenic':'Prob. path.','VUS':'VUS'};
 const CLS_ABBR = {'Pathogenic':'P','Likely pathogenic':'LP','VUS':'VUS'};
 
-const IC_INTERP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>';
 const IC_MSG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
 const IC_FLAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>';
-const IC_FILE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
-const IC_DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>';
+const IC_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>';
+const IC_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>';
+const IC_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>';
+const IC_SPIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+const IC_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 
-// ---- Annotations : ClinVar (liste plate, une ligne par variant) ----
-const CV_CLS = {'P':'p','LP':'outline'};
-const clinvarRows = CLINVAR.flatMap(g => g.variants.map(v => ({gene:g.symbol, aa:v.aa, classification:v.classification})));
-document.getElementById('clinvar').innerHTML = clinvarRows.map(v => `
-  <div class="cv-row">
-    <span class="vname"><span class="gene">${esc(v.gene)}</span><span class="aa">${esc(v.aa)}</span></span>
-    <span class="b ${CV_CLS[v.classification]}">${v.classification==='P'?'Pathogénique':'Prob. pathogénique'}</span>
-  </div>`).join('');
-
-// ---- Annotations : Priorisation (union des top 5, tri par consensus) ----
-const prioMap = {};
-ALGOS.forEach(algo => PRIO[algo].forEach((v,i) => {
-  if (!prioMap[v]) { const p=v.indexOf(' '); prioMap[v]={key:v, gene:v.slice(0,p), aa:v.slice(p+1), ranks:{}}; }
-  prioMap[v].ranks[algo] = i+1;
-}));
-const prioRows = Object.values(prioMap).map(r => {
-  const present = ALGOS.filter(a => r.ranks[a]);
-  return {...r, count:present.length, avg:present.reduce((s,a)=>s+r.ranks[a],0)/present.length};
-}).sort((a,b) => b.count-a.count || a.avg-b.avg);
-document.getElementById('prio').innerHTML = prioRows.map(r => `
-  <div class="prio-row c${r.count}">
-    <span class="prio-var">
-      <span class="gene">${esc(r.gene)}</span><span class="aa">${esc(r.aa)}</span>
-      ${r.count>=2 ? `<span class="cons c${r.count}">${r.count}/3</span>` : ''}
+// ---- Priorisation algorithmique (Exomiser · Radiant) ----
+// Tri par rang Radiant (la méthode dont nous maîtrisons les critères), les non-retenus en dernier.
+const rkCell = n => n ? `<span class="rk on">#${n}</span>` : `<span class="rk off" title="Non retenu">—</span>`;
+document.getElementById('prio').innerHTML = PRIO.slice()
+  .sort((a,b) => (a.rad ?? 99) - (b.rad ?? 99) || (a.exo ?? 99) - (b.exo ?? 99))
+  .map(r => `
+  <div class="pm-row${r.exo && r.rad ? ' accord' : ''}">
+    <span>
+      <span class="prio-var"><span class="gene">${esc(r.gene)}</span><span class="aa">${esc(r.aa)}</span></span>
+      <div class="pm-crits">${r.crits.map(k => `
+        <span class="crit${k.neg ? ' neg' : ''}">${esc(CRIT_LABEL[k.c] || k.c)}${k.v ? `<span class="v">${esc(k.v)}</span>` : ''}</span>`).join('')}</div>
     </span>
-    ${ALGOS.map(a => r.ranks[a]
-        ? `<span class="rk on">#${r.ranks[a]}</span>`
-        : `<span class="rk off">—</span>`).join('')}
+    <span class="pm-cell">${rkCell(r.exo)}${r.exoScore ? `<span class="sc" title="exomiser_variant_score">${esc(r.exoScore)}</span>` : ''}</span>
+    <span class="pm-cell">${rkCell(r.rad)}</span>
   </div>`).join('');
 
-// ---- QC : verdict global (pire statut) + phrase-type + lien vers l'onglet QC ----
-const rank = {ok:0, warn:1, fail:2};
-const worst = QC_INDICATORS.reduce((a,b)=> rank[b.status]>rank[a] ? b.status : a, 'ok');
-const vEl = document.getElementById('qcVerdict');
-vEl.className = 'verdict '+worst;
-vEl.innerHTML = `<span class="dot ${worst}"></span>${ST_LABEL[worst]}`;
+// ---- Synthèse de l'assistant (générée à l'ouverture de l'onglet, conservée, régénérable) ----
+const aiFoot = `
+  <div class="ai-foot">
+    <span>Généré le ${esc(AI.generated)} · ${esc(AI.model)} · à valider par le généticien</span>
+    <a class="ai-link" href="#" title="Poursuivre dans l'assistant">Ouvrir dans l'assistant ${IC_ARROW}</a>
+  </div>`;
 
-const attention = QC_INDICATORS.filter(i=>i.status==='warn').map(i=>i.label);
-const failed = QC_INDICATORS.filter(i=>i.status==='fail').map(i=>i.label);
-const QC_ICON = {
-  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>',
-  fail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
-};
-let qcLine, qcDesc;
-if (worst==='ok') {
-  qcLine = 'Tous les critères de qualité sont conformes.';
-  qcDesc = 'Aucun indicateur ne nécessite d’attention particulière.';
-} else if (worst==='warn') {
-  qcLine = 'La qualité est globalement conforme, avec des points à surveiller.';
-  qcDesc = 'À vérifier : ' + attention.join(', ') + '.';
-} else {
-  qcLine = 'Un ou plusieurs critères de qualité ne sont pas atteints.';
-  qcDesc = 'En échec : ' + failed.join(', ')
-         + (attention.length ? ' · à surveiller : ' + attention.join(', ') : '') + '.';
-}
-document.getElementById('qcSummary').innerHTML = `
-  <div class="qc-icon ${worst}">${QC_ICON[worst]}</div>
-  <div class="txt">
-    <div class="qc-line">${esc(qcLine)}</div>
-    <div class="qc-desc">${esc(qcDesc)}</div>
+const aiReady = stale => `
+  ${stale ? `<div class="ai-note">${IC_WARN}<span>Les données du cas ont changé depuis cette synthèse — régénérer pour la mettre à jour.</span></div>` : ''}
+  <p class="ai-syn">${esc(AI.synthese)}</p>
+  <div class="prio-head"><span>Candidat</span><span class="ac">Exomiser</span></div>
+  ${AI.candidats.map(c => `
+    <div class="ai-row">
+      <span>
+        <span class="prio-var"><span class="gene">${esc(c.gene)}</span><span class="aa">${esc(c.aa)}</span></span>
+        <div class="ai-why">${esc(c.why)}</div>
+      </span>
+      <span>${c.exo ? `<span class="rk on">#${c.exo}</span>` : `<span class="rk off" title="Hors du top 5 Exomiser">—</span>`}</span>
+    </div>`).join('')}
+  <div class="ai-div">
+    ${AI.divergences.map(d => `
+      <div class="ai-div-row ${d.sens}">${d.sens === 'up' ? IC_UP : IC_DOWN}<span>${esc(d.txt)}</span></div>`).join('')}
   </div>
-  <a class="qc-link" href="../qc/qc_radiant.html" title="Ouvrir l’onglet QC">Ouvrir l’onglet QC
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-  </a>`;
+  ${aiFoot}`;
+
+const AI_VIEWS = {
+  ready: () => aiReady(false),
+  stale: () => aiReady(true),
+  loading: () => `
+    <div class="ai-wait">${IC_SPIN}<span>Génération de la synthèse…</span></div>
+    <div class="skel" style="width:96%"></div><div class="skel" style="width:88%"></div>
+    <div class="skel" style="width:70%"></div><div class="skel" style="width:40%"></div>`,
+  error: () => `
+    <div class="ai-note">${IC_WARN}<span>La synthèse n'a pas pu être générée. La priorisation Exomiser reste disponible ci-contre.</span></div>
+    <a class="ai-link" href="#" style="margin:10px 0 4px">Poser la question dans l'assistant ${IC_ARROW}</a>`,
+};
+document.getElementById('aiCard').innerHTML = (AI_VIEWS[AI_STATE] || AI_VIEWS.ready)();
+document.getElementById('aiStale').innerHTML = AI_STATE === 'stale'
+  ? `<span class="chip stale" title="Données modifiées depuis la génération">Périmée</span>` : '';
+document.getElementById('aiRefresh').disabled = (AI_STATE === 'loading');
 
 // ---- Activités : variants (interprétation · commentaires · flags, alignés en colonnes) ----
 // Une rangée = nom (SNV : gène+AA / CNV : type+coords) + verdict abrégé + icônes Radiant
@@ -517,8 +519,8 @@ const variantRow = (nameHtml, v) => `
     <span class="av-cell">${v.classification
         ? `<span class="cls ${CLS_MAP[v.classification]}" title="${esc(CLS_SHORT[v.classification])}">${esc(CLS_ABBR[v.classification])}</span>`
         : `<span class="dash">—</span>`}</span>
-    <span class="av-cell">${v.comments>0
-        ? `<span class="vic on" title="${v.comments} commentaire${v.comments>1?'s':''}">${IC_MSG}<span class="dot"></span></span>`
+    <span class="av-cell">${v.comments > 0
+        ? `<span class="vic on" title="${v.comments} commentaire${v.comments > 1 ? 's' : ''}">${IC_MSG}<span class="dot"></span></span>`
         : `<span class="vic off" title="Aucun commentaire">${IC_MSG}</span>`}</span>
     <span class="av-cell">${v.flagged
         ? `<span class="vic flag-on" title="Marqué d’un drapeau">${IC_FLAG}</span>`
@@ -529,19 +531,6 @@ document.getElementById('variants').innerHTML = VARIANTS.map(v =>
   variantRow(`<span class="gene">${esc(v.gene)}</span><span class="aa">${esc(v.aa)}</span>`, v)).join('');
 document.getElementById('cnvs').innerHTML = CNVS.map(v =>
   variantRow(`<span class="gene">${esc(v.type)}</span><span class="aa">${esc(v.coords)}</span>`, v)).join('');
-
-// ---- Activités : rapports (un ou aucun) ----
-document.getElementById('repCnt').textContent = REPORTS.length;
-document.getElementById('reports').innerHTML = REPORTS.length
-  ? REPORTS.map(r => `
-    <div class="rep">
-      <div class="rep-left">
-        ${IC_FILE}
-        <div class="who"><span class="rep-name trunc">${esc(r.name)}</span><span class="rep-meta">${esc(r.size)} · ${esc(r.date)}</span></div>
-      </div>
-      <button class="icon-btn" type="button" title="Télécharger">${IC_DL}</button>
-    </div>`).join('')
-  : `<div class="empty">Aucun rapport généré pour ce cas.</div>`;
 
 // ---- Activités : commentaire libre sur le cas (afficher / ajouter) ----
 document.getElementById('caseNote').innerHTML = `
