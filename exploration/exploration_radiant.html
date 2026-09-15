@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exploration · Radiant</title>
+<style>
+  :root{
+    --primary:#4f5fc3; --primary-fg:#f8fafc;
+    --bg:#ffffff; --fg:#1a1d3a; --muted:#f1f5f9; --muted-fg:#64748b;
+    --border:#e2e8f0; --input:#cbd5e1; --table-header:#f1f5f9; --table-accent:#f8fafc;
+    --err-fg:#dc2626; --dark-bg:#ede9fe; --dark-fg:#6d28d9;
+    --radius:8px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--fg);background:var(--muted);font-size:14px;line-height:1.45}
+  a{color:var(--primary);text-decoration:none}
+  .hidden{display:none !important}
+  .muted{color:var(--muted-fg)}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+  /* ---- MainNavbar Radiant (placement « top », h 44px) ---- */
+  .nav{display:flex;align-items:center;height:44px;padding:0 24px;border-bottom:1px solid var(--border);
+       background:var(--bg);box-shadow:0 1px 2px rgba(0,0,0,.03);gap:4px}
+  .nav .logo{font-weight:800;font-size:15px;letter-spacing:-.3px;margin-right:18px;color:var(--fg)}
+  .nav .logo i{color:var(--primary);font-style:normal}
+  .nav-item{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 10px;border-radius:6px;
+            font-size:13.5px;color:var(--muted-fg);cursor:pointer;white-space:nowrap}
+  .nav-item svg{width:15px;height:15px}
+  .nav-item:hover{background:var(--muted);color:var(--fg)}
+  .nav-item.active{background:var(--muted);color:var(--fg);font-weight:650}
+  .nav .grow{flex:1}
+  .nav .right{display:flex;align-items:center;gap:10px;color:var(--muted-fg);font-size:12.5px}
+  .nav .avatar{width:24px;height:24px;border-radius:50%;background:var(--dark-bg);color:var(--dark-fg);
+               display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+
+  /* ---- HeaderNavigation Radiant ---- */
+  .rd-header{background:var(--bg);border-bottom:1px solid var(--border)}
+  .rd-inner{max-width:1720px;margin:0 auto;padding:0 20px}
+  .rd-crumb{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted-fg);padding-top:12px}
+  .rd-crumb svg{width:14px;height:14px}
+  .rd-crumb a{cursor:pointer}
+  .rd-header-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:13px 0}
+  .rd-title-wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+  .rd-title{margin:0;font-size:20px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+  .rd-badge{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:2px 8px;
+            font-size:12px;font-weight:600;white-space:nowrap}
+  .rd-badge svg{width:13px;height:13px}
+  .rd-badge.secondary{background:var(--muted);color:#334155}
+  .rd-badge.outline{background:transparent;border:1px solid var(--border);color:var(--fg)}
+
+  /* ---- onglets de l'entité variant (TabsNav) ---- */
+  .tabs{display:flex;gap:4px;background:var(--bg);border-bottom:1px solid var(--border);padding:0 20px}
+  .tabs .in{display:flex;gap:4px;max-width:1720px;margin:0 auto;width:100%}
+  .tab{padding:9px 12px;color:var(--muted-fg);font-weight:500;border-bottom:2px solid transparent;cursor:default;
+       font-size:13.5px}
+  .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:650}
+
+  /* ---- boutons ---- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 14px;
+       border-radius:var(--radius);font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;
+       border:1px solid transparent;background:transparent;color:var(--fg);white-space:nowrap}
+  .btn svg{width:15px;height:15px}
+  .btn.primary{background:var(--primary);color:var(--primary-fg)}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.outline{border-color:var(--input);background:var(--bg)}
+  .btn.outline:hover{background:var(--muted)}
+  .btn.sm{height:30px;padding:0 10px;font-size:13px}
+
+  main{padding:16px 20px 48px;max-width:1720px;margin:0 auto}
+  .card{background:var(--bg);border:1px solid var(--border);border-radius:12px;
+        box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card>.hd{padding:13px 18px;border-bottom:1px solid var(--border);font-weight:650;font-size:15px}
+  .card>.bd{padding:18px}
+
+  /* ================= formulaire d'exploration ================= */
+  .search-wrap{max-width:760px}
+  .fld{margin-bottom:16px}
+  .fld:last-child{margin-bottom:0}
+  label.lbl{display:block;font-size:13px;font-weight:650;margin-bottom:6px}
+  .seg-row{display:flex;gap:28px;flex-wrap:wrap}
+  .seg{display:inline-flex;padding:3px;background:var(--muted);border-radius:9px;gap:3px}
+  .seg button{border:0;background:transparent;font-family:inherit;font-size:13.5px;font-weight:600;
+              color:var(--muted-fg);padding:5px 14px;border-radius:7px;cursor:pointer;display:inline-flex;
+              align-items:center;gap:6px}
+  .seg button.on{background:var(--bg);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .seg button:disabled{cursor:not-allowed;opacity:.55}
+  .seg button .soon{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+                    background:var(--border);color:#64748b;border-radius:4px;padding:1px 5px}
+
+  /* combobox : le champ EST la recherche */
+  .cbx{position:relative}
+  .cbx .box{display:flex;align-items:center;gap:9px;height:44px;padding:0 12px;
+            border:1px solid var(--input);border-radius:var(--radius);background:var(--bg)}
+  .cbx .box:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,95,195,.14)}
+  .cbx .box>svg{width:17px;height:17px;color:var(--muted-fg);flex-shrink:0}
+  .cbx .box input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:inherit;
+                  font-size:15px;color:var(--fg)}
+  .cbx .box .clr{border:0;background:transparent;cursor:pointer;color:var(--muted-fg);padding:2px;display:none}
+  .cbx .box .clr svg{width:15px;height:15px;display:block}
+  .cbx .drop{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;max-height:340px;overflow-y:auto;
+             background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+             box-shadow:0 8px 24px rgba(0,0,0,.12);padding:5px}
+  .opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer}
+  .opt.sel{background:var(--muted)}
+  .opt .oic{width:18px;height:18px;color:var(--muted-fg);flex-shrink:0}
+  .opt .oic svg{width:18px;height:18px;display:block}
+  .opt .om{min-width:0;flex:1;display:flex;flex-direction:column}
+  .opt .o1{font-size:14px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt .o2{font-size:12px;color:var(--muted-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt .okind{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted-fg);
+              background:var(--muted);border-radius:5px;padding:2px 7px;white-space:nowrap}
+  .opt.sel .okind{background:var(--bg)}
+  .opt .hl{color:var(--primary)}
+  .nores{padding:10px;font-size:13px;color:var(--muted-fg)}
+  .ex{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--muted-fg)}
+  .ex button{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:1px solid var(--border);
+             background:var(--bg);color:var(--muted-fg);border-radius:999px;padding:2px 10px;cursor:pointer}
+  .ex button:hover{border-color:var(--primary);color:var(--primary)}
+
+  /* ---- états vides (Empty de Radiant) ---- */
+  .empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:56px 20px;text-align:center}
+  .empty svg{width:34px;height:34px;color:#cbd5e1}
+  .empty .t{font-size:15px;font-weight:650}
+  .empty .d{font-size:13px;color:var(--muted-fg);max-width:420px}
+
+  /* ================= tableau de variants ================= */
+  .toolbar{display:flex;align-items:center;gap:10px;padding:12px 14px;flex-wrap:wrap}
+  .toolbar .grow{flex:1}
+  .srch{position:relative;flex:0 1 280px}
+  .srch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted-fg)}
+  .srch input{width:100%;height:32px;padding:0 10px 0 31px;border:1px solid var(--input);
+              border-radius:var(--radius);font-family:inherit;font-size:13.5px;color:var(--fg);outline:0}
+  .fchip{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border:1px dashed var(--input);
+         border-radius:var(--radius);font-size:13px;color:var(--muted-fg);background:var(--bg);cursor:pointer;font-family:inherit}
+  .fchip svg{width:13px;height:13px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{background:var(--table-header);text-align:left;font-weight:600;font-size:12.5px;color:#475569;
+           padding:8px 12px;white-space:nowrap;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  tbody td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+  tbody tr:hover{background:var(--table-accent)}
+  td.c,th.c{text-align:center}
+  .tnum{font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
+  .vlink{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--primary);cursor:pointer}
+  .vlink:hover{text-decoration:underline;text-underline-offset:2px}
+  .gsym{font-weight:650;font-style:italic}
+  .tfoot{padding:9px 14px;font-size:12.5px;color:var(--muted-fg);border-top:1px solid var(--border);
+         display:flex;align-items:center;gap:10px}
+
+  /* indicateurs d'impact VEP (ImpactIndicator) */
+  .imp{display:inline-block;flex-shrink:0}
+  .imp.high{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;
+            border-bottom:8px solid #ef4444}
+  .imp.low{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;
+           border-top:8px solid #10b981}
+  .imp.moderate{width:8px;height:8px;background:#f59e0b;transform:rotate(45deg)}
+  .imp.modifier{width:8px;height:8px;border-radius:50%;background:#94a3b8}
+  .csq{display:inline-flex;align-items:center;gap:7px}
+
+  /* badges de classification (ClassificationBadge) */
+  .cb{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;margin-right:3px}
+  .cb.red{background:#fee2e2;color:#b91c1c}
+  .cb.orange{background:#ffedd5;color:#c2410c}
+  .cb.yellow{background:#fef9c3;color:#a16207}
+  .cb.lime{background:#ecfccb;color:#4d7c0f}
+  .cb.green{background:#dcfce7;color:#15803d}
+  .cb.violet{background:#ede9fe;color:#6d28d9}
+  .cb.neutral{background:#f1f5f9;color:#475569}
+  .mane{display:inline-block;padding:1px 6px;border-radius:5px;font-size:10.5px;font-weight:700;
+        background:#e0f2fe;color:#0369a1}
+  .dash{color:#cbd5e1}
+
+  /* ================= page entité variant (onglet Résumé) ================= */
+  .ov{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;align-items:start}
+  .ov>.c8{grid-column:span 8} .ov>.c4{grid-column:span 4}
+  .ov>.c2{grid-column:span 2} .ov>.c6{grid-column:span 6}
+  @media(max-width:1400px){.ov>.c8,.ov>.c4,.ov>.c2,.ov>.c6{grid-column:span 6}}
+  @media(max-width:900px){.ov>*{grid-column:span 12 !important}}
+  .mdc{display:flex;gap:26px;flex-wrap:wrap;padding:22px 20px}
+  .mdc>div{display:flex;flex-direction:column;gap:6px;min-width:96px}
+  .mdc .k{font-size:13px;color:var(--muted-fg);display:flex;align-items:center;gap:4px}
+  .mdc .gene{font-size:23px;font-weight:650;font-style:italic}
+  .mdc .aa{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--muted-fg)}
+  .mdc .v{font-weight:650;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .sep{border-top:1px solid var(--border)}
+  .mdc-foot{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:12px 20px;font-size:13px;
+            font-family:ui-monospace,Menlo,Consolas,monospace;color:#334155}
+  .ov .card>.hd{font-size:14px;padding:12px 16px}
+  .ov .card>.bd{padding:14px 16px}
+  dl.kv{margin:0;display:grid;grid-template-columns:1fr auto;gap:9px 14px;font-size:13px;align-items:baseline}
+  dl.kv dt{color:var(--muted-fg)}
+  dl.kv dd{margin:0;text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
+  .cnts{display:flex;flex-direction:column;gap:8px;font-size:13px}
+  .cnts .r{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .cnts .n{font-weight:700;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .src{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+       color:var(--muted-fg);margin-bottom:8px}
+  .cond{display:flex;flex-direction:column;gap:9px;font-size:13px}
+  .cond .r{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .cond .nm{min-width:0}
+  .cond .inh{font-size:11px;font-weight:700;color:var(--muted-fg);background:var(--muted);
+             border-radius:5px;padding:1px 6px;white-space:nowrap}
+  .refs{display:flex;flex-direction:column;gap:9px;font-size:13px}
+  .refs a{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+  .refs a svg{width:13px;height:13px}
+  .nodata{font-size:13px;color:var(--muted-fg);border:1px dashed var(--border);border-radius:8px;
+          padding:18px;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ============ barre de navigation principale (MainNavbar, placement top) ============ -->
+<nav class="nav">
+  <span class="logo">Radi<i>a</i>nt</span>
+  <span class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>Cas</span>
+  <span class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>Fichiers</span>
+  <span class="nav-item active" id="navExplo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Exploration</span>
+  <span class="grow"></span>
+  <span class="right">FR<span class="avatar">VF</span></span>
+</nav>
+
+<!-- ======================================================================= -->
+<!-- VUE 1 — formulaire d'exploration                                        -->
+<!-- ======================================================================= -->
+<div id="vSearch">
+  <header class="rd-header">
+    <div class="rd-inner">
+      <div class="rd-header-row">
+        <div class="rd-title-wrap"><h1 class="rd-title">Exploration des variants</h1></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="card search-wrap">
+      <div class="bd">
+
+        <div class="fld seg-row">
+          <div>
+            <label class="lbl">Type de variant</label>
+            <div class="seg" id="segType">
+              <button class="on" data-v="snv" onclick="setType('snv')">SNV</button>
+              <button data-v="cnv" disabled title="Non couvert par cette maquette">CNV <span class="soon">à venir</span></button>
+            </div>
+          </div>
+          <div>
+            <label class="lbl">Origine</label>
+            <div class="seg" id="segOrigin">
+              <button class="on" data-v="germline" onclick="setOrigin('germline')">Germinal</button>
+              <button data-v="somatic" onclick="setOrigin('somatic')">Somatique</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="fld">
+          <label class="lbl" for="q">Variant ou gène</label>
+          <div class="cbx">
+            <div class="box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input id="q" type="text" autocomplete="off" spellcheck="false"
+                     placeholder="1-55051215-G-GA · chr10:g.99235506G>A · PCSK9">
+              <button class="clr" id="clr" onclick="clearQuery()" aria-label="Effacer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div class="drop hidden" id="drop"></div>
+          </div>
+          <div class="ex">
+            <span>Exemples :</span>
+            <button onclick="tryEx('1-55051215-G-GA')">1-55051215-G-GA</button>
+            <button onclick="tryEx('10-99235506-G-A')">10-99235506-G-A</button>
+            <button onclick="tryEx('M-8602-T-C')">M-8602-T-C</button>
+            <button onclick="tryEx('PCSK9')">PCSK9</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card search-wrap hidden" id="notFound" style="margin-top:14px">
+      <div class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg>
+        <div class="t">Variante introuvable</div>
+        <div class="d" id="notFoundDesc"></div>
+        <button class="btn outline sm" style="margin-top:6px" onclick="flipOrigin()" id="notFoundBtn"></button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ======================================================================= -->
+<!-- VUE 2 — tableau des variants d'un gène                                  -->
+<!-- ======================================================================= -->
+<div id="vTable" class="hidden">
+  <header class="rd-header">
+    <div class="rd-inner">
+      <div class="rd-crumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg><a onclick="goSearch()">Exploration</a></div>
+      <div class="rd-header-row">
+        <div class="rd-title-wrap">
+          <h1 class="rd-title" id="tblTitle"></h1>
+          <span class="rd-badge outline" id="tblEns"></span>
+          <span class="rd-badge secondary" id="tblOrigin"></span>
+          <span class="rd-badge secondary">SNV</span>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="card">
+      <div class="toolbar">
+        <div class="srch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" placeholder="Filtrer les variants">
+        </div>
+        <button class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Conséquence</button>
+        <button class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>ClinVar</button>
+        <button class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>gnomAD</button>
+        <span class="grow"></span>
+        <button class="btn outline sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 21h8"/></svg>Exporter</button>
+        <button class="btn outline sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>Colonnes</button>
+      </div>
+      <div id="tblHost"></div>
+    </div>
+  </main>
+</div>
+
+<!-- ======================================================================= -->
+<!-- VUE 3 — page entité du variant (existante dans Radiant)                 -->
+<!-- ======================================================================= -->
+<div id="vEntity" class="hidden">
+  <header class="rd-header">
+    <div class="rd-inner">
+      <div class="rd-crumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg><a id="entBack"></a></div>
+      <div class="rd-header-row">
+        <div class="rd-title-wrap">
+          <h1 class="rd-title mono" id="entTitle"></h1>
+          <span class="rd-badge outline">GRCh38</span>
+          <span class="rd-badge secondary" id="entOrigin"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="tabs"><div class="in">
+    <div class="tab active">Résumé</div>
+    <div class="tab">Fréquences</div>
+    <div class="tab">Preuves et conditions</div>
+    <div class="tab">Transcrits</div>
+    <div class="tab">Cas</div>
+  </div></div>
+  <main><div class="ov" id="entBody"></div></main>
+</div>
+
+<script>
+/* =======================================================================
+   DONNÉES DE DÉMONSTRATION — inlinées, rien n'est branché sur l'API.
+   Le variant HPSE2 10-99235506-G-A reprend les valeurs réelles du jeu de
+   test Cypress de Radiant (cypress/pom/shared/Data.ts) ; les autres sont
+   inventés mais plausibles (coordonnées GRCh38 réelles pour TP53 / KRAS).
+   ======================================================================= */
+
+const GENES = [
+  {sym:'PCSK9',   ens:'ENSG00000169174', name:'Proprotein convertase subtilisin/kexin type 9'},
+  {sym:'HPSE2',   ens:'ENSG00000172987', name:'Heparanase 2 (inactive)'},
+  {sym:'TP53',    ens:'ENSG00000141510', name:'Tumor protein p53'},
+  {sym:'KRAS',    ens:'ENSG00000133703', name:'KRAS proto-oncogene, GTPase'},
+  {sym:'BRCA1',   ens:'ENSG00000012048', name:'BRCA1 DNA repair associated'},
+  {sym:'BRCA2',   ens:'ENSG00000139618', name:'BRCA2 DNA repair associated'},
+  {sym:'CFTR',    ens:'ENSG00000001626', name:'CF transmembrane conductance regulator'},
+  {sym:'DMD',     ens:'ENSG00000198947', name:'Dystrophin'},
+  {sym:'MECP2',   ens:'ENSG00000169057', name:'Methyl-CpG binding protein 2'},
+  {sym:'SCN1A',   ens:'ENSG00000144285', name:'Sodium voltage-gated channel alpha subunit 1'},
+  {sym:'CDKL5',   ens:'ENSG00000008086', name:'Cyclin dependent kinase like 5'},
+  {sym:'TRAPPC9', ens:'ENSG00000167632', name:'Trafficking protein particle complex subunit 9'},
+  {sym:'GRIN2A',  ens:'ENSG00000183454', name:'Glutamate ionotropic receptor NMDA type subunit 2A'},
+  {sym:'ATXN1',   ens:'ENSG00000124788', name:'Ataxin 1'},
+  {sym:'NF1',     ens:'ENSG00000196712', name:'Neurofibromin 1'},
+  {sym:'PTEN',    ens:'ENSG00000171862', name:'Phosphatase and tensin homolog'},
+  {sym:'EGFR',    ens:'ENSG00000146648', name:'Epidermal growth factor receptor'},
+  {sym:'BRAF',    ens:'ENSG00000157764', name:'B-Raf proto-oncogene, serine/threonine kinase'},
+  {sym:'MLH1',    ens:'ENSG00000076242', name:'MutL homolog 1'},
+  {sym:'ATM',     ens:'ENSG00000149311', name:'ATM serine/threonine kinase'},
+];
+
+/* un variant : niveau VARIANT (jamais niveau occurrence — voir CLAUDE.md) */
+const VARIANTS = {
+  germline: {
+    PCSK9: [
+      {locus:'1-55039974-G-T', hgvsg:'chr1:g.55039974G>T', vclass:'SNV', aa:'p.Tyr142Ter',
+       csq:'Stop Gained', impact:'HIGH', mane:true, dbsnp:'rs67608943', omim:['AD'],
+       clinvar:['pathogenic'], gnomad:1.53e-4, pc:3, pf:2.1e-3, interp:{pathogenic:2},
+       ov:{transcript:'ENST00000302118', exon:'3 / 12', dna:'c.426C>A', clinvarId:'253048',
+           omimCond:[{n:'Hypercholesterolemia, familial, 1',id:'603776',inh:'AD'}],
+           scores:{cadd_phred:38, cadd_raw:7.42, dann:0.998, loeuf:0.94, pli:0.01}}},
+      {locus:'1-55051215-G-GA', hgvsg:'chr1:g.55051215dup', vclass:'Insertion', aa:'p.Ser414fs',
+       csq:'Frameshift', impact:'HIGH', mane:true, dbsnp:null, omim:['AD'],
+       clinvar:[], gnomad:4.12e-5, pc:1, pf:7.0e-4, interp:{likely_pathogenic:1},
+       ov:{transcript:'ENST00000302118', exon:'8 / 12', dna:'c.1240dup', clinvarId:null,
+           omimCond:[{n:'Hypercholesterolemia, familial, 1',id:'603776',inh:'AD'}],
+           scores:{loeuf:0.94, pli:0.01}}},
+      {locus:'1-55052746-C-T', hgvsg:'chr1:g.55052746C>T', vclass:'SNV', aa:'p.Arg496Trp',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs374603772', omim:['AD'],
+       clinvar:['uncertain_significance'], gnomad:8.24e-5, pc:2, pf:1.4e-3, interp:{uncertain_significance:1},
+       ov:{transcript:'ENST00000302118', exon:'9 / 12', dna:'c.1486C>T', clinvarId:'411557',
+           omimCond:[{n:'Hypercholesterolemia, familial, 1',id:'603776',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.002, revel:0.681, polyphen:'Probably Damaging',
+                   cadd_phred:26.4, cadd_raw:4.81, dann:0.996, fathmm:'Tolerated', lrt:'Neutral',
+                   phylop:0.612, loeuf:0.94, pli:0.01}}},
+      {locus:'1-55058616-G-A', hgvsg:'chr1:g.55058616G>A', vclass:'SNV', aa:'p.Arg619Cys',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs148195424', omim:['AD'],
+       clinvar:['likely_benign'], gnomad:1.02e-3, pc:5, pf:3.6e-3, interp:{},
+       ov:{transcript:'ENST00000302118', exon:'11 / 12', dna:'c.1855C>T', clinvarId:'333126',
+           omimCond:[{n:'Hypercholesterolemia, familial, 1',id:'603776',inh:'AD'}],
+           scores:{sift_pred:'Tolerated', sift:0.21, revel:0.223, polyphen:'Benign',
+                   cadd_phred:14.1, cadd_raw:1.32, dann:0.912, phylop:0.118, loeuf:0.94, pli:0.01}}},
+      {locus:'1-55059485-T-C', hgvsg:'chr1:g.55059485T>C', vclass:'SNV', aa:null,
+       csq:'Splice Region', impact:'LOW', mane:true, dbsnp:'rs562556', omim:['AD'],
+       clinvar:['benign'], gnomad:3.41e-1, pc:128, pf:9.2e-2, interp:{},
+       ov:{transcript:'ENST00000302118', exon:null, dna:'c.1953+9T>C', clinvarId:'253055',
+           omimCond:[{n:'Hypercholesterolemia, familial, 1',id:'603776',inh:'AD'}],
+           scores:{spliceai:0.03, loeuf:0.94, pli:0.01}}},
+      {locus:'1-55063514-CTT-C', hgvsg:'chr1:g.55063516_55063517del', vclass:'Deletion', aa:'p.Leu665del',
+       csq:'Inframe Deletion', impact:'MODERATE', mane:true, dbsnp:null, omim:['AD'],
+       clinvar:[], gnomad:null, pc:1, pf:7.0e-4, interp:{uncertain_significance:1},
+       ov:{transcript:'ENST00000302118', exon:'12 / 12', dna:'c.1993_1995del', clinvarId:null,
+           omimCond:[{n:'Hypercholesterolemia, familial, 1',id:'603776',inh:'AD'}], scores:{loeuf:0.94, pli:0.01}}},
+      {locus:'1-55064566-A-G', hgvsg:'chr1:g.55064566A>G', vclass:'SNV', aa:'p.Glu670Gly',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs505151', omim:['AD'],
+       clinvar:['benign'], gnomad:7.12e-2, pc:34, pf:2.4e-2, interp:{},
+       ov:{transcript:'ENST00000302118', exon:'12 / 12', dna:'c.2009A>G', clinvarId:'253056',
+           omimCond:[{n:'Hypercholesterolemia, familial, 1',id:'603776',inh:'AD'}],
+           scores:{sift_pred:'Tolerated', sift:0.34, revel:0.104, polyphen:'Benign',
+                   cadd_phred:12.8, cadd_raw:1.04, dann:0.883, phylop:0.061, loeuf:0.94, pli:0.01}}},
+    ],
+    HPSE2: [
+      /* valeurs réelles du jeu de test Cypress de Radiant */
+      {locus:'10-99235506-G-A', hgvsg:'chr10:g.99235506G>A', vclass:'SNV', aa:null,
+       csq:'Splice Region', impact:'LOW', mane:true, dbsnp:'rs72840396', omim:['AR'],
+       clinvar:['likely_benign','benign'], gnomad:1.66e-3, pc:2, pf:1.43e-1, interp:{likely_benign:1},
+       ov:{transcript:'ENST00000370552', exon:null, dna:'c.290+7C>T', clinvarId:'784210',
+           omimCond:[{n:'Urofacial syndrome 1',id:'236730',inh:'AR'}],
+           scores:{spliceai:0.01, loeuf:1.12, pli:0.00, dann:0.741, cadd_phred:4.2, cadd_raw:0.11}}},
+      {locus:'10-99332108-C-T', hgvsg:'chr10:g.99332108C>T', vclass:'SNV', aa:'p.Arg169Ter',
+       csq:'Stop Gained', impact:'HIGH', mane:true, dbsnp:'rs121918228', omim:['AR'],
+       clinvar:['pathogenic'], gnomad:8.1e-6, pc:1, pf:7.1e-2, interp:{pathogenic:1},
+       ov:{transcript:'ENST00000370552', exon:'5 / 12', dna:'c.505C>T', clinvarId:'5698',
+           omimCond:[{n:'Urofacial syndrome 1',id:'236730',inh:'AR'}],
+           scores:{cadd_phred:36, cadd_raw:6.88, dann:0.997, loeuf:1.12, pli:0.00}}},
+      {locus:'10-99404501-G-A', hgvsg:'chr10:g.99404501G>A', vclass:'SNV', aa:'p.Gly451Ser',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs200817682', omim:['AR'],
+       clinvar:['uncertain_significance'], gnomad:2.4e-4, pc:1, pf:7.1e-2, interp:{},
+       ov:{transcript:'ENST00000370552', exon:'9 / 12', dna:'c.1351G>A', clinvarId:'462204',
+           omimCond:[{n:'Urofacial syndrome 1',id:'236730',inh:'AR'}],
+           scores:{sift_pred:'Deleterious', sift:0.01, revel:0.412, polyphen:'Possibly Damaging',
+                   cadd_phred:24.1, cadd_raw:3.91, loeuf:1.12, pli:0.00}}},
+      {locus:'10-99459912-T-C', hgvsg:'chr10:g.99459912T>C', vclass:'SNV', aa:null,
+       csq:'Intron', impact:'MODIFIER', mane:true, dbsnp:'rs11594273', omim:['AR'],
+       clinvar:['benign'], gnomad:2.18e-1, pc:96, pf:6.9e-2, interp:{},
+       ov:{transcript:'ENST00000370552', exon:null, dna:'c.1698-112T>C', clinvarId:null,
+           omimCond:[{n:'Urofacial syndrome 1',id:'236730',inh:'AR'}], scores:{loeuf:1.12, pli:0.00}}},
+    ],
+  },
+  somatic: {
+    TP53: [
+      {locus:'17-7673802-C-T', hgvsg:'chr17:g.7673802C>T', vclass:'SNV', aa:'p.Arg273His',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs28934576', hotspot:true,
+       clinvar:['pathogenic'], gnomad:null, pc:6, pf:4.3e-2, interp:{oncogenic:3},
+       ov:{transcript:'ENST00000269305', exon:'8 / 11', dna:'c.818G>A', clinvarId:'12366',
+           omimCond:[{n:'Li-Fraumeni syndrome 1',id:'151623',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.000, revel:0.912, polyphen:'Probably Damaging',
+                   cadd_phred:32, cadd_raw:5.77, dann:0.999, phylop:0.994, loeuf:0.57, pli:0.94}}},
+      {locus:'17-7673803-G-A', hgvsg:'chr17:g.7673803G>A', vclass:'SNV', aa:'p.Arg273Cys',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs121913343', hotspot:true,
+       clinvar:['pathogenic'], gnomad:null, pc:2, pf:1.4e-2, interp:{likely_oncogenic:1},
+       ov:{transcript:'ENST00000269305', exon:'8 / 11', dna:'c.817C>T', clinvarId:'12365',
+           omimCond:[{n:'Li-Fraumeni syndrome 1',id:'151623',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.000, revel:0.889, cadd_phred:31, loeuf:0.57, pli:0.94}}},
+      {locus:'17-7674220-C-T', hgvsg:'chr17:g.7674220C>T', vclass:'SNV', aa:'p.Arg248Gln',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs11540652', hotspot:true,
+       clinvar:['pathogenic'], gnomad:null, pc:4, pf:2.9e-2, interp:{oncogenic:2},
+       ov:{transcript:'ENST00000269305', exon:'7 / 11', dna:'c.743G>A', clinvarId:'12356',
+           omimCond:[{n:'Li-Fraumeni syndrome 1',id:'151623',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.000, revel:0.927, polyphen:'Probably Damaging',
+                   cadd_phred:34, cadd_raw:6.12, dann:0.999, loeuf:0.57, pli:0.94}}},
+      {locus:'17-7674290-T-C', hgvsg:'chr17:g.7674290T>C', vclass:'SNV', aa:'p.Tyr220Cys',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs121912666', hotspot:true,
+       clinvar:['pathogenic'], gnomad:null, pc:3, pf:2.1e-2, interp:{oncogenic:1},
+       ov:{transcript:'ENST00000269305', exon:'6 / 11', dna:'c.659A>G', clinvarId:'12379',
+           omimCond:[{n:'Li-Fraumeni syndrome 1',id:'151623',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.001, revel:0.874, cadd_phred:28.9, loeuf:0.57, pli:0.94}}},
+      {locus:'17-7675088-C-T', hgvsg:'chr17:g.7675088C>T', vclass:'SNV', aa:'p.Arg175His',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs28934578', hotspot:true,
+       clinvar:['pathogenic'], gnomad:null, pc:5, pf:3.6e-2, interp:{oncogenic:2},
+       ov:{transcript:'ENST00000269305', exon:'5 / 11', dna:'c.524G>A', clinvarId:'12374',
+           omimCond:[{n:'Li-Fraumeni syndrome 1',id:'151623',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.000, revel:0.941, polyphen:'Probably Damaging',
+                   cadd_phred:29.4, cadd_raw:5.02, dann:0.998, loeuf:0.57, pli:0.94}}},
+      {locus:'17-7676154-G-A', hgvsg:'chr17:g.7676154G>A', vclass:'SNV', aa:'p.Pro72Leu',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs1800371', hotspot:false,
+       clinvar:['likely_benign'], gnomad:1.9e-3, pc:1, pf:7.2e-3, interp:{},
+       ov:{transcript:'ENST00000269305', exon:'4 / 11', dna:'c.215C>T', clinvarId:'12375',
+           omimCond:[{n:'Li-Fraumeni syndrome 1',id:'151623',inh:'AD'}],
+           scores:{sift_pred:'Tolerated', sift:0.18, revel:0.192, cadd_phred:13.4, loeuf:0.57, pli:0.94}}},
+    ],
+    KRAS: [
+      {locus:'12-25227341-T-A', hgvsg:'chr12:g.25227341T>A', vclass:'SNV', aa:'p.Gln61His',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs17851045', hotspot:true,
+       clinvar:['pathogenic'], gnomad:null, pc:2, pf:1.4e-2, interp:{oncogenic:1},
+       ov:{transcript:'ENST00000311936', exon:'3 / 6', dna:'c.183A>T', clinvarId:'12583',
+           omimCond:[{n:'Noonan syndrome 3',id:'609942',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.000, revel:0.903, cadd_phred:27.1, loeuf:0.33, pli:0.87}}},
+      {locus:'12-25245347-C-T', hgvsg:'chr12:g.25245347C>T', vclass:'SNV', aa:'p.Gly13Asp',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs112445441', hotspot:true,
+       clinvar:['pathogenic'], gnomad:null, pc:3, pf:2.1e-2, interp:{oncogenic:2},
+       ov:{transcript:'ENST00000311936', exon:'2 / 6', dna:'c.38G>A', clinvarId:'12580',
+           omimCond:[{n:'Noonan syndrome 3',id:'609942',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.000, revel:0.884, cadd_phred:26.6, loeuf:0.33, pli:0.87}}},
+      {locus:'12-25245350-C-A', hgvsg:'chr12:g.25245350C>A', vclass:'SNV', aa:'p.Gly12Val',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs121913529', hotspot:true,
+       clinvar:['pathogenic'], gnomad:null, pc:7, pf:5.0e-2, interp:{oncogenic:4},
+       ov:{transcript:'ENST00000311936', exon:'2 / 6', dna:'c.35G>T', clinvarId:'12582',
+           omimCond:[{n:'Noonan syndrome 3',id:'609942',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.000, revel:0.931, polyphen:'Probably Damaging',
+                   cadd_phred:28.2, cadd_raw:4.94, dann:0.999, loeuf:0.33, pli:0.87}}},
+      {locus:'12-25245350-C-T', hgvsg:'chr12:g.25245350C>T', vclass:'SNV', aa:'p.Gly12Asp',
+       csq:'Missense', impact:'MODERATE', mane:true, dbsnp:'rs121913529', hotspot:true,
+       clinvar:['pathogenic'], gnomad:null, pc:9, pf:6.4e-2, interp:{oncogenic:5},
+       ov:{transcript:'ENST00000311936', exon:'2 / 6', dna:'c.35G>A', clinvarId:'12581',
+           omimCond:[{n:'Noonan syndrome 3',id:'609942',inh:'AD'}],
+           scores:{sift_pred:'Deleterious', sift:0.000, revel:0.925, polyphen:'Probably Damaging',
+                   cadd_phred:27.8, cadd_raw:4.81, dann:0.999, loeuf:0.33, pli:0.87}}},
+    ],
+  },
+};
+
+/* ------------------------- libellés ------------------------- */
+const CLS = {
+  pathogenic:            {ab:'P',   c:'red',     l:'Pathogénique'},
+  likely_pathogenic:     {ab:'LP',  c:'orange',  l:'Probablement pathogénique'},
+  uncertain_significance:{ab:'VUS', c:'yellow',  l:'De signification incertaine'},
+  likely_benign:         {ab:'LB',  c:'lime',    l:'Probablement bénigne'},
+  benign:                {ab:'B',   c:'green',   l:'Bénigne'},
+  oncogenic:             {ab:'O',   c:'red',     l:'Oncogénique'},
+  likely_oncogenic:      {ab:'LO',  c:'violet',  l:'Probablement oncogénique'},
+};
+const ORIGIN_LBL = {germline:'Germinal', somatic:'Somatique'};
+const BANQUE_LBL = {germline:'germinale', somatic:'somatique'};  /* « la banque … » */
+
+/* ------------------------- état ------------------------- */
+let state = {type:'snv', origin:'germline', back:'search', gene:null, sel:-1, opts:[]};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const exp2 = v => (v === null || v === undefined) ? null : Number(v).toExponential(2);
+
+/* ===================== analyse de la requête =====================
+   Trois formes acceptées, dans cet ordre :
+     1. HGVSg          chr10:g.99235506G>A   (ce que le titre de la page entité affiche)
+     2. locus gnomAD   1-55051215-G-GA · chr1:55051215:G:GA · M-8602-T-C
+     3. symbole de gène
+   Le locus est normalisé au format de la colonne `locus` de StarRocks :
+   « chr-pos-ref-alt », sans préfixe « chr », MT ramené à M.                */
+const CHR = '(?:chr)?(2[0-2]|1\\d|[1-9]|X|Y|MT|M)';
+const RE_HGVSG = new RegExp('^' + CHR + ':g\\.(\\d+)([ACGTN]+)>([ACGTN]+)$', 'i');
+const RE_LOCUS = new RegExp('^' + CHR + '[-:_](\\d+)[-:_]([ACGTN]+)[-:_]([ACGTN]+)$', 'i');
+
+function normLocus(c, p, r, a){
+  c = c.toUpperCase(); if (c === 'MT') c = 'M';
+  return c + '-' + p + '-' + r.toUpperCase() + '-' + a.toUpperCase();
+}
+
+function parseQuery(q){
+  q = q.trim();
+  if (!q) return {kind:'empty'};
+  let m = RE_HGVSG.exec(q) || RE_LOCUS.exec(q);
+  if (m) return {kind:'locus', locus:normLocus(m[1], m[2], m[3], m[4])};
+  if (/^[A-Za-z][A-Za-z0-9._-]{0,14}$/.test(q)) return {kind:'gene', prefix:q.toUpperCase()};
+  return {kind:'unknown'};
+}
+
+/* ===================== accès aux données ===================== */
+const bank = () => VARIANTS[state.origin] || {};
+function findByLocus(locus){
+  const b = bank();
+  for (const g in b) for (const v of b[g]) if (v.locus === locus) return Object.assign({gene:g}, v);
+  return null;
+}
+const geneVariants = sym => (bank()[sym] || []).map(v => Object.assign({gene:sym}, v));
+
+/* ===================== segments ===================== */
+function setType(v){
+  state.type = v;
+  [...$('segType').children].forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  refreshDrop();
+}
+function setOrigin(v){
+  state.origin = v;
+  [...$('segOrigin').children].forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  $('notFound').classList.add('hidden');
+  refreshDrop();
+}
+function flipOrigin(){
+  setOrigin(state.origin === 'germline' ? 'somatic' : 'germline');
+  submit();
+}
+
+/* ===================== combobox ===================== */
+function refreshDrop(){
+  const q = $('q').value;
+  $('clr').style.display = q ? 'block' : 'none';
+  const p = parseQuery(q);
+  const drop = $('drop');
+  state.opts = []; state.sel = -1;
+
+  if (p.kind === 'empty'){ drop.classList.add('hidden'); drop.innerHTML = ''; return; }
+
+  if (p.kind === 'locus'){
+    state.opts = [{kind:'locus', locus:p.locus}];
+  } else if (p.kind === 'gene'){
+    state.opts = GENES.filter(g => g.sym.startsWith(p.prefix))
+                      .slice(0, 8)
+                      .map(g => Object.assign({kind:'gene'}, g));
+  }
+  state.sel = state.opts.length ? 0 : -1;
+
+  if (!state.opts.length){
+    drop.innerHTML = '<div class="nores">' +
+      (p.kind === 'unknown'
+        ? 'Format non reconnu. Attendu : un locus (1-55051215-G-GA) ou un symbole de gène.'
+        : 'Aucun résultat trouvé') + '</div>';
+    drop.classList.remove('hidden'); return;
+  }
+
+  drop.innerHTML = state.opts.map((o, i) => {
+    const s = i === state.sel ? ' sel' : '';
+    if (o.kind === 'locus')
+      return '<div class="opt' + s + '" data-i="' + i + '">' +
+             '<span class="oic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M22 12h-4M6 12H2M12 6V2M12 22v-4"/></svg></span>' +
+             '<span class="om"><span class="o1 mono">' + esc(o.locus) + '</span>' +
+             '<span class="o2">GRCh38 · ' + ORIGIN_LBL[state.origin].toLowerCase() + ' · SNV</span></span>' +
+             '<span class="okind">Variant</span></div>';
+    const pfx = parseQuery($('q').value).prefix || '';
+    const hl = '<span class="hl">' + esc(o.sym.slice(0, pfx.length)) + '</span>' + esc(o.sym.slice(pfx.length));
+    return '<div class="opt' + s + '" data-i="' + i + '">' +
+           '<span class="oic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m10 16 1.5 1.5"/><path d="m14 8-1.5-1.5"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m16.5 10.5 1 1"/><path d="m17 6-2.891-2.891"/><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="m20 9 .891.891"/><path d="M3.109 14.109 6 17"/><path d="m6.5 12.5 1 1"/><path d="m7 18 2.891 2.891"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/></svg></span>' +
+           '<span class="om"><span class="o1">' + hl + '</span><span class="o2">' + esc(o.name) + '</span></span>' +
+           '<span class="okind">Gène</span></div>';
+  }).join('');
+  drop.classList.remove('hidden');
+
+  drop.querySelectorAll('.opt').forEach(el => {
+    el.addEventListener('mousedown', ev => { ev.preventDefault(); choose(+el.dataset.i); });
+  });
+}
+
+function move(d){
+  if (!state.opts.length) return;
+  state.sel = (state.sel + d + state.opts.length) % state.opts.length;
+  [...$('drop').children].forEach((el, i) => el.classList.toggle('sel', i === state.sel));
+  const cur = $('drop').children[state.sel];
+  if (cur && cur.scrollIntoView) cur.scrollIntoView({block:'nearest'});
+}
+
+function choose(i){
+  const o = state.opts[i]; if (!o) return;
+  $('q').value = o.kind === 'locus' ? o.locus : o.sym;
+  closeDrop();
+  submit();
+}
+const closeDrop = () => { $('drop').classList.add('hidden'); };
+function clearQuery(){ $('q').value = ''; refreshDrop(); $('notFound').classList.add('hidden'); $('q').focus(); }
+function tryEx(v){ $('q').value = v; $('q').focus(); refreshDrop(); }
+
+function submit(){
+  const p = parseQuery($('q').value);
+  $('notFound').classList.add('hidden');
+  if (p.kind === 'locus'){
+    const v = findByLocus(p.locus);
+    if (v){ state.back = 'search'; openEntity(v); }
+    else   { showNotFound(p.locus); }
+  } else if (p.kind === 'gene'){
+    const g = GENES.find(x => x.sym === p.prefix);
+    if (g) openGene(g);
+  }
+}
+
+function showNotFound(locus){
+  const other = state.origin === 'germline' ? 'somatic' : 'germline';
+  $('notFoundDesc').innerHTML = '<span class="mono">' + esc(locus) + '</span> n’est pas dans la banque ' +
+    BANQUE_LBL[state.origin] + ' (SNV, GRCh38).';
+  $('notFoundBtn').textContent = 'Chercher dans la banque ' + BANQUE_LBL[other];
+  $('notFound').classList.remove('hidden');
+}
+
+/* ===================== navigation entre les vues ===================== */
+function show(v){
+  ['vSearch','vTable','vEntity'].forEach(id => $(id).classList.toggle('hidden', id !== v));
+  window.scrollTo(0, 0);
+}
+function goSearch(){ show('vSearch'); $('q').focus(); }
+
+/* ===================== vue tableau ===================== */
+function openGene(g){
+  state.gene = g;
+  state.back = 'table';
+  const rows = geneVariants(g.sym);
+  $('tblTitle').textContent = g.sym;
+  $('tblEns').textContent = g.ens;
+  $('tblOrigin').textContent = ORIGIN_LBL[state.origin];
+  $('tblHost').innerHTML = rows.length ? tableHtml(rows) : emptyGeneHtml(g);
+  show('vTable');
+}
+
+function emptyGeneHtml(g){
+  return '<div class="empty">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m10 16 1.5 1.5"/><path d="m14 8-1.5-1.5"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m16.5 10.5 1 1"/><path d="m17 6-2.891-2.891"/><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="m20 9 .891.891"/><path d="M3.109 14.109 6 17"/><path d="m6.5 12.5 1 1"/><path d="m7 18 2.891 2.891"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/></svg>' +
+    '<div class="t">Aucun variant trouvé</div>' +
+    '<div class="d">Aucun SNV ' + ORIGIN_LBL[state.origin].toLowerCase() +
+    ' n’est rapporté dans <i>' + esc(g.sym) + '</i>.</div></div>';
+}
+
+function tableHtml(rows){
+  const som = state.origin === 'somatic';
+  const th = ['Variant', 'Type', 'Gène', 'AA', 'Conséquence', 'MANE', 'dbSNP',
+              som ? 'Hotspot' : 'OMIM', 'ClinVar', 'gnomAD',
+              som ? 'Fréq. TN' : 'Fréq. G', 'Interpr.'];
+  const ctr = som ? [5, 7] : [5];   // MANE, et Hotspot côté somatique
+  const head = '<thead><tr>' + th.map((h, i) =>
+    '<th' + (ctr.includes(i) ? ' class="c"' : '') + '>' + h + '</th>').join('') + '</tr></thead>';
+
+  const body = '<tbody>' + rows.map(v => {
+    const cls = (v.clinvar || []).map(c => badge(c)).join('') || dash();
+    const interp = Object.keys(v.interp || {}).length
+      ? Object.entries(v.interp).map(([k, n]) => badge(k, n)).join('') : dash();
+    const col8 = som
+      ? '<td class="c">' + (v.hotspot ? '<span class="cb red">Oui</span>' : dash()) + '</td>'
+      : '<td>' + ((v.omim || []).join(', ') || dash()) + '</td>';
+    return '<tr>' +
+      '<td><span class="vlink" onclick="openEntityByLocus(\'' + v.locus + '\')">' + esc(v.hgvsg) + '</span></td>' +
+      '<td>' + esc(v.vclass) + '</td>' +
+      '<td><span class="gsym">' + esc(v.gene) + '</span></td>' +
+      '<td class="tnum">' + (v.aa ? esc(v.aa) : dash()) + '</td>' +
+      '<td><span class="csq"><span class="imp ' + v.impact.toLowerCase() + '"></span>' + esc(v.csq) + '</span></td>' +
+      '<td class="c">' + (v.mane ? '<span class="mane">MANE</span>' : dash()) + '</td>' +
+      '<td>' + (v.dbsnp ? '<a class="mono" href="https://www.ncbi.nlm.nih.gov/snp/' + v.dbsnp + '" target="_blank" rel="noreferrer">' + esc(v.dbsnp) + '</a>' : dash()) + '</td>' +
+      col8 +
+      '<td>' + cls + '</td>' +
+      '<td class="tnum">' + (v.gnomad === null ? dash() : exp2(v.gnomad)) + '</td>' +
+      '<td class="tnum">' + v.pc + ' (' + exp2(v.pf) + ')</td>' +
+      '<td>' + interp + '</td>' +
+    '</tr>';
+  }).join('') + '</tbody>';
+
+  return '<table>' + head + body + '</table>' +
+         '<div class="tfoot">' + rows.length + ' variant' + (rows.length > 1 ? 's' : '') + '</div>';
+}
+
+const dash = () => '<span class="dash">-</span>';
+function badge(key, n){
+  const c = CLS[key] || {ab:key, c:'neutral', l:key};
+  return '<span class="cb ' + c.c + '" title="' + esc(c.l) + '">' + c.ab + (n ? ' ' + n : '') + '</span>';
+}
+
+/* ===================== vue entité ===================== */
+function openEntityByLocus(locus){ const v = findByLocus(locus); if (v) openEntity(v); }
+
+function openEntity(v){
+  $('entTitle').textContent = v.hgvsg;
+  $('entOrigin').textContent = ORIGIN_LBL[state.origin];
+  const back = $('entBack');
+  if (state.back === 'table' && state.gene){
+    back.textContent = state.gene.sym;
+    back.onclick = () => openGene(state.gene);
+  } else {
+    back.textContent = 'Exploration';
+    back.onclick = goSearch;
+  }
+  $('entBody').innerHTML = entityHtml(v);
+  show('vEntity');
+}
+
+function entityHtml(v){
+  const o = v.ov || {}, s = o.scores || {};
+  const som = state.origin === 'somatic';
+
+  /* carte « conséquence la plus délétère » */
+  const mdc =
+    '<div class="card c8"><div class="mdc">' +
+      '<div><span class="gene">' + esc(v.gene) + '</span>' +
+        '<span class="aa">' + (v.aa ? esc(v.aa) : '') + '</span></div>' +
+      '<div><span class="k">Conséquence</span><span class="csq" style="font-weight:650">' +
+        '<span class="imp ' + v.impact.toLowerCase() + '"></span>' + esc(v.csq) + '</span></div>' +
+      '<div><span class="k">ClinVar</span><span>' +
+        ((v.clinvar || []).map(c => badge(c)).join('') || dash()) + '</span></div>' +
+      '<div><span class="k">Patients</span><span class="v">' + v.pc + ' (' + exp2(v.pf) + ')</span></div>' +
+      '<div><span class="k">gnomAD</span><span class="v">' +
+        (v.gnomad === null ? dash() : exp2(v.gnomad)) + '</span></div>' +
+    '</div><div class="sep"></div><div class="mdc-foot">' +
+      (o.transcript ? '<span>' + esc(o.transcript) + (v.mane ? ' <span class="mane">MANE</span>' : '') + '</span>' : '') +
+      (o.exon ? '<span>Exon : ' + esc(o.exon) + '</span>' : '') +
+      (o.dna ? '<span>' + esc(o.dna) + '</span>' : '') +
+      (v.dbsnp ? '<a href="https://www.ncbi.nlm.nih.gov/snp/' + v.dbsnp + '" target="_blank" rel="noreferrer">' + esc(v.dbsnp) + '</a>' : '') +
+    '</div></div>';
+
+  /* interprétations du réseau */
+  const ik = Object.keys(v.interp || {});
+  const interp =
+    '<div class="card c2"><div class="hd">Interprétation</div><div class="bd">' +
+      (ik.length
+        ? '<div class="cnts">' + ik.map(k =>
+            '<div class="r"><span>' + badge(k) + ' ' + esc(CLS[k] ? CLS[k].l : k) + '</span>' +
+            '<span class="n">' + v.interp[k] + '</span></div>').join('') + '</div>'
+        : '<div class="nodata">Ce variant n’a pas été interprété dans votre réseau.</div>') +
+    '</div></div>';
+
+  /* classifications ClinVar */
+  const classif =
+    '<div class="card c2"><div class="hd">Classifications</div><div class="bd">' +
+      ((v.clinvar || []).length
+        ? '<div class="src">ClinVar</div><div class="cnts">' + v.clinvar.map(k =>
+            '<div class="r"><span>' + badge(k) + ' ' + esc(CLS[k] ? CLS[k].l : k) + '</span></div>').join('') + '</div>'
+        : '<div class="nodata">Ce variant n’a pas été soumis à ClinVar.</div>') +
+    '</div></div>';
+
+  /* scores de prédiction */
+  const SC = [
+    ['SIFT',            s.sift_pred ? s.sift_pred + ' (' + s.sift.toFixed(3) + ')' : null],
+    ['REVEL',           s.revel],
+    ['PolyPhen-2 HVAR', s.polyphen],
+    ['FATHMM',          s.fathmm],
+    ['LRT',             s.lrt],
+    ['CADD (phred)',    s.cadd_phred],
+    ['CADD (raw)',      s.cadd_raw],
+    ['DANN',            s.dann],
+    ['SpliceAI',        s.spliceai],
+    ['PhyloP17Way',     s.phylop],
+    ['LOEUF',           s.loeuf],
+    ['pLI',             s.pli],
+  ].filter(r => r[1] !== undefined && r[1] !== null);
+  const scores =
+    '<div class="card c4"><div class="hd">Scores de prédiction</div><div class="bd">' +
+      (SC.length
+        ? '<dl class="kv">' + SC.map(r => '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>').join('') + '</dl>'
+        : '<div class="nodata">Aucune donnée pour ce variant.</div>') +
+    '</div></div>';
+
+  /* conditions associées (OMIM) */
+  const conds = o.omimCond || [];
+  const cond =
+    '<div class="card c4"><div class="hd">Conditions associées (OMIM)</div><div class="bd">' +
+      (conds.length
+        ? '<div class="cond">' + conds.map(c =>
+            '<div class="r"><span class="nm"><a href="https://www.omim.org/entry/' + c.id + '" target="_blank" rel="noreferrer">' +
+            esc(c.n) + '</a></span><span class="inh">' + esc(c.inh) + '</span></div>').join('') + '</div>'
+        : '<div class="nodata">Aucune donnée pour ce variant.</div>') +
+    '</div></div>';
+
+  /* références externes */
+  const gnomadSet = som ? 'gnomad_r4' : 'gnomad_r3';
+  const refs =
+    '<div class="card c4"><div class="hd">Références externes</div><div class="bd"><div class="refs">' +
+      (o.clinvarId ? '<a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/' + o.clinvarId + '" target="_blank" rel="noreferrer">ClinVar ' + link() + '</a>' : '') +
+      (v.dbsnp ? '<a href="https://www.ncbi.nlm.nih.gov/snp/' + v.dbsnp + '" target="_blank" rel="noreferrer">dbSNP ' + link() + '</a>' : '') +
+      '<a href="https://gnomad.broadinstitute.org/variant/' + v.locus + '?dataset=' + gnomadSet + '" target="_blank" rel="noreferrer">gnomAD ' + link() + '</a>' +
+    '</div></div></div>';
+
+  return mdc + interp + classif + scores + cond + refs;
+}
+const link = () => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
+
+/* ===================== événements ===================== */
+$('q').addEventListener('input', refreshDrop);
+$('q').addEventListener('focus', refreshDrop);
+$('q').addEventListener('blur', () => setTimeout(closeDrop, 120));
+$('q').addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+  else if (e.key === 'ArrowUp'){ e.preventDefault(); move(-1); }
+  else if (e.key === 'Enter'){ e.preventDefault(); if (state.sel >= 0) choose(state.sel); else submit(); }
+  else if (e.key === 'Escape'){ closeDrop(); }
+});
+$('navExplo').addEventListener('click', goSearch);
+$('q').focus();
+</script>
+</body>
+</html>

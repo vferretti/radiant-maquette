@@ -12,6 +12,10 @@ Chaque section vit dans son propre sous-répertoire, avec son propre `CLAUDE.md`
 - **`hpo/`** — Signes cliniques : sélection des phénotypes HPO (étape 3 du formulaire de
   prescription), portée du POC `~/src/poc_hpo`. L'arbre HPO complet (18 689 termes, FR/EN)
   est inliné — d'où le poids inhabituel du fichier. Voir `hpo/CLAUDE.md`.
+- **`exploration/`** — Exploration des variants : section de premier niveau (hors cas) qui permet
+  d'atteindre un variant par son **locus** (format gnomAD, `1-55051215-G-GA`) ou de lister les
+  variants d'un **gène**. Comble le trou actuel : on ne peut atteindre un variant que par un cas.
+  SNV seulement pour l'instant. Voir `exploration/CLAUDE.md`.
 - *(à venir : autres sections — ex. `variants/`, `files/`… — chacune avec son `CLAUDE.md`.)*
 
 Claude charge automatiquement ce `CLAUDE.md` racine **plus** celui du sous-répertoire où l'on travaille : garder ici ce qui est **transversal**, mettre le **spécifique** dans le sous-répertoire de la section.
