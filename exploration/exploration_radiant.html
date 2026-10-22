@@ -85,9 +85,6 @@
               color:var(--muted-fg);padding:5px 14px;border-radius:7px;cursor:pointer;display:inline-flex;
               align-items:center;gap:6px}
   .seg button.on{background:var(--bg);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
-  .seg button:disabled{cursor:not-allowed;opacity:.55}
-  .seg button .soon{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
-                    background:var(--border);color:#64748b;border-radius:4px;padding:1px 5px}
 
   /* combobox : le champ EST la recherche */
   .cbx{position:relative}
@@ -114,6 +111,7 @@
   .opt.sel .okind{background:var(--bg)}
   .opt .hl{color:var(--primary)}
   .nores{padding:10px;font-size:13px;color:var(--muted-fg)}
+  .nores a{color:var(--primary);font-weight:600;cursor:pointer}
   .ex{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--muted-fg)}
   .ex button{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:1px solid var(--border);
              background:var(--bg);color:var(--muted-fg);border-radius:999px;padding:2px 10px;cursor:pointer}
@@ -141,6 +139,7 @@
   tbody td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
   tbody tr:hover{background:var(--table-accent)}
   td.c,th.c{text-align:center}
+  td.r,th.r{text-align:right}
   .tnum{font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
   .vlink{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--primary);cursor:pointer}
   .vlink:hover{text-decoration:underline;text-underline-offset:2px}
@@ -167,6 +166,7 @@
   .cb.green{background:#dcfce7;color:#15803d}
   .cb.violet{background:#ede9fe;color:#6d28d9}
   .cb.neutral{background:#f1f5f9;color:#475569}
+  .cb.blue{background:#dbeafe;color:#1d4ed8}
   .mane{display:inline-block;padding:1px 6px;border-radius:5px;font-size:10.5px;font-weight:700;
         background:#e0f2fe;color:#0369a1}
   .dash{color:#cbd5e1}
@@ -241,7 +241,7 @@
             <label class="lbl">Type de variant</label>
             <div class="seg" id="segType">
               <button class="on" data-v="snv" onclick="setType('snv')">SNV</button>
-              <button data-v="cnv" disabled title="Non couvert par cette maquette">CNV <span class="soon">à venir</span></button>
+              <button data-v="cnv" onclick="setType('cnv')">CNV</button>
             </div>
           </div>
           <div>
@@ -264,13 +264,7 @@
             </div>
             <div class="drop hidden" id="drop"></div>
           </div>
-          <div class="ex">
-            <span>Exemples :</span>
-            <button onclick="tryEx('1-55051215-G-GA')">1-55051215-G-GA</button>
-            <button onclick="tryEx('10-99235506-G-A')">10-99235506-G-A</button>
-            <button onclick="tryEx('M-8602-T-C')">M-8602-T-C</button>
-            <button onclick="tryEx('PCSK9')">PCSK9</button>
-          </div>
+          <div class="ex" id="ex"></div>
         </div>
 
       </div>
@@ -279,7 +273,7 @@
     <div class="card search-wrap hidden" id="notFound" style="margin-top:14px">
       <div class="empty">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg>
-        <div class="t">Variante introuvable</div>
+        <div class="t" id="notFoundTitle">Variante introuvable</div>
         <div class="d" id="notFoundDesc"></div>
         <button class="btn outline sm" style="margin-top:6px" onclick="flipOrigin()" id="notFoundBtn"></button>
       </div>
@@ -299,7 +293,7 @@
           <h1 class="rd-title" id="tblTitle"></h1>
           <span class="rd-badge outline" id="tblEns"></span>
           <span class="rd-badge secondary" id="tblOrigin"></span>
-          <span class="rd-badge secondary">SNV</span>
+          <span class="rd-badge secondary" id="tblType">SNV</span>
         </div>
       </div>
     </div>
@@ -311,8 +305,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input type="text" placeholder="Filtrer les variants">
         </div>
-        <button class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Conséquence</button>
-        <button class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>ClinVar</button>
+        <button class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span id="fc1">Conséquence</span></button>
+        <button class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span id="fc2">ClinVar</span></button>
         <button class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>gnomAD</button>
         <span class="grow"></span>
         <button class="btn outline sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 21h8"/></svg>Exporter</button>
@@ -378,7 +372,63 @@ const GENES = [
   {sym:'BRAF',    ens:'ENSG00000157764', name:'B-Raf proto-oncogene, serine/threonine kinase'},
   {sym:'MLH1',    ens:'ENSG00000076242', name:'MutL homolog 1'},
   {sym:'ATM',     ens:'ENSG00000149311', name:'ATM serine/threonine kinase'},
+  {sym:'TBX1',    ens:'ENSG00000184058', name:'T-box transcription factor 1'},
+  {sym:'TBX6',    ens:'ENSG00000149922', name:'T-box transcription factor 6'},
+  {sym:'ERBB2',   ens:'ENSG00000141736', name:'Erb-b2 receptor tyrosine kinase 2'},
+  {sym:'CDKN2A',  ens:'ENSG00000147889', name:'Cyclin dependent kinase inhibitor 2A'},
 ];
+
+/* CNV : pas de table « variant » côté StarRocks (seulement cnv__occurrence) — un CNV
+   est ici un appel distinct (type, chr, début, fin) agrégé sur les patients du réseau.
+   Coordonnées GRCh38 plausibles (22q11.2, 16p11.2, DMD, MECP2, ERBB2, CDKN2A…). */
+const CNVS = {
+  germline: [
+    {type:'LOSS', chr:'1',  start:55039447,  end:55064852,  cyto:'1p32.3',  genes:['PCSK9'], nbg:1,
+     gnomad:null, pc:1, pf:7.0e-4, interp:{}},
+    {type:'GAIN', chr:'1',  start:54980000,  end:55120000,  cyto:'1p32.3',  genes:['BSND','PCSK9','USP24'], nbg:3,
+     gnomad:2.1e-3, pc:6, pf:4.2e-3, interp:{likely_benign:1}},
+    {type:'GAIN', chr:'16', start:29580020,  end:30180000,  cyto:'16p11.2', genes:['SPN','QPRT','MAPK3','KCTD13','TBX6','ALDOA'], nbg:28,
+     gnomad:4.4e-4, pc:3, pf:2.1e-3, interp:{likely_pathogenic:1, uncertain_significance:1}},
+    {type:'GAIN', chr:'16', start:29652999,  end:30199351,  cyto:'16p11.2', genes:['QPRT','MAPK3','KCTD13','TBX6','ALDOA'], nbg:27,
+     gnomad:null, pc:1, pf:7.0e-4, interp:{}},
+    {type:'LOSS', chr:'16', start:29580020,  end:30180000,  cyto:'16p11.2', genes:['SPN','QPRT','MAPK3','KCTD13','TBX6','ALDOA'], nbg:28,
+     gnomad:3.1e-4, pc:5, pf:3.5e-3, interp:{pathogenic:4}},
+    {type:'LOSS', chr:'22', start:18912231,  end:21465672,  cyto:'22q11.21', genes:['TBX1','COMT','HIRA','CRKL','DGCR8'], nbg:46,
+     gnomad:1.2e-4, pc:4, pf:2.8e-3, interp:{pathogenic:3}},
+    {type:'LOSS', chr:'22', start:18638000,  end:21505000,  cyto:'22q11.21', genes:['TBX1','COMT','HIRA','CRKL','DGCR8'], nbg:51,
+     gnomad:null, pc:1, pf:7.0e-4, interp:{pathogenic:1}},
+    {type:'LOSS', chr:'22', start:18912231,  end:20287000,  cyto:'22q11.21', genes:['TBX1','COMT','HIRA','DGCR8'], nbg:31,
+     gnomad:null, pc:1, pf:7.0e-4, interp:{likely_pathogenic:1}},
+    {type:'GAIN', chr:'22', start:18912231,  end:21465672,  cyto:'22q11.21', genes:['TBX1','COMT','HIRA','CRKL','DGCR8'], nbg:46,
+     gnomad:6.3e-4, pc:2, pf:1.4e-3, interp:{uncertain_significance:1}},
+    {type:'LOSS', chr:'X',  start:31819974,  end:31875380,  cyto:'Xp21.1',  genes:['DMD'], nbg:1,
+     gnomad:null, pc:1, pf:7.0e-4, interp:{pathogenic:1}},
+    {type:'LOSS', chr:'X',  start:31774146,  end:31932130,  cyto:'Xp21.1',  genes:['DMD'], nbg:1,
+     gnomad:null, pc:2, pf:1.4e-3, interp:{pathogenic:2}},
+    {type:'LOSS', chr:'X',  start:32364060,  end:32441000,  cyto:'Xp21.1',  genes:['DMD'], nbg:1,
+     gnomad:null, pc:1, pf:7.0e-4, interp:{likely_pathogenic:1}},
+    {type:'GAIN', chr:'X',  start:31986000,  end:32287000,  cyto:'Xp21.1',  genes:['DMD'], nbg:1,
+     gnomad:null, pc:1, pf:7.0e-4, interp:{uncertain_significance:1}},
+    {type:'GAIN', chr:'X',  start:153950000, end:154420000, cyto:'Xq28',    genes:['MECP2','IRAK1','L1CAM','FLNA'], nbg:18,
+     gnomad:null, pc:2, pf:1.4e-3, interp:{pathogenic:2}},
+  ],
+  somatic: [
+    {type:'GAIN', chr:'17', start:39650000,  end:39760000,  cyto:'17q12',   genes:['PGAP3','ERBB2','MIEN1','GRB7'], nbg:4,
+     gnomad:null, pc:5, pf:3.6e-2, interp:{oncogenic:3}},
+    {type:'GAIN', chr:'17', start:39700000,  end:39735000,  cyto:'17q12',   genes:['ERBB2'], nbg:1,
+     gnomad:null, pc:2, pf:1.4e-2, interp:{oncogenic:1}},
+    {type:'GAIN', chr:'7',  start:55010000,  end:55220000,  cyto:'7p11.2',  genes:['EGFR'], nbg:1,
+     gnomad:null, pc:4, pf:2.9e-2, interp:{oncogenic:2}},
+    {type:'LOSS', chr:'9',  start:21960000,  end:22010000,  cyto:'9p21.3',  genes:['CDKN2A','CDKN2B'], nbg:2,
+     gnomad:null, pc:7, pf:5.0e-2, interp:{oncogenic:4}},
+    {type:'LOSS', chr:'9',  start:21800000,  end:22200000,  cyto:'9p21.3',  genes:['MTAP','CDKN2A','CDKN2B','DMRTA1'], nbg:4,
+     gnomad:null, pc:3, pf:2.1e-2, interp:{likely_oncogenic:1}},
+    {type:'LOSS', chr:'17', start:7640000,   end:7720000,   cyto:'17p13.1', genes:['TP53','WRAP53','EFNB3'], nbg:5,
+     gnomad:null, pc:3, pf:2.1e-2, interp:{oncogenic:1}},
+    {type:'LOSS', chr:'10', start:87850000,  end:87980000,  cyto:'10q23.31', genes:['PTEN'], nbg:1,
+     gnomad:null, pc:2, pf:1.4e-2, interp:{oncogenic:2}},
+  ],
+};
 
 /* un variant : niveau VARIANT (jamais niveau occurrence — voir CLAUDE.md) */
 const VARIANTS = {
@@ -561,16 +611,23 @@ const exp2 = v => (v === null || v === undefined) ? null : Number(v).toExponenti
 const CHR = '(?:chr)?(2[0-2]|1\\d|[1-9]|X|Y|MT|M)';
 const RE_HGVSG = new RegExp('^' + CHR + ':g\\.(\\d+)([ACGTN]+)>([ACGTN]+)$', 'i');
 const RE_LOCUS = new RegExp('^' + CHR + '[-:_](\\d+)[-:_]([ACGTN]+)[-:_]([ACGTN]+)$', 'i');
+/* CNV : GAIN:chr1:55039447-55064852 · LOSS-1-55039447-55064852 (séparateurs libres) */
+const RE_CNV = new RegExp('^(GAIN|LOSS)[-:_]' + CHR + '[-:_](\\d+)[-:_](\\d+)$', 'i');
 
+function normChr(c){ c = c.toUpperCase(); return c === 'MT' ? 'M' : c; }
 function normLocus(c, p, r, a){
-  c = c.toUpperCase(); if (c === 'MT') c = 'M';
-  return c + '-' + p + '-' + r.toUpperCase() + '-' + a.toUpperCase();
+  return normChr(c) + '-' + p + '-' + r.toUpperCase() + '-' + a.toUpperCase();
 }
 
 function parseQuery(q){
   q = q.trim();
   if (!q) return {kind:'empty'};
-  let m = RE_HGVSG.exec(q) || RE_LOCUS.exec(q);
+  let m = RE_CNV.exec(q.replace(/,/g, ''));
+  if (m){
+    let s = +m[3], e = +m[4]; if (s > e) [s, e] = [e, s];
+    return {kind:'cnv', cnv:{type:m[1].toUpperCase(), chr:normChr(m[2]), start:s, end:e}};
+  }
+  m = RE_HGVSG.exec(q) || RE_LOCUS.exec(q);
   if (m) return {kind:'locus', locus:normLocus(m[1], m[2], m[3], m[4])};
   if (/^[A-Za-z][A-Za-z0-9._-]{0,14}$/.test(q)) return {kind:'gene', prefix:q.toUpperCase()};
   return {kind:'unknown'};
@@ -585,12 +642,48 @@ function findByLocus(locus){
 }
 const geneVariants = sym => (bank()[sym] || []).map(v => Object.assign({gene:sym}, v));
 
+/* CNV — nom affiché comme dans Radiant (GAIN:chr1:start-end), clé normalisée GAIN-1-start-end */
+const cnvName = c => c.type + ':chr' + c.chr + ':' + c.start + '-' + c.end;
+const cnvKey  = c => c.type + '-' + c.chr + '-' + c.start + '-' + c.end;
+const cnvLen  = c => c.end - c.start + 1;
+const cnvBank = () => CNVS[state.origin] || [];
+const geneCnvs = sym => cnvBank().filter(c => c.genes.includes(sym));
+/* CNV du même type qui chevauchent la région saisie ; pct = part du CNV chevauchée */
+function overlappingCnvs(q){
+  return cnvBank()
+    .filter(c => c.type === q.type && c.chr === q.chr && c.start <= q.end && q.start <= c.end)
+    .map(c => Object.assign({
+      pct: (Math.min(c.end, q.end) - Math.max(c.start, q.start) + 1) / cnvLen(c),
+      same: cnvKey(c) === cnvKey(q)}, c))
+    .sort((a, b) => (b.same - a.same) || (b.pct - a.pct) || (a.start - b.start));
+}
+function fmtLen(n){
+  if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace('.', ',') + ' Mb';
+  if (n >= 1e3) return (n / 1e3).toFixed(1).replace('.', ',') + ' kb';
+  return n + ' pb';
+}
+const fmtPos = n => n.toLocaleString('fr-CA');
+
 /* ===================== segments ===================== */
+const EXAMPLES = {
+  snv: ['1-55051215-G-GA', '10-99235506-G-A', 'M-8602-T-C', 'PCSK9'],
+  cnv: ['LOSS:chr22:18912231-21465672', 'GAIN-16-29580020-30180000', 'LOSS-X-31800000-31900000', 'DMD'],
+};
+const PLACEHOLDER = {
+  snv: '1-55051215-G-GA · chr10:g.99235506G>A · PCSK9',
+  cnv: 'GAIN:chr16:29580020-30180000 · LOSS-22-18912231-21465672 · DMD',
+};
 function setType(v){
   state.type = v;
   [...$('segType').children].forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  refreshDrop();
+  $('q').placeholder = PLACEHOLDER[v];
+  $('ex').innerHTML = '<span>Exemples :</span>' + EXAMPLES[v].map(x =>
+    '<button onclick="tryEx(\'' + x + '\')">' + esc(x) + '</button>').join('');
+  $('notFound').classList.add('hidden');
+  if (document.activeElement === $('q')) refreshDrop();
 }
+/* bascule de type proposée quand la forme saisie ne correspond pas au type choisi */
+function switchType(v){ setType(v); $('q').focus(); refreshDrop(); }
 function setOrigin(v){
   state.origin = v;
   [...$('segOrigin').children].forEach(b => b.classList.toggle('on', b.dataset.v === v));
@@ -612,8 +705,19 @@ function refreshDrop(){
 
   if (p.kind === 'empty'){ drop.classList.add('hidden'); drop.innerHTML = ''; return; }
 
+  /* la forme saisie trahit l'autre type : on le dit, et on propose de basculer */
+  const want = p.kind === 'cnv' ? 'cnv' : p.kind === 'locus' ? 'snv' : null;
+  if (want && want !== state.type){
+    drop.innerHTML = '<div class="nores">Ceci est un ' + want.toUpperCase() + '. ' +
+      '<a onmousedown="event.preventDefault();switchType(\'' + want + '\')">Chercher parmi les ' +
+      want.toUpperCase() + '</a></div>';
+    drop.classList.remove('hidden'); return;
+  }
+
   if (p.kind === 'locus'){
     state.opts = [{kind:'locus', locus:p.locus}];
+  } else if (p.kind === 'cnv'){
+    state.opts = [{kind:'cnv', cnv:p.cnv}];
   } else if (p.kind === 'gene'){
     state.opts = GENES.filter(g => g.sym.startsWith(p.prefix))
                       .slice(0, 8)
@@ -624,7 +728,9 @@ function refreshDrop(){
   if (!state.opts.length){
     drop.innerHTML = '<div class="nores">' +
       (p.kind === 'unknown'
-        ? 'Format non reconnu. Attendu : un locus (1-55051215-G-GA) ou un symbole de gène.'
+        ? (state.type === 'cnv'
+            ? 'Format non reconnu. Attendu : un CNV (GAIN:chr16:29580020-30180000) ou un symbole de gène.'
+            : 'Format non reconnu. Attendu : un locus (1-55051215-G-GA) ou un symbole de gène.')
         : 'Aucun résultat trouvé') + '</div>';
     drop.classList.remove('hidden'); return;
   }
@@ -637,6 +743,13 @@ function refreshDrop(){
              '<span class="om"><span class="o1 mono">' + esc(o.locus) + '</span>' +
              '<span class="o2">GRCh38 · ' + ORIGIN_LBL[state.origin].toLowerCase() + ' · SNV</span></span>' +
              '<span class="okind">Variant</span></div>';
+    if (o.kind === 'cnv')
+      return '<div class="opt' + s + '" data-i="' + i + '">' +
+             '<span class="oic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4M17 12h4"/><rect x="7" y="8" width="10" height="8" rx="1"/></svg></span>' +
+             '<span class="om"><span class="o1 mono">' + esc(cnvName(o.cnv)) + '</span>' +
+             '<span class="o2">GRCh38 · ' + ORIGIN_LBL[state.origin].toLowerCase() + ' · CNV · ' +
+             fmtLen(cnvLen(o.cnv)) + ' · CNV chevauchants</span></span>' +
+             '<span class="okind">Région</span></div>';
     const pfx = parseQuery($('q').value).prefix || '';
     const hl = '<span class="hl">' + esc(o.sym.slice(0, pfx.length)) + '</span>' + esc(o.sym.slice(pfx.length));
     return '<div class="opt' + s + '" data-i="' + i + '">' +
@@ -661,7 +774,7 @@ function move(d){
 
 function choose(i){
   const o = state.opts[i]; if (!o) return;
-  $('q').value = o.kind === 'locus' ? o.locus : o.sym;
+  $('q').value = o.kind === 'locus' ? o.locus : o.kind === 'cnv' ? cnvName(o.cnv) : o.sym;
   closeDrop();
   submit();
 }
@@ -672,7 +785,12 @@ function tryEx(v){ $('q').value = v; $('q').focus(); refreshDrop(); }
 function submit(){
   const p = parseQuery($('q').value);
   $('notFound').classList.add('hidden');
-  if (p.kind === 'locus'){
+  if ((p.kind === 'cnv') !== (state.type === 'cnv') && p.kind !== 'gene') return;
+  if (p.kind === 'cnv'){
+    const rows = overlappingCnvs(p.cnv);
+    if (rows.length) openCnvRegion(p.cnv, rows);
+    else showNotFound(cnvName(p.cnv));
+  } else if (p.kind === 'locus'){
     const v = findByLocus(p.locus);
     if (v){ state.back = 'search'; openEntity(v); }
     else   { showNotFound(p.locus); }
@@ -684,8 +802,13 @@ function submit(){
 
 function showNotFound(locus){
   const other = state.origin === 'germline' ? 'somatic' : 'germline';
-  $('notFoundDesc').innerHTML = '<span class="mono">' + esc(locus) + '</span> n’est pas dans la banque ' +
-    BANQUE_LBL[state.origin] + ' (SNV, GRCh38).';
+  const cnv = state.type === 'cnv';
+  $('notFoundTitle').textContent = cnv ? 'Aucun CNV trouvé' : 'Variante introuvable';
+  $('notFoundDesc').innerHTML = cnv
+    ? 'Aucun CNV ' + esc(locus.split(':')[0]) + ' ne chevauche <span class="mono">' + esc(locus) +
+      '</span> dans la banque ' + BANQUE_LBL[state.origin] + ' (GRCh38).'
+    : '<span class="mono">' + esc(locus) + '</span> n’est pas dans la banque ' +
+      BANQUE_LBL[state.origin] + ' (SNV, GRCh38).';
   $('notFoundBtn').textContent = 'Chercher dans la banque ' + BANQUE_LBL[other];
   $('notFound').classList.remove('hidden');
 }
@@ -698,22 +821,81 @@ function show(v){
 function goSearch(){ show('vSearch'); $('q').focus(); }
 
 /* ===================== vue tableau ===================== */
+function setTableHeader(title, sub, mono){
+  $('tblTitle').textContent = title;
+  $('tblTitle').classList.toggle('mono', !!mono);
+  $('tblEns').textContent = sub;
+  $('tblOrigin').textContent = ORIGIN_LBL[state.origin];
+  $('tblType').textContent = state.type.toUpperCase();
+  const cnv = state.type === 'cnv';
+  $('fc1').textContent = cnv ? 'Type' : 'Conséquence';
+  $('fc2').textContent = cnv ? 'Longueur' : 'ClinVar';
+}
+
 function openGene(g){
   state.gene = g;
   state.back = 'table';
-  const rows = geneVariants(g.sym);
-  $('tblTitle').textContent = g.sym;
-  $('tblEns').textContent = g.ens;
-  $('tblOrigin').textContent = ORIGIN_LBL[state.origin];
-  $('tblHost').innerHTML = rows.length ? tableHtml(rows) : emptyGeneHtml(g);
+  const cnv = state.type === 'cnv';
+  const rows = cnv ? geneCnvs(g.sym) : geneVariants(g.sym);
+  setTableHeader(g.sym, g.ens);
+  $('tblHost').innerHTML = rows.length ? (cnv ? cnvTableHtml(rows, {gene:g.sym}) : tableHtml(rows)) : emptyGeneHtml(g);
   show('vTable');
+}
+
+function openCnvRegion(q, rows){
+  setTableHeader(cnvName(q), fmtLen(cnvLen(q)), true);
+  $('tblHost').innerHTML = cnvTableHtml(rows, {region:true});
+  show('vTable');
+}
+
+/* tableau CNV — niveau variant : CN, GT, filtre, qualité, PE (propres à une occurrence) exclus.
+   Libellés repris de variant.headers.* ; le nom renvoie à Franklin comme dans CNVNameCell. */
+function cnvTableHtml(rows, opt){
+  const som = state.origin === 'somatic';
+  const th = ['Variant', 'Type', 'Cytobande', 'Chr', 'Début', 'Fin', 'Longueur']
+    .concat(opt.region ? ['% CNV'] : [])
+    .concat(['Gènes', '# Gènes', 'gnomAD', som ? 'Fréq. TN' : 'Fréq. G', 'Interpr.']);
+  const right = ['Début', 'Fin', 'Longueur', '% CNV', '# Gènes'];
+  const head = '<thead><tr>' + th.map(h =>
+    '<th' + (right.includes(h) ? ' class="r"' : '') + '>' + h + '</th>').join('') + '</tr></thead>';
+
+  const body = '<tbody>' + rows.map(c => {
+    const interp = Object.keys(c.interp || {}).length
+      ? Object.entries(c.interp).map(([k, n]) => badge(k, n)).join('') : dash();
+    const href = 'https://franklin.genoox.com/clinical-db/variant/sv/chr' + c.chr + '-' + c.start + '-' + c.end +
+                 '-' + (c.type === 'GAIN' ? 'DUP' : 'DEL') + '-HG38';
+    const shown = c.genes.slice(0, 3);
+    if (opt.gene && !shown.includes(opt.gene)) shown[2] = opt.gene;
+    const genes = shown.map(g => '<span class="gsym"' + (g === opt.gene ? '' : ' style="font-weight:400"') + '>' +
+                  esc(g) + '</span>').join(', ') +
+                  (c.nbg > shown.length ? ' <span class="dash">+' + (c.nbg - shown.length) + '</span>' : '');
+    return '<tr>' +
+      '<td><a class="vlink" href="' + href + '" target="_blank" rel="noreferrer">' + esc(cnvName(c)) + '</a>' +
+        (c.same ? ' <span class="cb neutral" title="Identique à la recherche">identique</span>' : '') + '</td>' +
+      '<td><span class="cb ' + (c.type === 'GAIN' ? 'blue' : 'red') + '">' + c.type + '</span></td>' +
+      '<td>' + esc(c.cyto) + '</td>' +
+      '<td>' + esc(c.chr) + '</td>' +
+      '<td class="tnum r">' + fmtPos(c.start) + '</td>' +
+      '<td class="tnum r">' + fmtPos(c.end) + '</td>' +
+      '<td class="tnum r">' + fmtLen(cnvLen(c)) + '</td>' +
+      (opt.region ? '<td class="tnum r">' + Math.round(c.pct * 100) + ' %</td>' : '') +
+      '<td>' + genes + '</td>' +
+      '<td class="tnum r">' + c.nbg + '</td>' +
+      '<td class="tnum">' + (c.gnomad === null ? dash() : exp2(c.gnomad)) + '</td>' +
+      '<td class="tnum">' + c.pc + ' (' + exp2(c.pf) + ')</td>' +
+      '<td>' + interp + '</td>' +
+    '</tr>';
+  }).join('') + '</tbody>';
+
+  return '<table>' + head + body + '</table>' +
+         '<div class="tfoot">' + rows.length + ' CNV</div>';
 }
 
 function emptyGeneHtml(g){
   return '<div class="empty">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m10 16 1.5 1.5"/><path d="m14 8-1.5-1.5"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m16.5 10.5 1 1"/><path d="m17 6-2.891-2.891"/><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="m20 9 .891.891"/><path d="M3.109 14.109 6 17"/><path d="m6.5 12.5 1 1"/><path d="m7 18 2.891 2.891"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/></svg>' +
     '<div class="t">Aucun variant trouvé</div>' +
-    '<div class="d">Aucun SNV ' + ORIGIN_LBL[state.origin].toLowerCase() +
+    '<div class="d">Aucun ' + state.type.toUpperCase() + ' ' + ORIGIN_LBL[state.origin].toLowerCase() +
     ' n’est rapporté dans <i>' + esc(g.sym) + '</i>.</div></div>';
 }
 
@@ -877,6 +1059,7 @@ $('q').addEventListener('keydown', e => {
   else if (e.key === 'Escape'){ closeDrop(); }
 });
 $('navExplo').addEventListener('click', goSearch);
+setType('snv');
 $('q').focus();
 </script>
 </body>

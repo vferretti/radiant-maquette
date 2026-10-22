@@ -37,8 +37,8 @@ données » (plus large que ce qu'on livre). À trancher.
 ## Le formulaire — trois contrôles, rien d'autre
 
 ```
-Type de variant            Origine
-[ SNV ][ CNV à venir ]     [ Germinal ][ Somatique ]
+Type de variant      Origine
+[ SNV ][ CNV ]       [ Germinal ][ Somatique ]
 
 Variant ou gène
 [🔍  1-55051215-G-GA · chr10:g.99235506G>A · PCSK9              ✕ ]
@@ -47,14 +47,14 @@ Exemples :  1-55051215-G-GA   10-99235506-G-A   M-8602-T-C   PCSK9
 
 - **Deux segments** (`Type de variant`, `Origine`) : ce sont deux banques de données
   différentes, pas deux filtres. Le choix précède la recherche, il ne la raffine pas.
-  **CNV est désactivé** dans cette maquette (« à venir »), conformément au périmètre demandé.
+  Le type change le placeholder, les exemples, et ce que le champ accepte (voir « CNV »).
 - **Un seul champ de recherche**, pas deux. Le clinicien ne devrait pas avoir à déclarer s'il
   cherche un variant ou un gène : ce que la chaîne saisie est se **déduit** de sa forme, comme
   dans la boîte unique de gnomAD. C'est un geste de moins et une décision de moins.
 - **Le champ *est* la recherche** — même parti pris que `prescription/` : curseur déjà dedans,
   on tape, `↵`. `↑` `↓` parcourent, `↵` choisit, `esc` referme ; les options réagissent au
   `mousedown` (sinon le `blur` referme la liste avant le clic).
-- **Ligne d'exemples** cliquables sous le champ. C'est le seul texte ajouté à l'écran, et il
+- **Ligne d'exemples** cliquables (propre à chaque type : `EXAMPLES.snv` / `EXAMPLES.cnv`) sous le champ. C'est le seul texte ajouté à l'écran, et il
   est là parce que la syntaxe du locus n'est devinable par personne — gnomAD affiche la même
   chose sur sa page de recherche. Ce ne sont pas des explications, ce sont des amorces.
 
@@ -76,6 +76,9 @@ Trois formes, testées dans cet ordre (`parseQuery`) :
 - **HGVSg est accepté parce que c'est ce que le titre de la page entité affiche** : un
   utilisateur qui recopie un variant depuis Radiant recolle un `hgvsg`, pas un locus.
 
+En type **SNV**, une chaîne de forme CNV n'est pas rejetée en silence : la liste déroulante
+affiche « Ceci est un CNV. Chercher parmi les CNV » (bascule de type) — et inversement.
+
 ### Ce qu'il n'accepte pas encore
 
 `rs72840396` (dbSNP), un identifiant de transcrit, une région (`19-11078371-11144910`), un
@@ -91,6 +94,30 @@ locus mitochondrial autrement que sous forme de SNV. Volontairement hors périm�
      bouton qui **rejoue la recherche dans l'autre banque** — c'est la méprise la plus probable.
 2. **Un gène → un tableau de variants**, avec un retour « ‹ Exploration » et, depuis une ligne,
    le passage à la page entité (qui revient alors « ‹ PCSK9 »).
+
+## CNV
+
+Deux formes en type CNV : **un CNV** ou **un symbole de gène**.
+
+| Forme | Exemples | Normalisé |
+|---|---|---|
+| **CNV** | `GAIN:chr16:29580020-30180000`, `LOSS-22-18912231-21465672` | `GAIN:chr16:29580020-30180000` |
+
+- `GAIN` ou `LOSS` (casse libre), `chr` facultatif, séparateurs `-` `:` `_` libres, virgules
+  tolérées dans les positions, début/fin remis dans l'ordre. Affichage au format du `name` de
+  Radiant (`GAIN:chrN:début-fin`) ; clé interne `GAIN-N-début-fin` (`cnvKey`).
+- **Un CNV n'ouvre jamais une page entité** (il n'en existe pas) : c'est une **région**, et le
+  résultat est toujours une **liste** — les CNV du même type qui la chevauchent, le CNV
+  identique (s'il existe) en tête avec la pastille « identique », puis par % de chevauchement.
+  Aucun chevauchement → état vide « Aucun CNV trouvé » + bouton « Chercher dans la banque … ».
+- **Un gène** → les CNV (des deux types) qui le touchent.
+- Colonnes (libellés `variant.headers.*`, ordre inspiré de `germline-cnv-occurrence-table-settings.tsx`) :
+  Variant · Type · Cytobande · Chr · Début · Fin · Longueur · **% CNV** (recherche par région
+  seulement : part du CNV chevauchée par la région saisie) · Gènes · # Gènes · gnomAD · Fréq. G /
+  Fréq. TN · Interpr. Exclus, car propres à une occurrence : CN, GT, Filtre, Qual., PE, # SNVs,
+  Exomiser.
+- Le nom du CNV renvoie à **Franklin** (`…/variant/sv/chrN-début-fin-DUP|DEL-HG38`), exactement
+  comme `CNVNameCell` de Radiant.
 
 ## Le tableau — colonnes retenues
 
@@ -153,21 +180,27 @@ Constats tirés du code, à valider avec l'équipe :
    page entité somatique** : c'est un chantier à part entière, pas un branchement.
 4. **La branche « gène » peut réutiliser l'existant** : `GET /{tenant}/genes/autocomplete`
    (préfixe + limite) alimente exactement la liste déroulante de la maquette.
-5. **Place dans la navigation** : une entrée de plus dans `protected-navbar.tsx`, à côté de
+5. **CNV : il n'y a pas de table « variant »**, seulement `cnv__occurrence`. Chaque appel a
+   ses propres bornes : la maquette agrège les appels **strictement identiques** (type, chr,
+   début, fin) et compte les patients, mais côté produit il faudra décider comment regrouper
+   (identité exacte ? chevauchement réciproque ≥ x % ?) — c'est la vraie question ouverte du CNV.
+6. **Place dans la navigation** : une entrée de plus dans `protected-navbar.tsx`, à côté de
    « Cas » et « Fichiers », et une route dans `portals/radiant/app/routes.ts`.
 
 ## Données de démonstration
 
-Inlinées en JS (`GENES`, `VARIANTS`), rien n'est branché.
+Inlinées en JS (`GENES`, `VARIANTS`, `CNVS`), rien n'est branché.
 
 - **`10-99235506-G-A` (HPSE2) reprend les valeurs réelles** du jeu de test Cypress de Radiant
   (`cypress/pom/shared/Data.ts` → `variantGermline`) : locus, hgvsg, rs72840396, conséquence,
   transcrit `ENST00000370552`, `c.290+7C>T`, gnomAD `1.66e-3`, patients `2 (1.43e-1)`, ClinVar
   `784210`, OMIM 236730. C'est le variant à utiliser pour toute vérification.
+- **CNV** (`CNVS`) : germinal — 22q11.2, 16p11.2 (GAIN et LOSS), DMD (4), MECP2, PCSK9 ;
+  somatique — ERBB2, EGFR, CDKN2A (2), TP53, PTEN. Coordonnées GRCh38 plausibles, inventées.
 - **Germinal** : `PCSK9` (7 variants, dont le `1-55051215-G-GA` de l'énoncé) et `HPSE2` (4).
 - **Somatique** : `TP53` (6) et `KRAS` (4) — coordonnées GRCh38 et dbSNP réels pour les points
   chauds (R273H, R248Q, R175H, G12D…), le reste est inventé.
-- Les autres gènes du catalogue d'autocomplétion (BRCA1, CFTR, DMD…) **n'ont aucun variant** :
+- Les autres gènes du catalogue d'autocomplétion (BRCA1, CFTR…) **n'ont aucun variant** (DMD n'a que des CNV) :
   c'est ce qui permet de montrer l'état vide du tableau.
 
 ## Vérification
@@ -188,14 +221,15 @@ sed "s|^\$('q').focus();\$|\$('q').value='PCSK9';submit();|" exploration_radiant
 `$('q').value='PCSK9';submit();` (tableau) ·
 `openEntityByLocus('1-55052746-C-T')` (page entité) ·
 `setOrigin('somatic');$('q').value='1-55051215-G-GA';submit();` (variante introuvable) ·
-`setOrigin('somatic');$('q').value='BRCA1';submit();` (gène sans variant).
+`setOrigin('somatic');$('q').value='BRCA1';submit();` (gène sans variant) ·
+`setType('cnv');$('q').value='LOSS:chr22:18912231-21465672';submit();` (CNV chevauchants) ·
+`setType('cnv');$('q').value='DMD';submit();` (CNV d'un gène) ·
+`$('q').value='LOSS-1-100-200';$('q').focus();refreshDrop();` (mauvais type → bascule).
 
 ## Prochaines étapes
 
-- **CNV** : le segment est en place mais désactivé. Une recherche de CNV n'est pas une
-  recherche de locus — c'est une **région** (`1-55039447-55064852`), donc un chevauchement, donc
-  un résultat qui est toujours une liste, jamais un variant unique. Le formulaire devra le
-  refléter (et la page entité CNV n'existe pas).
+- **CNV** : règle de regroupement des appels (voir point 5 ci-dessus), recherche par région
+  **sans type** (`1-55039447-55064852` → GAIN et LOSS), et une éventuelle page entité CNV.
 - **rsID** (`rs72840396`) : troisième forme à reconnaître, la plus demandée après le locus.
 - **Recherche par région** et par **transcrit** (`ENST00000302118`), comme gnomAD.
 - **Colonnes du tableau** : à arbitrer avec les généticiens (la liste ci-dessus est une
