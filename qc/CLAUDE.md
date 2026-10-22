@@ -1,6 +1,6 @@
 # Section QC — couverture des gènes & qualité de séquençage
 
-Maquette de l'**onglet QC** de la page Case de Radiant. Fichier de travail : `qc_radiant.html`. Les conventions transversales (HTML autonome, vérif headless, terminologie, en-tête, partage) sont dans le `CLAUDE.md` **racine**.
+Maquette de l'**onglet QC** de la page Case de Radiant. Fichier de travail : `qc_radiant_v3.html`. Les conventions transversales (HTML autonome, vérif headless, terminologie, en-tête, partage) sont dans le `CLAUDE.md` **racine**.
 
 ## Contexte
 
@@ -8,14 +8,14 @@ Calquée sur l'onglet QC de l'app sœur **clin** (`~/src/clin-portal-ui`, `src/v
 
 ## Fichiers
 
-- `qc_radiant.html` — maquette principale (autonome, données inlinées). C'est le fichier de travail.
+- `qc_radiant_v3.html` — maquette principale (autonome, données inlinées). C'est le fichier de travail.
 - `build_mockup.py` — script qui a généré la première version de la maquette à partir de `test_gene_coverage.csv`. N'a pas été re-exécuté depuis l'ajout du modal exon et des autres features — le HTML est édité directement.
-- `qc_radiant_v1.html` / `qc_radiant_v2.html` — **variantes allégées dérivées de `qc_radiant.html`** pour recueillir des commentaires sur un sous-ensemble de fonctionnalités. Éditées directement (comme la maquette principale) ; à re-dériver manuellement si `qc_radiant.html` évolue.
+- `qc_radiant_v1.html` / `qc_radiant_v2.html` — **variantes allégées dérivées de `qc_radiant_v3.html`** pour recueillir des commentaires sur un sous-ensemble de fonctionnalités. Éditées directement (comme la maquette principale) ; à re-dériver manuellement si `qc_radiant_v3.html` évolue.
   - **v1** retire : *Qualité de séquençage* → section Pédigrée/parenté + bouton Rapport MultiQC ; *Couverture des gènes* → colonne « Exons hors crit. », modal « Détail par exon » (et l'accès par clic sur le gène), **compteurs** SNV/CNV (les liens `SNV ↗`/`CNV ↗`/`IGV ↗` restent), bouton/dialogue Note de limitation. Le code mort associé (constantes `EXON_DATA`/`PEDIGREE`, fonctions, câblage, CSS) est nettoyé.
   - **v2** = v1 **plus** la section Pédigrée/parenté restaurée (le reste des retraits de v1 est conservé, MultiQC compris).
-- `qc_radiant_en.html` — **version anglaise de `qc_radiant.html`** (fonctionnalités identiques, seule l'UI est traduite). À re-dériver manuellement si `qc_radiant.html` évolue. Choix de traduction : terminologie reprise des **traductions officielles** des deux apps — `frontend/translations/merged/radiant/en.json` (en-tête : *Case*, *Germline Family*, *Routine*, *In Progress*, onglets *Details / Variants / Files*, relations *Proband / Mother / Father*) et `clin-portal-ui/src/locales/en.json` (*Gene coverage*, *Avg. Cov.*, formulations contamination/uniformité de `quality_control_summary`). Statuts : **Pass / Warning / Fail / Unmappable** (le vocabulaire Conforme/Attention/Échec/Non mappable n'existe pas encore côté anglais). Noter que l'anglais des deux produits dit **« Proband »** là où le français impose « cas-index ». Conventions typographiques adaptées : `98%` sans espace, point décimal (`93.91%`, `0.50`), `162.00x` sans espace, séparateur de milliers `,` (`toLocaleString('en-CA')`, y compris les coordonnées du modal exon), `pb` → `bp`.
+- `qc_radiant_en.html` — **version anglaise de `qc_radiant_v3.html`** (fonctionnalités identiques, seule l'UI est traduite). À re-dériver manuellement si `qc_radiant_v3.html` évolue. Choix de traduction : terminologie reprise des **traductions officielles** des deux apps — `frontend/translations/merged/radiant/en.json` (en-tête : *Case*, *Germline Family*, *Routine*, *In Progress*, onglets *Details / Variants / Files*, relations *Proband / Mother / Father*) et `clin-portal-ui/src/locales/en.json` (*Gene coverage*, *Avg. Cov.*, formulations contamination/uniformité de `quality_control_summary`). Statuts : **Pass / Warning / Fail / Unmappable** (le vocabulaire Conforme/Attention/Échec/Non mappable n'existe pas encore côté anglais). Noter que l'anglais des deux produits dit **« Proband »** là où le français impose « cas-index ». Conventions typographiques adaptées : `98%` sans espace, point décimal (`93.91%`, `0.50`), `162.00x` sans espace, séparateur de milliers `,` (`toLocaleString('en-CA')`, y compris les coordonnées du modal exon), `pb` → `bp`.
 - `test_gene_coverage.csv` — données de couverture par gène qui ont servi à alimenter la maquette initiale.
-- `QC_demo_multiqc_report.html` — rapport MultiQC (agrégé, 1 par famille). **Lié depuis la maquette** : bouton « Rapport MultiQC » de la vue d'ensemble (ouvert dans un nouvel onglet). Doit rester dans le même dossier que `qc_radiant.html` pour que le lien fonctionne.
+- `QC_demo_multiqc_report.html` — rapport MultiQC (agrégé, 1 par famille). **Lié depuis la maquette** : bouton « Rapport MultiQC » de la vue d'ensemble (ouvert dans un nouvel onglet). Doit rester dans le même dossier que `qc_radiant_v3.html` pour que le lien fonctionne.
 - `41267.qc-coverage-region-2_cov_report.bed` — rapport Dragen pour l'échantillon 41267 : **la source cible** pour brancher les vraies données par exon du modal drill-down (voir « Notes techniques » plus bas).
 - `47674.QC_report.json` — rapport JSON Dragen (niveau échantillon) pour l'échantillon 47674 : **source des données de la Vue d'ensemble**. Structure : `SamplesQC[0]` (groupes `DRAGEN_capture_coverage_metrics`, `DRAGEN_mapping_metrics`, `DRAGEN_cnv_metrics`, `DRAGEN_gvcf_metrics`, `DRAGEN_ploidy_estimation_metrics`, `Picard_CollectHsMetrics`) + `SequencingQC` (run/flowcell/kit). Les valeurs du proband sont inlinées telles quelles (`QC_RAW`/`SEQ_QC`).
 
@@ -55,7 +55,7 @@ Calquée sur l'onglet QC de l'app sœur **clin** (`~/src/clin-portal-ui`, `src/v
 ## Notes techniques
 
 ### Données simulées pour le drill-down
-Les données par exon sont inlinées dans `qc_radiant.html` (constante `EXON_DATA`) pour 6 gènes en tête du tableau alphabétique : **AANAT, ABRAXAS2, ACKR4, ACTR3, AKR1B15, AKR1C2**.
+Les données par exon sont inlinées dans `qc_radiant_v3.html` (constante `EXON_DATA`) pour 6 gènes en tête du tableau alphabétique : **AANAT, ABRAXAS2, ACKR4, ACTR3, AKR1B15, AKR1C2**.
 
 **AKR1B15 est le cas vedette de la démo** : marqué « Attention » (~85 % à 15x) au niveau du gène, mais le modal révèle que 4 exons sur 5 sont à 100 % et **un exon (150 pb) est totalement à 0**. C'est précisément le scénario qui justifie la vue drill-down.
 
