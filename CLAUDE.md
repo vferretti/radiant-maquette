@@ -16,6 +16,9 @@ Chaque section vit dans son propre sous-répertoire, avec son propre `CLAUDE.md`
   d'atteindre un variant par son **locus** (format gnomAD, `1-55051215-G-GA`) ou de lister les
   variants d'un **gène**. Comble le trou actuel : on ne peut atteindre un variant que par un cas.
   SNV et CNV (`GAIN:chr1:début-fin`). Voir `exploration/CLAUDE.md`.
+- **`cnv/`** — CNV : analyse de la figure DRAGEN copy ratio / BAF / ROH du CQGC et de ses
+  sources de données, en vue d'une version interactive. Pas encore de maquette ; les
+  fichiers d'échantillon ne sont **pas versionnés**. Voir `cnv/CLAUDE.md`.
 - *(à venir : autres sections — ex. `variants/`, `files/`… — chacune avec son `CLAUDE.md`.)*
 
 Claude charge automatiquement ce `CLAUDE.md` racine **plus** celui du sous-répertoire où l'on travaille : garder ici ce qui est **transversal**, mettre le **spécifique** dans le sous-répertoire de la section.

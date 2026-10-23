@@ -15,3 +15,7 @@ __pycache__/
 
 # Verrous LibreOffice
 .~lock.*#
+
+# Données d'échantillon CNV (récupérées hors git) — seul cnv/CLAUDE.md est versionné
+cnv/*
+!cnv/CLAUDE.md
